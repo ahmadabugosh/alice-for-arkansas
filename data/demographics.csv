@@ -1,0 +1,25 @@
+category,total_households,alice_households,alice_percentage,poverty_percent,year
+Total Arkansas,1212992,537094,28,16,2023
+White,868688,270247,31,9,2023
+Black,177692,75806,43,21,2023
+Hispanic/Latino,71337,27735,39,7,2023
+Asian,16420,3864,24,6,2023
+American Indian,5880,2754,37,10,2023
+Alaska Native,5880,2754,37,10,2023
+Native Hawaiian,5880,2754,37,10,2023
+Pacific Islander,2514,1079,39,4,2023
+Biracial,77952,35989,36,10,2023
+Two or More Races,77952,28125,36,10,2023
+Couples Age  Under 25 Years,60600,37565,31,31,2023
+Age 25 to 44 Years,394165,156785,23,17,2023
+Age 45 to 64 Years,418704,161552,24,14,2023
+Age 65 Years and Over,339523,181192,39,14,2023
+Couples Married With Children,208877,41666,11,9,2023
+"Single-Female-Headed
+With Children",83690,64120,29,48,2023
+"Single-Male-Headed
+With Children",27324,16278,31,29,2023
+"Single or Cohabiting
+Under 65 with no Children",553578,233838,28,14,2023
+Rural Households,410053,207784,32,19,2023
+Urban Households,802939,329310,27,14,2023

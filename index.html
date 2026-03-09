@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent Plugin View</title>
+    <script>
+      // Override toast functions before anything loads
+      (function() {
+        // Override common toast/notification functions
+        const originalCreateElement = document.createElement;
+        document.createElement = function(tagName) {
+          const element = originalCreateElement.call(this, tagName);
+          if (tagName.toLowerCase() === 'li' && arguments.length > 0) {
+            // Intercept li elements and check if they become toast notifications
+            const originalSetAttribute = element.setAttribute;
+            element.setAttribute = function(name, value) {
+              if (name === 'role' && value === 'status') {
+                // This is likely a toast notification, don't create it
+                return;
+              }
+              return originalSetAttribute.call(this, name, value);
+            };
+          }
+          return element;
+        };
+        
+        // Override appendChild to prevent toast elements from being added
+        const originalAppendChild = Element.prototype.appendChild;
+        Element.prototype.appendChild = function(child) {
+          if (child && child.getAttribute && child.getAttribute('role') === 'status') {
+            // Don't append toast notifications
+            console.log('Blocked toast notification from being added');
+            return child;
+          }
+          if (child && child.textContent && 
+              (child.textContent.includes('New version') || 
+               child.textContent.includes('v1.5.5') || 
+               child.textContent.includes('available'))) {
+            // Don't append elements containing version text
+            console.log('Blocked version notification from being added');
+            return child;
+          }
+          return originalAppendChild.call(this, child);
+        };
+        
+        // Also override insertBefore
+        const originalInsertBefore = Element.prototype.insertBefore;
+        Element.prototype.insertBefore = function(newNode, referenceNode) {
+          if (newNode && newNode.getAttribute && newNode.getAttribute('role') === 'status') {
+            console.log('Blocked toast notification from being inserted');
+            return newNode;
+          }
+          if (newNode && newNode.textContent && 
+              (newNode.textContent.includes('New version') || 
+               newNode.textContent.includes('v1.5.5') || 
+               newNode.textContent.includes('available'))) {
+            console.log('Blocked version notification from being inserted');
+            return newNode;
+          }
+          return originalInsertBefore.call(this, newNode, referenceNode);
+        };
+      })();
+      
+      // Inject custom styles to hide menu items
+      (function() {
+        const customStyles = `
+          [data-state="inactive"][value="groups"],
+          [data-state="active"][value="groups"],
+          [data-state="inactive"][value="documentation"],
+          [data-state="active"][value="documentation"],
+          [data-state="inactive"][value="settings"],
+          [data-state="active"][value="settings"],
+          button[aria-label*="Create"],
+          button[title*="Create"],
+          .create-button,
+          .add-button,
+          /* Hide version update notifications */
+          li[role="status"][data-state="open"],
+          li[role="status"][data-radix-collection-item],
+          /* Hide version update notifications - brute force approach */
+          div[role="region"],
+          ol.fixed,
+          .fixed.top-0,
+          .z-\\[100\\],
+          [class*="fixed"][class*="top-0"],
+          [data-radix-toast-viewport],
+          [aria-label*="Notifications"] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            position: absolute !important;
+            left: -9999px !important;
+            top: -9999px !important;
+            width: 0 !important;
+            height: 0 !important;
+            overflow: hidden !important;
+            z-index: -9999 !important;
+          }
+        `;
+        
+        function injectStyles() {
+          if (document.getElementById('alice-custom-styles')) return;
+          
+          const style = document.createElement('style');
+          style.id = 'alice-custom-styles';
+          style.textContent = customStyles;
+          document.head.appendChild(style);
+          
+          console.log('Alice custom styles injected');
+        }
+        
+        function hideUpdateNotifications() {
+          // Brute force: hide ALL elements that could be notifications
+          const selectors = [
+            'div[role="region"]',
+            'ol[class*="fixed"]',
+            '[class*="fixed"][class*="top-0"]',
+            '[class*="z-"][class*="100"]',
+            '[aria-label*="Notifications"]',
+            '[data-radix-toast-viewport]'
+          ];
+          
+          selectors.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(el => {
+              el.style.setProperty('display', 'none', 'important');
+              el.style.setProperty('visibility', 'hidden', 'important');
+              el.style.setProperty('opacity', '0', 'important');
+              el.style.setProperty('position', 'absolute', 'important');
+              el.style.setProperty('left', '-9999px', 'important');
+              el.style.setProperty('top', '-9999px', 'important');
+              el.style.setProperty('z-index', '-9999', 'important');
+              el.setAttribute('style', 'display: none !important; visibility: hidden !important; opacity: 0 !important;');
+              el.remove();
+            });
+          });
+          
+          // Also target by text content
+          const allElements = document.querySelectorAll('*');
+          allElements.forEach(el => {
+            const text = el.textContent || '';
+            if (text.includes('New version v1.5.5') || text.includes('Visit GitHub for more information')) {
+              el.style.setProperty('display', 'none', 'important');
+              el.setAttribute('style', 'display: none !important;');
+              el.remove();
+            }
+          });
+        }
+        
+        // Inject immediately if DOM is ready, otherwise wait
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', injectStyles);
+        } else {
+          injectStyles();
+        }
+        
+        // Also inject when window loads to catch dynamic content
+        window.addEventListener('load', () => {
+          injectStyles();
+          hideUpdateNotifications();
+        });
+        
+        // Run notification hiding immediately and very frequently
+        hideUpdateNotifications();
+        setInterval(hideUpdateNotifications, 10);
+        
+        // Also add a global CSS rule that overrides everything
+        const globalStyle = document.createElement('style');
+        globalStyle.innerHTML = `
+          * {
+            --radix-toast-viewport-display: none !important;
+          }
+          *[class*="fixed"]:has-text("New version"),
+          *[class*="fixed"]:has-text("v1.5.5"),
+          *:contains("New version"),
+          *:contains("v1.5.5") {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+          }
+        `;
+        document.head.appendChild(globalStyle);
+        
+        // Also run on DOM mutations
+        const observer = new MutationObserver(hideUpdateNotifications);
+        observer.observe(document.body, { 
+          childList: true, 
+          subtree: true 
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/frontend/index.tsx"></script>
+  </body>
+</html>

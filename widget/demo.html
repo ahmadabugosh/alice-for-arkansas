@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alice Chat Widget Demo</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      background: #f3f4f6;
+    }
+
+    .demo-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .demo-header h1 {
+      font-size: 48px;
+      margin: 0 0 16px 0;
+      color: #1f2937;
+    }
+
+    .demo-header p {
+      font-size: 20px;
+      color: #6b7280;
+      margin: 0;
+    }
+
+    .demo-content {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+
+    .demo-content h2 {
+      margin-top: 0;
+      color: #1f2937;
+    }
+
+    .demo-content p {
+      color: #4b5563;
+      line-height: 1.6;
+    }
+
+    .demo-content ul {
+      color: #4b5563;
+      line-height: 1.8;
+    }
+
+    .demo-content code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .demo-section {
+      margin: 30px 0;
+    }
+
+    .demo-section h3 {
+      color: #374151;
+      margin-bottom: 16px;
+    }
+
+    .code-block {
+      background: #1f2937;
+      color: #f9fafb;
+      padding: 20px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .highlight {
+      background: #fef3c7;
+      padding: 20px;
+      border-left: 4px solid #f59e0b;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background: #4F46E5;
+      color: white;
+      padding: 14px 28px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .cta-button:hover {
+      background: #4338CA;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      color: #6b7280;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-header">
+    <h1>🤖 Alice for Arkansas</h1>
+    <p>Chat Widget Demo</p>
+  </div>
+
+  <div class="demo-content">
+    <h2>Welcome to the Alice Chat Widget</h2>
+    <p>
+      Alice is an AI assistant that provides accurate ALICE (Asset Limited, Income Constrained, Employed) 
+      data for Arkansas counties. This chat widget can be embedded on any website.
+    </p>
+
+    <div class="highlight">
+      <strong>👉 Try it out!</strong> Click the chat button in the bottom-right corner and ask Alice questions like:
+      <ul style="margin-top: 10px;">
+        <li>"What's the ALICE rate in Pulaski County?"</li>
+        <li>"Tell me about Washington County demographics"</li>
+        <li>"What's the statewide ALICE rate for Arkansas?"</li>
+        <li>"Compare Benton and Sebastian counties"</li>
+      </ul>
+    </div>
+
+    <div class="demo-section">
+      <h3>📋 How to Embed</h3>
+      <p>Add this single line of code to your website before the closing <code>&lt;/body&gt;</code> tag:</p>
+      
+      <div class="code-block">
+&lt;script src="http://localhost:3000/widget/alice-chat-widget.js"
+        data-api-url="http://localhost:3000/api/chat"
+        data-title="Chat with Alice"
+        data-subtitle="Ask about Arkansas ALICE data"
+        data-color="#4F46E5"
+        data-position="bottom-right"&gt;&lt;/script&gt;
+      </div>
+    </div>
+
+    <div class="demo-section">
+      <h3>⚙️ Configuration Options</h3>
+      <p>Customize the widget appearance using data attributes:</p>
+      <ul>
+        <li><code>data-api-url</code> - Your Alice API endpoint</li>
+        <li><code>data-title</code> - Widget header title</li>
+        <li><code>data-subtitle</code> - Widget header subtitle</li>
+        <li><code>data-color</code> - Primary color (hex code)</li>
+        <li><code>data-position</code> - Position: bottom-right, bottom-left, top-right, top-left</li>
+      </ul>
+    </div>
+
+    <div class="demo-section">
+      <h3>🔌 WordPress Plugin</h3>
+      <p>
+        For WordPress sites, install the Alice for Arkansas plugin for easier configuration 
+        through your WordPress admin panel. No code required!
+      </p>
+      <a href="#" class="cta-button">Download WordPress Plugin</a>
+    </div>
+
+    <div class="demo-section">
+      <h3>✨ Features</h3>
+      <ul>
+        <li>✅ Real-time chat responses</li>
+        <li>✅ Persistent conversation history</li>
+        <li>✅ Mobile responsive</li>
+        <li>✅ Easy customization</li>
+        <li>✅ No dependencies</li>
+        <li>✅ Lightweight (~8KB)</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer>
+    <p>Alice for Arkansas &copy; 2025 | Powered by ElizaOS</p>
+  </footer>
+
+  <!-- Alice Chat Widget -->
+  <script 
+    src="./alice-chat-widget.js"
+    data-api-url="http://localhost:3000/api/chat"
+    data-title="Chat with Alice"
+    data-subtitle="Ask about Arkansas ALICE data"
+    data-color="#4F46E5"
+    data-position="bottom-right"
+  ></script>
+</body>
+</html>

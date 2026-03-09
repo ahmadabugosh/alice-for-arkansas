@@ -1,0 +1,76 @@
+county,households,below_alice_percentage,poverty,alice_percentage,alice_housholds,year,priority,notes
+Arkansas County,6587,41,15,26,1721,2023,FALSE,
+Ashley County,7199,57,23,34,2468,2023,TRUE,Rural priority area
+Baxter County,19289,50,14,36,6996,2023,FALSE,
+Benton County,117446,29,8,21,23721,2023,FALSE,Lowest rate in NW Arkansas
+Boone County,15232,46,15,31,4729,2023,FALSE,
+Bradley County,3600,57,26,31,1129,2023,TRUE,High rural poverty
+Calhoun County,1584,46,13,33,516,2023,TRUE,Small population high need
+Carroll County,11106,48,17,31,3504,2023,FALSE,
+Chicot County,3919,57,27,30,1210,2023,TRUE,Delta region priority
+Clark County,8147,49,22,27,2243,2023,FALSE,
+Clay County,6116,49,18,31,1880,2023,TRUE,Northeast Arkansas
+Cleburne County,10458,46,13,33,3389,2023,FALSE,
+Cleveland County,2793,54,15,39,1078,2023,TRUE,Rural manufacturing decline
+Columbia County,8361,54,23,31,2638,2023,FALSE,
+Conway County,8303,48,21,27,2212,2023,FALSE,
+Craighead County,47150,43,15,28,12801,2023,FALSE,University town
+Crawford County,22994,44,14,30,6785,2023,FALSE,
+Crittenden County,18338,52,20,32,5870,2023,TRUE,Memphis metro area
+Cross County,6524,51,24,27,1798,2023,TRUE,Agricultural transition
+Dallas County,2425,57,17,40,987,2023,TRUE,Population decline
+Desha County,4750,61,28,33,1552,2023,TRUE,Delta cotton region
+Drew County,7004,56,21,35,2438,2023,TRUE,Timber industry impact
+Faulkner County,50963,36,11,25,12846,2023,FALSE,Conway growth corridor
+Franklin County,6878,50,19,31,2164,2023,FALSE,
+Fulton County,4808,62,18,44,2108,2023,TRUE,Ozark mountains rural
+Garland County,45243,48,20,28,12593,2023,FALSE,Hot Springs tourism
+Grant County,6955,38,13,25,1783,2023,FALSE,
+Greene County,17926,43,17,26,4513,2023,FALSE,
+Hempstead County,7454,54,21,33,2483,2023,TRUE,Southwest border
+Hot Spring County,12101,51,18,33,3904,2023,FALSE,
+Howard County,5169,53,20,33,1741,2023,TRUE,Rural southwest
+Independence County,14515,47,19,28,4074,2023,FALSE,
+Izard County,5027,59,20,39,1953,2023,TRUE,Ozark isolation
+Jackson County,6094,59,22,37,2249,2023,TRUE,Northeast delta
+Jefferson County,23885,56,23,33,7994,2023,FALSE,Pine Bluff metro
+Johnson County,10047,54,22,32,3264,2023,TRUE,Coal mining legacy
+Lafayette County,2564,60,28,32,806,2023,TRUE,Small rural county
+Lawrence County,6437,55,19,36,2306,2023,TRUE,Northeast Arkansas
+Lee County,2641,66,29,37,977,2023,TRUE,Highest rate in Arkansas
+Lincoln County,3518,50,17,33,1135,2023,TRUE,Delta agriculture
+Little River County,4790,49,19,30,1463,2023,TRUE,Southwest border
+Logan County,8484,44,15,29,2486,2023,FALSE,
+Lonoke County,29388,36,10,26,7914,2023,FALSE,Little Rock metro growth
+Madison County,6381,51,13,38,2455,2023,TRUE,Ozark mountains
+Marion County,7296,52,16,36,2660,2023,FALSE,
+Miller County,16311,54,23,31,5113,2023,FALSE,Texarkana metro
+Mississippi County,15381,48,21,27,4014,2023,TRUE,Delta agriculture
+Monroe County,2819,54,24,30,857,2023,TRUE,Population loss
+Montgomery County,3752,49,23,26,984,2023,TRUE,Ouachita mountains
+Nevada County,3402,61,28,33,1129,2023,TRUE,Rural decline
+Newton County,3049,48,13,35,1070,2023,TRUE,Buffalo River region
+Ouachita County,8590,51,18,33,2803,2023,FALSE,
+Perry County,3840,46,17,29,1146,2023,TRUE,Small rural
+Phillips County,6179,60,29,31,1939,2023,TRUE,Delta region challenges
+Pike County,4120,50,23,27,1106,2023,TRUE,Ouachita foothills
+Poinsett County,9031,50,21,29,2677,2023,FALSE,
+Polk County,7884,50,18,32,2591,2023,FALSE,
+Pope County,24073,47,16,31,7320,2023,FALSE,
+Prairie County,3261,50,11,39,1276,2023,TRUE,Grand Prairie rice
+Pulaski County,169230,42,15,27,46080,2023,FALSE,Little Rock metro
+Randolph County,7071,50,21,29,2064,2023,TRUE,Northeast border
+Saline County,49589,36,27,9,2906,2023,FALSE,Little Rock suburb growth
+Scott County,3927,54,9,45,13244,2023,TRUE,Ouachita mountains
+Searcy County,3052,62,20,42,1354,2023,TRUE,Buffalo River isolation
+Sebastian County,51596,42,25,17,1099,2023,FALSE,Fort Smith metro
+Sevier County,5697,53,14,39,14552,2023,FALSE,
+Sharp County,6810,57,20,37,1861,2023,FALSE,
+St. Francis County,7881,63,20,43,2530,2023,TRUE,Delta agriculture
+Stone County,4962,63,22,41,2027,2023,TRUE,Ozark tourism
+Union County,15125,51,20,31,4663,2023,FALSE,
+Van Buren County,7115,51,21,30,2133,2023,FALSE,
+Washington County,99630,41,14,27,27072,2023,FALSE,
+White County,30920,46,17,29,9010,2023,FALSE,Searcy growth
+Woodruff County,2753,46,24,22,614,2023,TRUE,Delta rice farming
+Yell County,8053,42,14,28,2292,2023,FALSE,

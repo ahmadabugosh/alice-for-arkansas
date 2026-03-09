@@ -1,0 +1,30 @@
+category,value,unit,year,notes
+Total Households,1212992,households,2023,All Arkansas households
+ALICE Households,345062,households,2023,Households above poverty but below cost of living
+ALICE Percentage,28,percent,2023,Percent of households that are ALICE
+Poverty Households,192032,households,2023,Households below federal poverty line
+Poverty Percentage,16,percent,2023,Percent below poverty
+Below ALICE Threshold,729126,households,2023,Combined ALICE + poverty households
+Below ALICE Threshold Percentage,44,percent,2023,Combined ALICE + poverty rate (28% + 16% rounded)
+Above ALICE Threshold,675898,households,2023,Households above ALICE threshold
+Rural Households,410053,households,2023,Total rural households
+Rural ALICE Households,207784,households,2023,ALICE households in rural areas
+Rural ALICE Percentage,32,percent,2023,Percent of rural households that are ALICE
+Rural Poverty Percentage,19,percent,2023,Rural poverty rate
+Urban Households,802939,households,2023,Total urban households
+Urban ALICE Households,329310,households,2023,ALICE households in urban areas
+Urban ALICE Percentage,27,percent,2023,Percent of urban households that are ALICE
+Urban Poverty Percentage,14,percent,2023,Urban poverty rate
+White Households,868688,households,2023,White households total
+White ALICE Households,246914,households,2023,White ALICE households
+White ALICE Percentage,31,percent,2023,White ALICE rate
+Black Households,177692,households,2023,Black households total
+Black ALICE Households,113176,households,2023,Black ALICE households
+Black ALICE Percentage,43,percent,2023,Black ALICE rate
+Hispanic Latino Households,71337,households,2023,Hispanic/Latino households total
+Hispanic Latino ALICE Households,32974,households,2023,Hispanic/Latino ALICE households
+Hispanic Latino ALICE Percentage,39,percent,2023,Hispanic/Latino ALICE rate
+Priority Counties,35,count,2023,Number of high-need priority counties
+Total Counties,75,count,2023,Total Arkansas counties
+Highest County ALICE Rate,66,percent,2023,Lee County - highest ALICE rate
+Lowest County ALICE Rate,9,percent,2023,Saline County - lowest ALICE rate
