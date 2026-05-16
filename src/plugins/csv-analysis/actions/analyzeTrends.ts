@@ -25,7 +25,8 @@ export const analyzeTrendsAction: Action = {
     const trendKeywords = [
       'trend', 'trends', 'change', 'changes', 'historical', 'history',
       'over time', 'year', 'years', 'growth', 'decline', 'increase',
-      'decrease', 'rising', 'falling', 'pattern', 'progression'
+      'decrease', 'rising', 'falling', 'pattern', 'progression',
+      'grown', 'grow', 'growing', 'grew', 'since', 'collected', 'span'
     ];
     
     const hasTrendKeyword = trendKeywords.some(keyword => text.includes(keyword));
@@ -38,9 +39,10 @@ export const analyzeTrendsAction: Action = {
     
     const hasMetricKeyword = metricKeywords.some(keyword => text.includes(keyword));
     
-    // Check if asking about Arkansas/state data over time
-    const isTimeQuery = (text.includes('alice') || text.includes('arkansas')) && 
-                        (hasTrendKeyword || text.includes('2021') || text.includes('2022') || text.includes('2023'));
+    // Check if asking about Arkansas/state data over time (any 4-digit year counts)
+    const hasYearMention = /\b(19|20)\d{2}\b/.test(text);
+    const isTimeQuery = (text.includes('alice') || text.includes('arkansas')) &&
+                        (hasTrendKeyword || hasYearMention);
     
     // Exclude demographic queries - if it mentions specific demographics, let demographics action handle it
     const isDemographicQuery = ['black', 'white', 'hispanic', 'latino', 'asian', 'native american', 'age', 'household type', 'parent', 'race', 'ethnicity'].some(keyword => text.includes(keyword));
@@ -79,6 +81,77 @@ export const analyzeTrendsAction: Action = {
       // Sort trends by year for chronological display
       const sortedTrends = [...trends].sort((a, b) => a.year - b.year);
       
+      // "How many years of data" / data-coverage questions
+      if (text.includes('how many year') || text.includes('years of data') ||
+          text.includes('years of alice') ||
+          ((text.includes('year') || text.includes('data')) &&
+           (text.includes('collected') || text.includes('coverage') || text.includes('span')))) {
+        const years = [...new Set(trends.map(t => t.year))].sort((a, b) => a - b);
+        if (years.length > 0) {
+          const yearsResponse =
+            `According to my data set, Arkansas ALICE data covers ${years.length} ` +
+            `year${years.length === 1 ? '' : 's'}: ${years.join(', ')}.`;
+          const yearsResult = { text: yearsResponse, success: true, action: 'TRENDS_DATA_RETRIEVED' };
+          if (callback) {
+            callback(yearsResult);
+            return true;
+          }
+          return yearsResult;
+        }
+      }
+
+      // ALICE household COUNT questions (e.g. "have ALICE households grown since 2020?")
+      const asksAliceHouseholdCount =
+        text.includes('alice household') ||
+        text.includes('number of alice') ||
+        (text.includes('alice') && text.includes('household') && !text.includes('rate'));
+
+      if (asksAliceHouseholdCount) {
+        const aliceData = sortedTrends.filter(t => t.metric === 'ALICE Households');
+        if (aliceData.length >= 2) {
+          // Honor an optional "since/from/after/in YYYY" lower bound
+          const sinceMatch = text.match(/\b(?:since|from|after|in)\s+((?:19|20)\d{2})\b/);
+          const fromYear = sinceMatch ? parseInt(sinceMatch[1], 10) : null;
+
+          let windowed = fromYear ? aliceData.filter(t => t.year >= fromYear) : aliceData;
+          // If the cutoff leaves fewer than 2 points, pull in the prior point for context
+          if (windowed.length < 2) {
+            const startIdx = windowed.length
+              ? aliceData.findIndex(t => t.year === windowed[0].year)
+              : aliceData.length;
+            windowed = startIdx > 0 ? aliceData.slice(startIdx - 1) : aliceData;
+          }
+
+          const first = windowed[0];
+          const last = windowed[windowed.length - 1];
+          const diff = last.value - first.value;
+          const pct = first.value > 0
+            ? Math.round((diff / first.value) * 1000) / 10
+            : 0;
+
+          response = `According to my data set, ALICE households in Arkansas`;
+          response += fromYear ? ` since ${first.year}:\n\n` : `:\n\n`;
+          windowed.forEach(t => {
+            response += `${t.year}: ${t.value.toLocaleString()} households\n`;
+          });
+          response += `\n`;
+          if (diff > 0) {
+            response += `ALICE households grew by ${diff.toLocaleString()} (${pct}%) from ${first.year} to ${last.year}.`;
+          } else if (diff < 0) {
+            response += `ALICE households fell by ${Math.abs(diff).toLocaleString()} (${Math.abs(pct)}%) from ${first.year} to ${last.year}.`;
+          } else {
+            response += `ALICE households were unchanged from ${first.year} to ${last.year}.`;
+          }
+
+          const aliceResult = { text: response, success: true, action: 'TRENDS_DATA_RETRIEVED' };
+          if (callback) {
+            callback(aliceResult);
+            return true;
+          }
+          return aliceResult;
+        }
+      }
+
       // Check what specific trend information is being asked for
       if (text.includes('cost of living') || text.includes('inflation')) {
         // Show cost of living trends

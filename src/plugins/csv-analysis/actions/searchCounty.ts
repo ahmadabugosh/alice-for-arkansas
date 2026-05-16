@@ -212,10 +212,12 @@ export const searchCountyAction: Action = {
       
       if (!csvService) {
         console.error('*** CRITICAL: CSV service is null after initialization ***');
-        return {
+        const errResult = {
           success: false,
           text: "I cannot access my data systems right now. Please try again later."
         };
+        if (callback) callback(errResult);
+        return errResult;
       }
 
       const text = message.content.text || '';
@@ -246,9 +248,13 @@ export const searchCountyAction: Action = {
         const regex = new RegExp(`\\b${county}\\b`, 'i');
         return regex.test(text);
       });
-      // Allow county names to go through lookup table (for ambiguous names like Benton city vs Benton County)
-      // The lookup table will handle prioritization - don't skip subcounty path for county names
-      const mightBeSubcountyQuery = hasAliceTerm && hasLocationPreposition && hasWordAfterPreposition;
+      // Bare names (e.g. "Benton") can go through the lookup table so it can
+      // disambiguate Benton city vs Benton County. But when the user explicitly
+      // writes "county" (e.g. "...for Benton County"), it is a county query -
+      // do NOT divert it to the subcounty/place lookup path.
+      const hasExplicitCountyWord = /\bcounty\b/i.test(text);
+      const mightBeSubcountyQuery = hasAliceTerm && hasLocationPreposition &&
+        hasWordAfterPreposition && !hasExplicitCountyWord;
       
       const isSubCountyQuery = hasSubcountyKeyword || hasZipCode || mightBeSubcountyQuery;
       
@@ -332,10 +338,12 @@ export const searchCountyAction: Action = {
           if (zipMatch) {
             const subcountyData = csvService.findSubCounty(searchTerm);
             if (!subcountyData) {
-              return {
+              const errResult = {
                 text: `I couldn't find data for zip code "${searchTerm}". Please check the zip code or try searching for cities, towns, counties, or subcounties.`,
                 success: false
               };
+              if (callback) callback(errResult);
+              return errResult;
             }
             
             // Build zip code response (no ambiguity check needed for zip codes)
@@ -407,10 +415,12 @@ export const searchCountyAction: Action = {
               }
             }
             
-            return {
+            const errResult = {
               text: `I couldn't find data for "${searchTerm}". Please check the spelling or try searching for cities, towns, counties, subcounties, or zip codes.`,
               success: false
             };
+            if (callback) callback(errResult);
+            return errResult;
           }
           
           // Only proceed if we have locationEntries
@@ -552,10 +562,12 @@ export const searchCountyAction: Action = {
         }
         
         // If no search term extracted, return error
-        return {
+        const errResult = {
           text: `I couldn't find a location name in your query. Please specify a city, town, county, subcounty, or zip code.`,
           success: false
         };
+        if (callback) callback(errResult);
+        return errResult;
       }
       
       // Otherwise, proceed with county search
@@ -619,10 +631,12 @@ export const searchCountyAction: Action = {
         
       if (!countyName) {
         console.error('*** No county name found in query ***');
-        return {
+        const errResult = {
           text: "I need a county name to search for. Please specify which Arkansas county you'd like information about.",
           success: false
         };
+        if (callback) callback(errResult);
+        return errResult;
       }
       
       // Ensure we have data before proceeding with retry mechanism
@@ -665,10 +679,12 @@ export const searchCountyAction: Action = {
       
       if (!countyData) {
         console.error('*** County not found in CSV after retries, returning error ***');
-        return {
+        const errResult = {
           text: `I couldn't find data for "${countyName}" county. Please check the spelling or try a different county name.`,
           success: false
         };
+        if (callback) callback(errResult);
+        return errResult;
       }
       
       // Add validation to ensure we're returning CSV data
@@ -725,8 +741,9 @@ export const searchCountyAction: Action = {
         success: false,
         text: "I cannot access my data systems right now. Please try again later."
       };
-      
+
       console.error('*** Error result being returned:', JSON.stringify(errorResult));
+      if (callback) callback(errorResult);
       return errorResult;
     }
   },

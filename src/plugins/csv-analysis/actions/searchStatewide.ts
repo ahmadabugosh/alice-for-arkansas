@@ -15,7 +15,8 @@ export const searchStatewideAction: Action = {
   ],
   description: 'Search statewide Arkansas ALICE data and statistics',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    const text = message.content.text?.toLowerCase() || '';
+    // Normalize hyphens so "single-parent" matches "single parent", etc.
+    const text = (message.content.text?.toLowerCase() || '').replace(/[-–—]/g, ' ');
     console.error('\n*** STATEWIDE ACTION VALIDATION ***');
     console.error('*** Input text:', text);
     
@@ -40,9 +41,21 @@ export const searchStatewideAction: Action = {
       (text.includes('alice') || text.includes('household')) &&
       (text.includes('rate') || text.includes('percentage') || text.includes('how many'));
     
-    // Exclude demographic or trend queries - let those actions handle them
-    const isDemographicQuery = ['black', 'white', 'hispanic', 'latino', 'asian', 'native american', 'age', 'race', 'ethnicity'].some(keyword => text.includes(keyword));
-    const isTrendQuery = ['trend', 'change', 'over time', 'historical', 'year over year'].some(keyword => text.includes(keyword));
+    // Exclude demographic queries (race, ethnicity, age, household type) - let the demographics action handle them
+    const isDemographicQuery = [
+      'black', 'white', 'hispanic', 'latino', 'asian', 'native american',
+      'biracial', 'multiracial', 'race', 'ethnicity', 'ethnic', 'age',
+      'household type', 'single parent', 'two parent', 'single adult', 'parent'
+    ].some(keyword => text.includes(keyword));
+
+    // Exclude trend / change-over-time queries - let the trends action handle them
+    const isTrendQuery = [
+      'trend', 'change', 'over time', 'historical', 'history', 'year over year',
+      'grown', 'grow', 'growing', 'grew', 'growth', 'decline', 'declined',
+      'increase', 'increased', 'decrease', 'decreased', 'rising', 'falling',
+      'since', 'year', 'years'
+    ].some(keyword => text.includes(keyword));
+
     const isCountyQuery = text.includes('county') || text.includes('counties');
     
     const result = (hasStatewideKeyword || isGeneralArkansasAlice || (isArkansasQuery && text.includes('alice'))) && 

@@ -22,7 +22,8 @@ export const searchDemographicsAction: Action = {
   ],
   description: 'Search Arkansas demographic data by race, ethnicity, age, and household type',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
-    const text = message.content.text?.toLowerCase() || '';
+    // Normalize hyphens so "single-parent"/"two-parent" match "single parent"/"two parent".
+    const text = (message.content.text?.toLowerCase() || '').replace(/[-–—]/g, ' ');
     console.error('\n*** DEMOGRAPHICS ACTION VALIDATION ***');
     console.error('*** Input text:', text);
     
@@ -114,7 +115,45 @@ export const searchDemographicsAction: Action = {
         if (callback) callback(errorResult);
         return errorResult;
       }
-      
+
+      // Demographic breakdowns exist at the STATEWIDE level only. If the user
+      // named a specific county, say so rather than passing off statewide
+      // numbers as county-level figures. Require a location cue ("in X",
+      // "X County") so a race named "White" isn't mistaken for White County.
+      const demoCountyList = [
+        'ashley', 'baxter', 'benton', 'boone', 'bradley', 'calhoun', 'carroll', 'chicot', 'clark',
+        'clay', 'cleburne', 'cleveland', 'columbia', 'conway', 'craighead', 'crawford', 'crittenden', 'cross',
+        'dallas', 'desha', 'drew', 'faulkner', 'franklin', 'fulton', 'garland', 'grant', 'greene', 'hempstead',
+        'hot spring', 'howard', 'independence', 'izard', 'jackson', 'jefferson', 'johnson', 'lafayette',
+        'lawrence', 'lee', 'lincoln', 'little river', 'logan', 'lonoke', 'madison', 'marion', 'miller',
+        'mississippi', 'monroe', 'montgomery', 'nevada', 'newton', 'ouachita', 'perry', 'phillips', 'pike',
+        'poinsett', 'polk', 'pope', 'prairie', 'pulaski', 'randolph', 'saline', 'scott', 'searcy', 'sebastian',
+        'sevier', 'sharp', 'st. francis', 'stone', 'union', 'van buren', 'washington', 'white', 'woodruff', 'yell'
+      ];
+      const lowerForCounty = text.toLowerCase().replace(/[-–—]/g, ' ');
+      const namedCounty = demoCountyList.find(c => {
+        const escaped = c.replace(/\./g, '\\.');
+        // "in/for/within <county>" - but not "for White households" (race, not
+        // White County), so block a demographic noun right after the name.
+        const demoNoun = '(?:households?|individuals?|people|persons?|families|family|residents?)';
+        return new RegExp(
+          `\\b(?:in|for|within)\\s+${escaped}\\b(?!\\s+${demoNoun})|\\b${escaped}\\s+count(?:y|ies)\\b`,
+          'i'
+        ).test(lowerForCounty);
+      });
+      if (namedCounty) {
+        const prettyCounty = namedCounty.replace(/\b\w/g, ch => ch.toUpperCase()) + ' County';
+        const note =
+          `My data set tracks demographic breakdowns - race, ethnicity, age, and household type - ` +
+          `at the statewide level only, not by county. I don't have demographic figures specific to ${prettyCounty}.\n\n` +
+          `I can help two ways:\n` +
+          `- The statewide demographic breakdown (e.g. "ALICE rates by race in Arkansas")\n` +
+          `- Overall ALICE figures for ${prettyCounty} (e.g. "ALICE data for ${prettyCounty}")`;
+        const noteResult = { text: note, success: true, action: 'DEMOGRAPHICS_DATA_RETRIEVED' };
+        if (callback) { callback(noteResult); return true; }
+        return noteResult;
+      }
+
       let response = "";
       
       // Check if asking for specific demographic breakdown

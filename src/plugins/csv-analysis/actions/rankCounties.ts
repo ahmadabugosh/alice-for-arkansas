@@ -85,9 +85,13 @@ export const rankCountiesAction: Action = {
       wantsPercentage = !wantsCount; // Default to percentage
     }
     
-    // Determine location scope
-    const wantsSubcounty = text.includes('city') || text.includes('cities') || 
-                          text.includes('town') || text.includes('towns');
+    // Determine location scope: county (default), city/place, or zip code
+    const wantsZipCode = text.includes('zip code') || text.includes('zipcode') ||
+                         text.includes('zip codes') || /\bzip\b/.test(text);
+    const wantsSubcounty = wantsZipCode ||
+                          text.includes('city') || text.includes('cities') ||
+                          text.includes('town') || text.includes('towns') ||
+                          text.includes('place');
     const wantsCounty = !wantsSubcounty; // Default to counties
     
     // Determine sort direction
@@ -115,10 +119,12 @@ export const rankCountiesAction: Action = {
       const allCounties = csvService.getAllCounties();
       
       if (allCounties.length === 0) {
-        return {
+        const errResult = {
           text: "I couldn't access the county data. Please try again.",
           success: false
         };
+        if (callback) { callback(errResult); return true; }
+        return errResult;
       }
       
       locationScope = 'counties';
@@ -191,17 +197,24 @@ export const rankCountiesAction: Action = {
         results.sort((a, b) => isDescending ? b.count - a.count : a.count - b.count);
       }
     } else {
-      // Handle subcounty (cities/towns)
-      const allSubcounty = csvService.getAllSubCounty();
-      
+      // Handle cities/places or zip codes. getAllSubCounty() mixes Place,
+      // Sub_County and Zip_Code rows, so filter to the requested type. Also
+      // drop very small entries whose rates would be statistical noise.
+      const targetType = wantsZipCode ? 'Zip_Code' : 'Place';
+      const MIN_HOUSEHOLDS = 500;
+      const allSubcounty = csvService.getAllSubCounty()
+        .filter(s => s.type === targetType && s.households >= MIN_HOUSEHOLDS);
+
       if (allSubcounty.length === 0) {
-        return {
+        const errResult = {
           text: "I couldn't access the subcounty data. Please try again.",
           success: false
         };
+        if (callback) { callback(errResult); return true; }
+        return errResult;
       }
-      
-      locationScope = 'cities and towns';
+
+      locationScope = wantsZipCode ? 'zip codes' : 'cities and towns';
       
       if (isAlice && wantsPercentage) {
         metricName = 'ALICE rate';

@@ -53,6 +53,29 @@ The ALICE Threshold is **NOT a one-size-fits-all number**. It varies by:
 
 *Note: Exact amounts vary significantly by county due to differences in housing costs, childcare availability, and other factors.*
 
+## The ALICE Stability Budget (Household Stability Budget)
+
+### What is the ALICE Stability Budget?
+
+The **ALICE Stability Budget**, also called the **Household Stability Budget**, estimates the income a household needs not just to *survive*, but to be financially *stable* over the long term. It is **higher than the Household Survival Budget (the ALICE Threshold)**.
+
+While the Survival Budget covers only the bare minimum to live and work today, the Stability Budget adds the cost of:
+
+1. **Savings** - A savings category (often estimated at about 10% of the budget) to handle emergencies and build assets
+2. **More realistic essentials** - Sustainable costs for housing, childcare, healthcare, and other necessities
+3. **Long-term needs** - Modest room for planning ahead rather than living paycheck to paycheck
+
+### Survival Budget vs. Stability Budget
+
+- **Household Survival Budget (ALICE Threshold)**: The bare-minimum cost of basic necessities - housing, childcare, food, transportation, healthcare, technology, and taxes. A household below this is counted as ALICE or in poverty.
+- **Household Stability Budget**: The cost of a sustainable, financially secure household, including savings. It is meaningfully above the Survival Budget.
+
+A household can be **above** the ALICE Threshold (so not counted as ALICE) yet still fall **below** the Stability Budget - meaning they can cover today's costs but have little cushion against a financial shock.
+
+### Why the Stability Budget Matters
+
+The Stability Budget shows that simply rising above the ALICE Threshold does not mean a family is financially secure. It highlights the gap between *getting by* and *getting ahead*, and helps set goals for wages and policies that move households toward lasting stability.
+
 ## The Federal Poverty Level (FPL)
 
 ### What is the Federal Poverty Level?
