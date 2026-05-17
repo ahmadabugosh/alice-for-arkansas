@@ -22,9 +22,11 @@ export const searchEmploymentAction: Action = {
     const text = message.content.text?.toLowerCase() || '';
     
     // Check for employment-related keywords
+    // Note: no bare 'work' - it substring-matches unrelated words and, more
+    // importantly, hijacks "How does ALICE work?" (a concept question).
     const employmentKeywords = [
       'employment', 'occupation', 'job', 'worker', 'wage', 'salary',
-      'sector', 'industry', 'career', 'work', 'profession'
+      'sector', 'industry', 'career', 'profession'
     ];
     
     const hasEmploymentKeyword = employmentKeywords.some(keyword => 

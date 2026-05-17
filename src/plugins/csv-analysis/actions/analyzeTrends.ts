@@ -168,6 +168,15 @@ export const analyzeTrendsAction: Action = {
             }
             response += "\n";
           });
+        } else {
+          const msg =
+            'My ALICE trend data tracks household counts over time (2010-2023) - ' +
+            'ALICE, poverty, above-ALICE, and total households. It does not include ' +
+            'a cost-of-living index, so I cannot chart that. I can show how ALICE ' +
+            'household counts have changed over the years instead.';
+          const noDataResult = { text: msg, success: true, action: 'TRENDS_DATA_RETRIEVED' };
+          if (callback) { callback(noDataResult); return true; }
+          return noDataResult;
         }
       } else if (text.includes('income') || text.includes('median') || text.includes('household income')) {
         // Show income trends
@@ -184,6 +193,15 @@ export const analyzeTrendsAction: Action = {
             }
             response += "\n";
           });
+        } else {
+          const msg =
+            'My ALICE trend data tracks household counts over time (2010-2023) - ' +
+            'ALICE, poverty, above-ALICE, and total households. It does not include ' +
+            'median household income figures, so I cannot chart that. I can show how ' +
+            'ALICE household counts have changed over the years instead.';
+          const noDataResult = { text: msg, success: true, action: 'TRENDS_DATA_RETRIEVED' };
+          if (callback) { callback(noDataResult); return true; }
+          return noDataResult;
         }
       } else if (text.includes('statewide') || text.includes('alice rate') || text.includes('arkansas rate')) {
       // Show statewide trends
@@ -204,6 +222,15 @@ export const analyzeTrendsAction: Action = {
           response += `${trend.metric} (${trend.year}): ${trend.value}${trend.unit}\n`;
         });
         response += "\n";
+      } else {
+        const msg =
+          'My ALICE trend data tracks household counts over time (2010-2023) - ' +
+          'ALICE, poverty, above-ALICE, and total households - not employment ' +
+          'figures by year. For current employment data, ask about ALICE rates ' +
+          'by occupation or sector instead.';
+        const noDataResult = { text: msg, success: true, action: 'TRENDS_DATA_RETRIEVED' };
+        if (callback) { callback(noDataResult); return true; }
+        return noDataResult;
       }
     } else {
       // Show all trends grouped by metric

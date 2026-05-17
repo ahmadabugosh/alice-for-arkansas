@@ -8,17 +8,16 @@ export const compareCountiesAction: Action = {
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     const text = (message.content.text?.toLowerCase() || '').replace(/[-–—]/g, ' ');
 
-    // Explicit comparison phrasing
-    const hasCompareWord =
-      (text.includes('compare') && text.includes('count')) ||
+    // Explicit comparison verbs
+    const hasCompareVerb =
+      text.includes('compare') ||
       text.includes('comparison') ||
       text.includes('versus') ||
       text.includes(' vs ') || text.includes(' vs.') ||
       text.includes('difference between');
-    if (hasCompareWord) return true;
 
-    // Implicit comparison: two or more county names plus a comparative word,
-    // e.g. "Is the ALICE threshold higher in Benton County than Washington County?"
+    // County names, used both for explicit phrasing ("Compare X and Y", with or
+    // without the word "county") and implicit comparisons ("Is X higher than Y?").
     const arkansasCounties = [
       'arkansas', 'ashley', 'baxter', 'benton', 'boone', 'bradley', 'calhoun', 'carroll', 'chicot', 'clark',
       'clay', 'cleburne', 'cleveland', 'columbia', 'conway', 'craighead', 'crawford', 'crittenden', 'cross',
@@ -42,6 +41,14 @@ export const compareCountiesAction: Action = {
       text.includes('more') || text.includes('less') ||
       text.includes('better') || text.includes('worse');
 
+    // Explicit comparison: a compare verb paired with either the word "count(y)"
+    // or two recognised county names ("Compare Washington and Union").
+    if (hasCompareVerb && (text.includes('count') || namesFound.length >= 2)) {
+      return true;
+    }
+
+    // Implicit comparison: two county names plus a comparative word,
+    // e.g. "Is the ALICE threshold higher in Benton County than Washington County?"
     return namesFound.length >= 2 && hasComparative;
   },
   handler: async (runtime: IAgentRuntime, message: Memory, state: State, options: any, callback?: Function) => {

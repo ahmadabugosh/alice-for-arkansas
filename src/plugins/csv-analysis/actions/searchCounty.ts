@@ -110,7 +110,9 @@ export const searchCountyAction: Action = {
                           text.includes('rank') || text.includes('top') || text.includes('bottom') ||
                           text.includes('worst') || text.includes('best') ||
                           text.includes('largest') || text.includes('smallest') ||
-                          text.includes('greatest') || text.includes('more') || text.includes('less');
+                          text.includes('greatest');
+    // Note: bare 'more'/'less' excluded so "tell me more about <county>" is not
+    // misclassified as a ranking query (kept in sync with rankCounties).
     
     // DEBUG: Log all conditions
     console.error('*** VALIDATION DEBUG ***');

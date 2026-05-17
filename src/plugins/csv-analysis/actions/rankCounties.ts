@@ -34,8 +34,10 @@ export const rankCountiesAction: Action = {
                           text.includes('rank') || text.includes('top') || text.includes('bottom') ||
                           text.includes('worst') || text.includes('best') ||
                           text.includes('largest') || text.includes('smallest') ||
-                          text.includes('greatest') || text.includes('more') || text.includes('less') ||
+                          text.includes('greatest') ||
                           (text.includes('percentage') && text.includes('county'));
+                          // Note: bare 'more'/'less' deliberately excluded - they
+                          // hijack phrases like "tell me more about <county>".
     
     // Check for ALICE-related terms
     const hasAliceTerms = text.includes('alice') || text.includes('threshold') || 
