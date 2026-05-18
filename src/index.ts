@@ -4,6 +4,13 @@ import { character } from './character.ts';
 import { ProjectStarterTestSuite } from './__tests__/e2e/project-starter.e2e';
 import { CsvDataService } from './plugins/csv-analysis/services/csvDataService';
 
+/**
+ * Initializes the agent character on runtime startup.
+ *
+ * @param params - Initialization parameters.
+ * @param params.runtime - The active ElizaOS agent runtime.
+ * @returns The configured agent character.
+ */
 const initCharacter = ({ runtime }: { runtime: IAgentRuntime }) => {
   logger.info('Initializing character');
   return character;
