@@ -1,5 +1,73 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { CsvDataService } from '../services/csvDataService';
+import { CsvDataService, EmploymentData } from '../services/csvDataService';
+
+const SPECIFIC_UNAVAILABLE_CATEGORIES = [
+  'construction',
+  'construction trades',
+  'warehouse',
+  'landscaping',
+  'hotel',
+  'farm',
+  'farm workers',
+  'security',
+  'truck driver',
+  'truck drivers',
+  'maintenance'
+];
+
+const OCCUPATION_ALIASES: Record<string, string[]> = {
+  'Delivery Driver/Sales Workers': ['delivery driver', 'delivery drivers'],
+  'Fast Food and Counter Workers': ['fast food', 'counter workers', 'food service'],
+  'General and Operations Managers': ['operations managers', 'general managers'],
+  'Cashiers': ['cashier'],
+  'Retail Salespersons': ['retail', 'retail sales'],
+  'Registered Nurses': ['registered nurse', 'nurses', 'nursing'],
+  'Stockers and Order Fillers': ['stockers', 'order fillers'],
+  'Office Clerks': ['office clerk'],
+  'Laborers and Movers': ['laborers', 'movers'],
+  'Janitors and Building Cleaners': ['janitor', 'janitors', 'building cleaners'],
+  'Cooks': ['cook'],
+  'Customer Service Representatives': ['customer service'],
+  'Orderlies and Psychiatric Aides': ['orderlies', 'psychiatric aides'],
+  'Elementary and Middle School Teachers': ['elementary teachers', 'middle school teachers', 'teaching'],
+  'Nursing Assistants': ['nursing assistants', 'nursing assistant'],
+  'Waiters and Waitresses': ['waiters', 'waitresses', 'server', 'servers'],
+  'Personal Care Aides': ['personal care', 'personal care aides'],
+  'Sales Representatives Wholesale and Manufacturing': ['sales representatives', 'wholesale', 'manufacturing sales'],
+  'Administrative Support Supervisors': ['administrative support', 'support supervisors'],
+  'Secondary School Teachers': ['secondary teachers', 'high school teachers']
+};
+
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function includesPhrase(text: string, phrase: string): boolean {
+  const normalizedText = ` ${normalizeText(text)} `;
+  const normalizedPhrase = normalizeText(phrase);
+  return normalizedPhrase.length > 0 && normalizedText.includes(` ${normalizedPhrase} `);
+}
+
+function findEmploymentByQuestion(text: string, employmentData: EmploymentData[]): EmploymentData | undefined {
+  return employmentData.find((emp) => {
+    const aliases = [emp.occupation, ...(OCCUPATION_ALIASES[emp.occupation] || [])];
+    return aliases.some((alias) => includesPhrase(text, alias));
+  });
+}
+
+function findUnavailableCategory(text: string): string | undefined {
+  return SPECIFIC_UNAVAILABLE_CATEGORIES.find((category) => includesPhrase(text, category));
+}
+
+function formatAvailableCategories(employmentData: EmploymentData[]): string {
+  return employmentData
+    .map((emp) => `- ${emp.occupation}`)
+    .join('\n');
+}
 
 export const searchEmploymentAction: Action = {
   name: 'Searching employment data...',
@@ -75,8 +143,19 @@ export const searchEmploymentAction: Action = {
       
       let response = "";
       
-      // Check if asking for highest/lowest ALICE rates
-      if (text.includes('highest') && (text.includes('alice') || text.includes('rate'))) {
+      const matchedEmployment = findEmploymentByQuestion(text, employmentData);
+      const unavailableCategory = findUnavailableCategory(text);
+
+      if (matchedEmployment) {
+        response = `According to my data set, Arkansas employment data for ${matchedEmployment.occupation} in ${matchedEmployment.year}:\n\n`;
+        response += `ALICE workers: ${matchedEmployment.alice_workers.toLocaleString()} of ${matchedEmployment.total_workers.toLocaleString()} workers (${matchedEmployment.alice_percentage}%)\n`;
+        response += `Median wage: $${matchedEmployment.median_wage.toFixed(2)} per hour`;
+      } else if (unavailableCategory) {
+        response = `I don't currently have ALICE employment data for ${unavailableCategory}. `;
+        response += `I do have employment data for these categories:\n\n`;
+        response += formatAvailableCategories(employmentData);
+        response += `\n\nWould you like more stats on any of them?`;
+      } else if (text.includes('highest') && (text.includes('alice') || text.includes('rate'))) {
         const sortedByAlice = [...employmentData].sort((a, b) => b.alice_percentage - a.alice_percentage);
         const top5 = sortedByAlice.slice(0, 5);
         
