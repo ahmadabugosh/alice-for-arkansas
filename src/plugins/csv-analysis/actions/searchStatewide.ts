@@ -45,7 +45,8 @@ export const searchStatewideAction: Action = {
     const isDemographicQuery = [
       'black', 'white', 'hispanic', 'latino', 'asian', 'native american',
       'biracial', 'multiracial', 'race', 'ethnicity', 'ethnic', 'age',
-      'household type', 'single parent', 'two parent', 'single adult', 'parent'
+      'household type', 'single parent', 'two parent', 'single adult', 'parent',
+      'gender', 'female', 'male', 'woman', 'women', 'man', 'men'
     ].some(keyword => text.includes(keyword));
 
     // Exclude trend / change-over-time queries - let the trends action handle them

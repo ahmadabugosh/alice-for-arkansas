@@ -1,5 +1,56 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { CsvDataService } from '../services/csvDataService';
+import { CsvDataService, DemographicData } from '../services/csvDataService';
+
+function normalizeText(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[-–—]/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function isGenderRelatedQuery(text: string): boolean {
+  return /\b(?:gender|female|male|woman|women|man|men)\b/.test(normalizeText(text));
+}
+
+function normalizeCategory(category: string): string {
+  return category.replace(/\s+/g, ' ').trim();
+}
+
+function getGenderRelatedHouseholdData(demographicData: DemographicData[]): DemographicData[] {
+  const categories = [
+    'Couples Married With Children',
+    'Single-Female-Headed With Children',
+    'Single-Male-Headed With Children'
+  ];
+
+  return categories
+    .map((category) => demographicData.find((demo) => normalizeCategory(demo.category) === category))
+    .filter((demo): demo is DemographicData => Boolean(demo));
+}
+
+function formatGenderRelatedHouseholdData(demographicData: DemographicData[]): string {
+  const genderHouseholdData = getGenderRelatedHouseholdData(demographicData);
+
+  let response =
+    'The only gender-related ALICE data I have for Arkansas is the Married, Single-Female-Headed, and Single-Male-Headed household breakdown for families with children.\n\n';
+  response += 'According to my data set, here is that breakdown:\n\n';
+
+  genderHouseholdData.forEach((demo) => {
+    const combinedThreshold = demo.alice_percentage + demo.poverty_percent;
+    response += `${normalizeCategory(demo.category)}:\n`;
+    response += `  Total households: ${demo.total_households.toLocaleString()}\n`;
+    response += `  ALICE households: ${demo.alice_percentage}% (${demo.alice_households.toLocaleString()} households)\n`;
+    response += `  Households in poverty: ${demo.poverty_percent}%\n`;
+    response += `  Total below ALICE threshold: ${combinedThreshold}%\n\n`;
+  });
+
+  response +=
+    'Note: These figures describe household structure among families with children. They are not a full statewide gender breakdown for all ALICE households.';
+
+  return response;
+}
 
 export const searchDemographicsAction: Action = {
   name: 'Searching demographic data...',
@@ -18,7 +69,12 @@ export const searchDemographicsAction: Action = {
     'age groups',
     'single parent',
     'two parent',
-    'household type'
+    'household type',
+    'gender',
+    'female',
+    'male',
+    'women',
+    'men'
   ],
   description: 'Search Arkansas demographic data by race, ethnicity, age, and household type',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
@@ -60,15 +116,18 @@ export const searchDemographicsAction: Action = {
     const hasCategoryKeyword = categoryKeywords.some(keyword => 
       text.includes(keyword)
     );
+
+    const hasGenderKeyword = isGenderRelatedQuery(text);
     
     // Check for ALICE rate queries about demographics
     const hasAliceDemographicQuery = text.includes('alice') && 
       (text.includes('rate') || text.includes('percentage') || text.includes('breakdown')) &&
-      (hasDemographicKeyword || hasCategoryKeyword);
+      (hasDemographicKeyword || hasCategoryKeyword || hasGenderKeyword);
     
-    const result = hasDemographicKeyword || hasCategoryKeyword || hasAliceDemographicQuery;
+    const result = hasDemographicKeyword || hasCategoryKeyword || hasGenderKeyword || hasAliceDemographicQuery;
     console.error('*** Demographic keyword:', hasDemographicKeyword);
     console.error('*** Category keyword:', hasCategoryKeyword);
+    console.error('*** Gender keyword:', hasGenderKeyword);
     console.error('*** ALICE demographic query:', hasAliceDemographicQuery);
     console.error('*** VALIDATION RESULT:', result ? 'WILL TRIGGER' : 'WILL NOT TRIGGER');
     console.error('*** END DEMOGRAPHICS VALIDATION ***\n');
@@ -158,12 +217,15 @@ export const searchDemographicsAction: Action = {
       
       // Check if asking for specific demographic breakdown
       const lowerText = text.toLowerCase();
+      const isGenderQuery = isGenderRelatedQuery(text);
       
       // Check if asking about specific race/ethnicity
       const raceKeywords = ['white', 'black', 'hispanic', 'latino', 'asian', 'native american', 'race', 'ethnic'];
       const isRaceQuery = raceKeywords.some(keyword => lowerText.includes(keyword));
       
-      if (isRaceQuery) {
+      if (isGenderQuery) {
+        response = formatGenderRelatedHouseholdData(demographicData);
+      } else if (isRaceQuery) {
         const raceData = demographicData.filter(d => {
           const category = d.category.trim();
           return ['White', 'Black', 'Hispanic/Latino', 'Asian', 'Native American', 'Two or More Races'].includes(category);
