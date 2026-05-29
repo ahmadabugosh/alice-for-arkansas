@@ -223,6 +223,8 @@ export const searchCountyAction: Action = {
       }
 
       const text = message.content.text || '';
+      const isCountyThresholdOrBudgetQuery =
+        /\b(?:threshold|survival budget|stability budget|household survival budget|household stability budget)\b/i.test(text);
       console.error('*** Processing query:', text);
       
       // Check if this is a subcounty query (zip code, township, place)
@@ -702,12 +704,22 @@ export const searchCountyAction: Action = {
       const combinedThreshold = countyData.alice_percentage + countyData.poverty;
       
       let response = `According to my data set, ${countyData.county}:\n\n`;
-      response += `ALICE households: ${countyData.alice_percentage}% (${aliceHouseholds.toLocaleString()} households)\n`;
-      response += `Households in poverty: ${countyData.poverty}%\n`;
-      response += `Total below ALICE threshold: ${combinedThreshold}% (ALICE + poverty combined)\n`;
-      response += `Total households: ${countyData.households.toLocaleString()}\n`;
-      response += `Year: ${countyData.year}\n\n`;
-      response += `This means ${aliceHouseholds.toLocaleString()} households in ${countyData.county} are specifically ALICE (above poverty but below the cost of basic needs).`;
+      if (isCountyThresholdOrBudgetQuery) {
+        response += `I don't have county-level ALICE Threshold, Household Survival Budget, or Stability Budget dollar amounts in my dataset.\n\n`;
+        response += `What I do have for ${countyData.county} is the below-ALICE-threshold rate:\n`;
+        response += `Total below ALICE threshold: ${combinedThreshold}% (ALICE + poverty combined)\n`;
+        response += `ALICE households: ${countyData.alice_percentage}% (${aliceHouseholds.toLocaleString()} households)\n`;
+        response += `Households in poverty: ${countyData.poverty}%\n`;
+        response += `Total households: ${countyData.households.toLocaleString()}\n`;
+        response += `Year: ${countyData.year}`;
+      } else {
+        response += `ALICE households: ${countyData.alice_percentage}% (${aliceHouseholds.toLocaleString()} households)\n`;
+        response += `Households in poverty: ${countyData.poverty}%\n`;
+        response += `Total below ALICE threshold: ${combinedThreshold}% (ALICE + poverty combined)\n`;
+        response += `Total households: ${countyData.households.toLocaleString()}\n`;
+        response += `Year: ${countyData.year}\n\n`;
+        response += `This means ${aliceHouseholds.toLocaleString()} households in ${countyData.county} are specifically ALICE (above poverty but below the cost of basic needs).`;
+      }
       
       console.error('*** Returning successful response:', response);
       

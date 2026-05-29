@@ -199,13 +199,28 @@ export const rankCountiesAction: Action = {
         results.sort((a, b) => isDescending ? b.count - a.count : a.count - b.count);
       }
     } else {
-      // Handle cities/places or zip codes. getAllSubCounty() mixes Place,
-      // Sub_County and Zip_Code rows, so filter to the requested type. Also
-      // drop very small entries whose rates would be statistical noise.
+      // Handle cities/towns/places or zip codes. getAllSubCounty() mixes
+      // Place, Sub_County and Zip_Code rows, so filter to the requested type.
+      // Also drop very small entries whose rates would be statistical noise.
       const targetType = wantsZipCode ? 'Zip_Code' : 'Place';
       const MIN_HOUSEHOLDS = 500;
+      const wantsCityOnly = !wantsZipCode && (text.includes('city') || text.includes('cities'));
+      const wantsTownOnly = !wantsZipCode && !wantsCityOnly && (text.includes('town') || text.includes('towns'));
       const allSubcounty = csvService.getAllSubCounty()
-        .filter(s => s.type === targetType && s.households >= MIN_HOUSEHOLDS);
+        .filter(s => {
+          if (s.type !== targetType || s.households < MIN_HOUSEHOLDS) {
+            return false;
+          }
+
+          const label = s.geo_display_label.toLowerCase();
+          if (wantsCityOnly) {
+            return label.includes(' city,');
+          }
+          if (wantsTownOnly) {
+            return label.includes(' town,');
+          }
+          return true;
+        });
 
       if (allSubcounty.length === 0) {
         const errResult = {
@@ -216,7 +231,7 @@ export const rankCountiesAction: Action = {
         return errResult;
       }
 
-      locationScope = wantsZipCode ? 'zip codes' : 'cities and towns';
+      locationScope = wantsZipCode ? 'zip codes' : wantsCityOnly ? 'cities' : wantsTownOnly ? 'towns' : 'places';
       
       if (isAlice && wantsPercentage) {
         metricName = 'ALICE rate';

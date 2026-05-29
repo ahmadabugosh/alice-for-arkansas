@@ -118,6 +118,30 @@ export const compareCountiesAction: Action = {
       if (callback) callback(result);
       return result;
     }
+
+    const isYesNoComparison = /^\s*(?:is|are|does|do|did)\b/i.test(text);
+    const isThresholdComparison = lowerText.includes('threshold') || lowerText.includes('below alice');
+
+    if (isYesNoComparison && isThresholdComparison && counties.length >= 2) {
+      const [firstCounty, secondCounty] = counties;
+      const firstRate = firstCounty!.below_alice_percentage;
+      const secondRate = secondCounty!.below_alice_percentage;
+      const answer = firstRate > secondRate ? 'Yes' : 'No';
+      const relationship = firstRate > secondRate ? 'higher' : firstRate < secondRate ? 'lower' : 'the same';
+      const diff = Math.abs(firstRate - secondRate);
+
+      let response =
+        `${answer}. Using the county below-ALICE-threshold rate in my dataset, ${firstCounty!.county} is ${relationship} than ${secondCounty!.county}.\n\n`;
+      response += `${firstCounty!.county}: ${firstRate}% below the ALICE threshold\n`;
+      response += `${secondCounty!.county}: ${secondRate}% below the ALICE threshold`;
+      if (diff > 0) {
+        response += `\nDifference: ${diff} percentage points`;
+      }
+
+      const result = { text: response, success: true };
+      if (callback) callback(result);
+      return result;
+    }
     
     // Build detailed comparison response
     let response = `County Comparison Analysis\n\n`;
@@ -129,9 +153,6 @@ export const compareCountiesAction: Action = {
       response += `ALICE households: ${county!.alice_percentage}% (${county!.alice_housholds.toLocaleString()} households)\n`;
       response += `Poverty rate: ${county!.poverty}%\n`;
       response += `Below ALICE threshold: ${county!.below_alice_percentage}%\n`;
-      if (county!.priority) {
-        response += `Priority County: Yes\n`;
-      }
       response += `\n`;
     });
     
