@@ -709,14 +709,6 @@ export const searchCountyAction: Action = {
       response += `Year: ${countyData.year}\n\n`;
       response += `This means ${aliceHouseholds.toLocaleString()} households in ${countyData.county} are specifically ALICE (above poverty but below the cost of basic needs).`;
       
-      if (countyData.priority) {
-        response += '\n\n🎯 This is a priority tracking county.';
-      }
-      
-      if (countyData.notes) {
-        response += `\n\n📝 Note: ${countyData.notes}`;
-      }
-      
       console.error('*** Returning successful response:', response);
       
       // Always return the actual data immediately - no "looking up" messages
@@ -757,7 +749,7 @@ export const searchCountyAction: Action = {
       },
       {
         name: "Alice",
-        content: { text: "According to my data set, Johnson County has 10,047 households with 54% below the ALICE threshold in 2023. This is a priority tracking county." }
+        content: { text: "According to my data set, Johnson County has 10,047 households with 54% below the ALICE threshold in 2023." }
       }
     ],
     [
@@ -767,7 +759,7 @@ export const searchCountyAction: Action = {
       },
       {
         name: "Alice", 
-        content: { text: "According to my data set, Lee County has 2,641 households with 66% below the ALICE threshold in 2023. This is a priority tracking county. Note: Highest rate in Arkansas" }
+        content: { text: "According to my data set, Lee County has 2,641 households with 66% below the ALICE threshold in 2023." }
       }
     ]
   ]
