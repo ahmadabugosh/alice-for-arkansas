@@ -3,7 +3,7 @@ import { CsvDataService } from '../services/csvDataService';
 
 export const rankCountiesAction: Action = {
   name: 'Ranking locations...',
-  similes: ['highest', 'lowest', 'most', 'fewest', 'fewer', 'least', 'minimum', 'maximum', 'rank counties', 'top counties', 'bottom counties', 'worst counties', 'best counties', 'largest', 'smallest', 'greatest'],
+  similes: ['highest', 'lowest', 'most', 'fewest', 'fewer', 'least', 'minimum', 'maximum', 'rank counties', 'top counties', 'bottom counties', 'worst counties', 'best counties', 'largest', 'biggest', 'smallest', 'greatest'],
   description: 'Rank Arkansas counties and cities by ALICE, threshold, or poverty metrics',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     const text = message.content.text?.toLowerCase() || '';
@@ -33,7 +33,7 @@ export const rankCountiesAction: Action = {
                           text.includes('least') || text.includes('minimum') || text.includes('maximum') ||
                           text.includes('rank') || text.includes('top') || text.includes('bottom') ||
                           text.includes('worst') || text.includes('best') ||
-                          text.includes('largest') || text.includes('smallest') ||
+                          text.includes('largest') || text.includes('biggest') || text.includes('smallest') ||
                           text.includes('greatest') ||
                           (text.includes('percentage') && text.includes('county'));
                           // Note: bare 'more'/'less' deliberately excluded - they
@@ -42,10 +42,13 @@ export const rankCountiesAction: Action = {
     // Check for ALICE-related terms
     const hasAliceTerms = text.includes('alice') || text.includes('threshold') || 
                          text.includes('poverty') || text.includes('poor');
+    const isLocationSizeQuery =
+      (text.includes('city') || text.includes('cities') || text.includes('town') || text.includes('towns') || text.includes('place')) &&
+      (text.includes('largest') || text.includes('biggest') || text.includes('smallest'));
     
     console.error('*** hasRankKeyword:', hasRankKeyword, 'hasAliceTerms:', hasAliceTerms);
     
-    const result = hasRankKeyword && hasAliceTerms;
+    const result = hasRankKeyword && (hasAliceTerms || isLocationSizeQuery);
     console.error('*** RANK COUNTIES VALIDATION RESULT:', result ? 'TRUE - WILL TRIGGER' : 'FALSE - WILL NOT TRIGGER');
     
     return result;
@@ -60,6 +63,8 @@ export const rankCountiesAction: Action = {
     const isThreshold = text.includes('threshold') || text.includes('below alice');
     const isPoverty = text.includes('poverty') || text.includes('poor');
     const isAlice = !isThreshold && !isPoverty; // Default to ALICE
+    const hasAliceTerms = text.includes('alice') || text.includes('threshold') ||
+                         text.includes('poverty') || text.includes('poor');
     
     // Determine value type (percentage vs count)
     // Explicit mentions of rate/percentage take priority
@@ -81,7 +86,7 @@ export const rankCountiesAction: Action = {
       const hasHouseholdsWithRanking = text.includes('households') && 
         (text.includes('most') || text.includes('fewest') || text.includes('fewer') || 
          text.includes('least') || text.includes('maximum') || text.includes('minimum') ||
-         text.includes('largest') || text.includes('smallest'));
+         text.includes('largest') || text.includes('biggest') || text.includes('smallest'));
       
       wantsCount = hasHouseholdsWithRanking;
       wantsPercentage = !wantsCount; // Default to percentage
@@ -98,7 +103,7 @@ export const rankCountiesAction: Action = {
     
     // Determine sort direction
     const isDescending = text.includes('highest') || text.includes('most') || text.includes('worst') ||
-                        text.includes('maximum') || text.includes('greatest') || text.includes('largest') ||
+                        text.includes('maximum') || text.includes('greatest') || text.includes('largest') || text.includes('biggest') ||
                         text.includes('more');
     const isAscending = text.includes('lowest') || text.includes('fewest') || text.includes('best') ||
                        text.includes('least') || text.includes('fewer') || text.includes('minimum') ||
@@ -117,6 +122,61 @@ export const rankCountiesAction: Action = {
     let metricName = '';
     let valueType = '';
     
+    const countyForLocationSize = !wantsZipCode && wantsSubcounty
+      ? csvService.getAllCounties().find((county) => {
+        const countyName = county.county.toLowerCase().replace(/\s+county$/, '');
+        return new RegExp(`\\b${countyName.replace(/\./g, '\\.')}\\b`).test(text);
+      })
+      : undefined;
+    const isLocationSizeQuery =
+      Boolean(countyForLocationSize) &&
+      (text.includes('largest') || text.includes('biggest') || text.includes('smallest')) &&
+      !hasAliceTerms;
+
+    if (isLocationSizeQuery && countyForLocationSize) {
+      const wantsCityOnly = text.includes('city') || text.includes('cities');
+      const wantsTownOnly = !wantsCityOnly && (text.includes('town') || text.includes('towns'));
+      const allPlacesInCounty = csvService.getAllSubCounty()
+        .filter(s => s.type === 'Place' && s.county === countyForLocationSize.county);
+      const matchingPlaces = allPlacesInCounty.filter((place) => {
+        const label = place.geo_display_label.toLowerCase();
+        if (wantsCityOnly) return label.includes(' city,');
+        if (wantsTownOnly) return label.includes(' town,');
+        return true;
+      });
+      const rowsToRank = matchingPlaces.length > 0 ? matchingPlaces : allPlacesInCounty;
+
+      if (rowsToRank.length === 0) {
+        const result = {
+          text: `I don't have city, town, or place records for ${countyForLocationSize.county} in my dataset. I do have county-level ALICE data for ${countyForLocationSize.county}.`,
+          success: true
+        };
+        if (callback) { callback(result); return true; }
+        return result;
+      }
+
+      rowsToRank.sort((a, b) => isDescending ? b.households - a.households : a.households - b.households);
+      const top = rowsToRank[0];
+      const label = top.geo_display_label.split(',')[0].trim();
+      const alicePercentage = top.households > 0 ? Math.round((top.alice_households / top.households) * 100) : 0;
+      const direction = isDescending ? 'largest' : 'smallest';
+      const requestedType = wantsCityOnly ? 'city' : wantsTownOnly ? 'town' : 'place';
+      const fallbackNote = matchingPlaces.length === 0 && wantsTownOnly
+        ? `I don't have any town-labeled records for ${countyForLocationSize.county}. The ${direction} city/place record I have is ${label}.`
+        : `The ${direction} ${requestedType} record I have for ${countyForLocationSize.county} is ${label}.`;
+
+      let response = `According to my data set, ${fallbackNote}\n\n`;
+      response += `${label}:\n`;
+      response += `Total households: ${top.households.toLocaleString()}\n`;
+      response += `ALICE households: ${alicePercentage}% (${top.alice_households.toLocaleString()} households)\n`;
+      response += `Households in poverty: ${top.poverty_households.toLocaleString()} households\n`;
+      response += `Year: ${top.year}`;
+
+      const result = { text: response, success: true };
+      if (callback) { callback(result); return true; }
+      return result;
+    }
+
     if (wantsCounty) {
       const allCounties = csvService.getAllCounties();
       

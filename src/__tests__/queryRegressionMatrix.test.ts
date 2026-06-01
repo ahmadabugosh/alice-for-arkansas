@@ -132,4 +132,15 @@ describe('reviewed ALICE query regression matrix', () => {
     expect(employment.action).toBe('Searching employment data...');
     expect(employment.text).toContain('1. Orderlies and Psychiatric Aides: 67% (12,596 of 18,800 workers)');
   });
+
+  it('answers county-scoped town size questions from available place data', async () => {
+    const result = await ask("What's the biggest town in Scott county?");
+
+    expect(result.action).toBe('Ranking locations...');
+    expect(result.text).toContain("I don't have any town-labeled records for Scott County");
+    expect(result.text).toContain('largest city/place record I have is Waldron city');
+    expect(result.text).toContain('Total households: 1,329');
+    expect(result.text).toContain('ALICE households: 31% (416 households)');
+    expect(result.text).not.toContain("s biggest");
+  });
 });
