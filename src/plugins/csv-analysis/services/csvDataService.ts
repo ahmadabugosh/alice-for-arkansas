@@ -62,6 +62,45 @@ export interface StatewideData {
   notes?: string;
 }
 
+// Household-type breakdown stored as absolute counts per ALICE band.
+// Multi-year: each year is a set of rows distinguished by `year`.
+export interface HouseholdTypeData {
+  year: number;
+  name: string;
+  above: number;     // households above the ALICE threshold
+  alice: number;     // ALICE households (above poverty, below cost of living)
+  poverty: number;   // households below the federal poverty line
+  households: number; // total households of this type
+}
+
+// Time series (2010-present) of households BELOW the ALICE threshold
+// (ALICE + poverty combined), broken down by household type.
+export interface HouseholdTypeTrendData {
+  year: number;
+  name: string;
+  below_alice_threshold: number;
+}
+
+// ALICE budget (Survival or Stability) — monthly cost of each line item plus
+// totals, for a given household composition. All figures are dollars.
+export interface BudgetData {
+  year: number;
+  budget_type: string;      // "Survival" | "Stability"
+  household_type: string;   // e.g. "Single Adult", "Two Adults Two Children"
+  housing: number;
+  child_care: number;
+  food: number;
+  transportation: number;
+  health_care: number;
+  technology: number;
+  miscellaneous: number;
+  savings: number;
+  taxes: number;
+  monthly_total: number;
+  annual_total: number;
+  hourly_wage: number;
+}
+
 export interface LocationEntry {
   name: string;           // Base name (e.g., "Benton")
   type: 'City' | 'Town' | 'County' | 'Subcounty';
@@ -76,6 +115,9 @@ export class CsvDataService {
   private trends: TrendData[] = [];
   private subcounty: SubCountyData[] = [];
   private statewide: StatewideData[] = [];
+  private householdTypes: HouseholdTypeData[] = [];
+  private householdTypeTrends: HouseholdTypeTrendData[] = [];
+  private budgets: BudgetData[] = [];
   private locationNameIndex: Map<string, LocationEntry[]> = new Map();  // Lookup table for prioritized search
   private initialized = false;
 
@@ -351,7 +393,88 @@ export class CsvDataService {
       });
       console.log(`*** Loaded ${this.statewide.length} statewide records from CSV ***`);
     }
-    
+
+    // Load household-type breakdown data (multi-year, stored as counts)
+    const householdTypesPath = path.join(process.cwd(), 'data', 'household-types.csv');
+    if (fs.existsSync(householdTypesPath)) {
+      const householdTypesContent = fs.readFileSync(householdTypesPath, 'utf-8');
+      this.householdTypes = parse(householdTypesContent, {
+        columns: true,
+        skip_empty_lines: true,
+        cast: (value, { column }) => {
+          if (column === 'Year' || column === 'Above' || column === 'ALICE' || column === 'Poverty' || column === 'Households') {
+            return parseInt(value);
+          }
+          return value;
+        }
+      }).map((row: any) => ({
+        year: row.Year,
+        name: row.Name,
+        above: row.Above,
+        alice: row.ALICE,
+        poverty: row.Poverty,
+        households: row.Households,
+      }));
+      console.log(`*** Loaded ${this.householdTypes.length} household-type records from CSV ***`);
+    }
+
+    // Load household-type trend data (below-ALICE-threshold counts over time)
+    const householdTypeTrendsPath = path.join(process.cwd(), 'data', 'household-type-trends.csv');
+    if (fs.existsSync(householdTypeTrendsPath)) {
+      const householdTypeTrendsContent = fs.readFileSync(householdTypeTrendsPath, 'utf-8');
+      this.householdTypeTrends = parse(householdTypeTrendsContent, {
+        columns: true,
+        skip_empty_lines: true,
+        cast: (value, { column }) => {
+          if (column === 'Year' || column === 'BelowAliceThreshold') {
+            return parseInt(value);
+          }
+          return value;
+        }
+      }).map((row: any) => ({
+        year: row.Year,
+        name: row.Name,
+        below_alice_threshold: row.BelowAliceThreshold,
+      }));
+      console.log(`*** Loaded ${this.householdTypeTrends.length} household-type trend records from CSV ***`);
+    }
+
+    // Load ALICE budget data (Survival / Stability budgets by household type)
+    const budgetsPath = path.join(process.cwd(), 'data', 'budgets.csv');
+    if (fs.existsSync(budgetsPath)) {
+      const budgetsContent = fs.readFileSync(budgetsPath, 'utf-8');
+      const numericColumns = new Set([
+        'Year', 'Housing', 'ChildCare', 'Food', 'Transportation', 'HealthCare',
+        'Technology', 'Miscellaneous', 'Savings', 'Taxes', 'MonthlyTotal', 'AnnualTotal'
+      ]);
+      this.budgets = parse(budgetsContent, {
+        columns: true,
+        skip_empty_lines: true,
+        cast: (value, { column }) => {
+          if (numericColumns.has(column as string)) return parseInt(value);
+          if (column === 'HourlyWage') return parseFloat(value);
+          return value;
+        }
+      }).map((row: any) => ({
+        year: row.Year,
+        budget_type: row.BudgetType,
+        household_type: row.HouseholdType,
+        housing: row.Housing,
+        child_care: row.ChildCare,
+        food: row.Food,
+        transportation: row.Transportation,
+        health_care: row.HealthCare,
+        technology: row.Technology,
+        miscellaneous: row.Miscellaneous,
+        savings: row.Savings,
+        taxes: row.Taxes,
+        monthly_total: row.MonthlyTotal,
+        annual_total: row.AnnualTotal,
+        hourly_wage: row.HourlyWage,
+      }));
+      console.log(`*** Loaded ${this.budgets.length} budget records from CSV ***`);
+    }
+
     // Build location name index for prioritized search
     this.buildLocationIndex();
   }
@@ -566,8 +689,82 @@ export class CsvDataService {
   }
 
   getDemographicByCategory(category: string): DemographicData | undefined {
-    return this.demographics.find(d => 
+    return this.demographics.find(d =>
       d.category.toLowerCase().trim().includes(category.toLowerCase().trim())
+    );
+  }
+
+  // Household-type breakdown methods
+  getAllHouseholdTypes(): HouseholdTypeData[] {
+    return [...this.householdTypes];
+  }
+
+  getHouseholdTypes(year: number): HouseholdTypeData[] {
+    return this.householdTypes.filter(h => h.year === year);
+  }
+
+  getHouseholdTypeYears(): number[] {
+    return [...new Set(this.householdTypes.map(h => h.year))].sort((a, b) => a - b);
+  }
+
+  getLatestHouseholdTypeYear(): number | undefined {
+    const years = this.getHouseholdTypeYears();
+    return years.length ? years[years.length - 1] : undefined;
+  }
+
+  // Household-type trend methods (below-ALICE-threshold counts over time)
+  getAllHouseholdTypeTrends(): HouseholdTypeTrendData[] {
+    return [...this.householdTypeTrends];
+  }
+
+  // Series for one household type, sorted oldest-to-newest.
+  getHouseholdTypeTrend(name: string): HouseholdTypeTrendData[] {
+    const target = name.toLowerCase().trim();
+    return this.householdTypeTrends
+      .filter(h => h.name.toLowerCase().trim() === target)
+      .sort((a, b) => a.year - b.year);
+  }
+
+  getHouseholdTypeTrendYears(): number[] {
+    return [...new Set(this.householdTypeTrends.map(h => h.year))].sort((a, b) => a - b);
+  }
+
+  getLatestHouseholdTypeTrendYear(): number | undefined {
+    const years = this.getHouseholdTypeTrendYears();
+    return years.length ? years[years.length - 1] : undefined;
+  }
+
+  // Budget methods (ALICE Survival / Stability budgets)
+  getAllBudgets(): BudgetData[] {
+    return [...this.budgets];
+  }
+
+  getBudgetYears(): number[] {
+    return [...new Set(this.budgets.map(b => b.year))].sort((a, b) => a - b);
+  }
+
+  getLatestBudgetYear(): number | undefined {
+    const years = this.getBudgetYears();
+    return years.length ? years[years.length - 1] : undefined;
+  }
+
+  getBudgetTypes(): string[] {
+    return [...new Set(this.budgets.map(b => b.budget_type))];
+  }
+
+  getHouseholdTypesForBudget(): string[] {
+    return [...new Set(this.budgets.map(b => b.household_type))];
+  }
+
+  // Look up one budget row by household type (and optionally budget type / year).
+  // Defaults to the latest year available.
+  findBudget(householdType: string, budgetType?: string, year?: number): BudgetData | undefined {
+    const targetHousehold = householdType.toLowerCase().trim();
+    const targetYear = year ?? this.getLatestBudgetYear();
+    return this.budgets.find(b =>
+      b.household_type.toLowerCase().trim() === targetHousehold &&
+      (budgetType === undefined || b.budget_type.toLowerCase() === budgetType.toLowerCase()) &&
+      (targetYear === undefined || b.year === targetYear)
     );
   }
 
@@ -610,6 +807,9 @@ export class CsvDataService {
       trends: this.trends.length,
       subcounty: this.subcounty.length,
       statewide: this.statewide.length,
+      householdTypes: this.householdTypes.length,
+      householdTypeTrends: this.householdTypeTrends.length,
+      budgets: this.budgets.length,
       initialized: this.initialized
     };
   }

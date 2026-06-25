@@ -1,0 +1,5 @@
+Year,BudgetType,HouseholdType,Housing,ChildCare,Food,Transportation,HealthCare,Technology,Miscellaneous,Savings,Taxes,MonthlyTotal,AnnualTotal,HourlyWage
+2024,Stability,Single Adult,960,0,673,899,204,114,285,285,534,3954,47448,23.72
+2024,Stability,Two Adults,1207,0,1255,1098,562,148,427,427,767,5891,70692,35.35
+2024,Stability,Two Adults Two Children,1232,438,2278,1434,774,148,630,630,863,8427,101124,50.56
+2024,Stability,Two Adults Two Childcare,1232,1253,1942,1434,774,148,678,678,974,9113,109356,54.68

@@ -22,6 +22,7 @@ import { analyzeTrendsAction } from './plugins/csv-analysis/actions/analyzeTrend
 import { searchEmploymentAction } from './plugins/csv-analysis/actions/searchEmployment';
 import { searchDemographicsAction } from './plugins/csv-analysis/actions/searchDemographics';
 import { searchStatewideAction } from './plugins/csv-analysis/actions/searchStatewide';
+import { searchBudgetAction } from './plugins/csv-analysis/actions/searchBudget';
 import { explainAliceAction } from './plugins/csv-analysis/actions/explainAlice';
 import { CsvDataService } from './plugins/csv-analysis/services/csvDataService';
 import { ChatApiService } from './services/chatApiService';
@@ -209,6 +210,7 @@ console.error('*** rankCountiesAction:', !!rankCountiesAction, rankCountiesActio
 
 const actions = [
   explainAliceAction,     // MUST BE FIRST to handle "tell me about ALICE" concept queries
+  searchBudgetAction,     // BEFORE demographics/statewide so "how much to live"/"single adult" budget queries aren't intercepted
   searchStatewideAction,  // Second to prevent county action from matching "Arkansas"
   searchDemographicsAction,
   searchEmploymentAction,
