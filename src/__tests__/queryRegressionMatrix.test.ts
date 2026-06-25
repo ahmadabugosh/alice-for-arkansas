@@ -121,7 +121,9 @@ describe('reviewed ALICE query regression matrix', () => {
     const hispanicStatewide = await ask('How many Hispanic individuals are ALICE in AR?');
     expect(hispanicStatewide.action).toBe('Searching demographic data...');
     expect(hispanicStatewide.text).toContain('Hispanic/Latino households in Arkansas');
-    expect(hispanicStatewide.text).toContain('ALICE households: 39% (27,735 households)');
+    // Defaults to the latest year (2024) race band breakdown
+    expect(hispanicStatewide.text).toContain('latest available data, 2024');
+    expect(hispanicStatewide.text).toContain('ALICE households: 38% (27,851 households)');
 
     const hispanicCounty = await ask('How many Hispanic individuals are ALICE in Benton County?');
     expect(hispanicCounty.action).toBe('Searching demographic data...');

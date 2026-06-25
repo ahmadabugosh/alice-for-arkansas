@@ -89,6 +89,16 @@ export interface RaceTrendData {
   below_alice_threshold: number;
 }
 
+// Race/ethnicity breakdown as absolute counts per ALICE band, by year.
+export interface RaceBreakdownData {
+  year: number;
+  race: string;
+  above: number;     // households above the ALICE threshold
+  alice: number;     // ALICE households (above poverty, below cost of living)
+  poverty: number;   // households below the federal poverty line
+  households: number; // total households of this race/ethnicity
+}
+
 // ALICE budget (Survival or Stability) — monthly cost of each line item plus
 // totals, for a given household composition. All figures are dollars.
 export interface BudgetData {
@@ -126,6 +136,7 @@ export class CsvDataService {
   private householdTypes: HouseholdTypeData[] = [];
   private householdTypeTrends: HouseholdTypeTrendData[] = [];
   private raceTrends: RaceTrendData[] = [];
+  private raceBreakdown: RaceBreakdownData[] = [];
   private budgets: BudgetData[] = [];
   private locationNameIndex: Map<string, LocationEntry[]> = new Map();  // Lookup table for prioritized search
   private initialized = false;
@@ -469,6 +480,30 @@ export class CsvDataService {
       console.log(`*** Loaded ${this.raceTrends.length} race trend records from CSV ***`);
     }
 
+    // Load race/ethnicity band breakdown (Above/ALICE/Poverty counts by year)
+    const raceTypesPath = path.join(process.cwd(), 'data', 'race-types.csv');
+    if (fs.existsSync(raceTypesPath)) {
+      const raceTypesContent = fs.readFileSync(raceTypesPath, 'utf-8');
+      this.raceBreakdown = parse(raceTypesContent, {
+        columns: true,
+        skip_empty_lines: true,
+        cast: (value, { column }) => {
+          if (column === 'Year' || column === 'Above' || column === 'ALICE' || column === 'Poverty' || column === 'Households') {
+            return parseInt(value);
+          }
+          return value;
+        }
+      }).map((row: any) => ({
+        year: row.Year,
+        race: row.Race,
+        above: row.Above,
+        alice: row.ALICE,
+        poverty: row.Poverty,
+        households: row.Households,
+      }));
+      console.log(`*** Loaded ${this.raceBreakdown.length} race breakdown records from CSV ***`);
+    }
+
     // Load ALICE budget data (Survival / Stability budgets by household type)
     const budgetsPath = path.join(process.cwd(), 'data', 'budgets.csv');
     if (fs.existsSync(budgetsPath)) {
@@ -786,6 +821,24 @@ export class CsvDataService {
     return years.length ? years[years.length - 1] : undefined;
   }
 
+  // Race/ethnicity band-breakdown methods (Above/ALICE/Poverty counts)
+  getAllRaceBreakdown(): RaceBreakdownData[] {
+    return [...this.raceBreakdown];
+  }
+
+  getRaceBreakdown(year: number): RaceBreakdownData[] {
+    return this.raceBreakdown.filter(r => r.year === year);
+  }
+
+  getRaceBreakdownYears(): number[] {
+    return [...new Set(this.raceBreakdown.map(r => r.year))].sort((a, b) => a - b);
+  }
+
+  getLatestRaceBreakdownYear(): number | undefined {
+    const years = this.getRaceBreakdownYears();
+    return years.length ? years[years.length - 1] : undefined;
+  }
+
   // Budget methods (ALICE Survival / Stability budgets)
   getAllBudgets(): BudgetData[] {
     return [...this.budgets];
@@ -862,6 +915,7 @@ export class CsvDataService {
       householdTypes: this.householdTypes.length,
       householdTypeTrends: this.householdTypeTrends.length,
       raceTrends: this.raceTrends.length,
+      raceBreakdown: this.raceBreakdown.length,
       budgets: this.budgets.length,
       initialized: this.initialized
     };

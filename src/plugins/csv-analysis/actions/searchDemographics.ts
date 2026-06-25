@@ -1,5 +1,5 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { CsvDataService, DemographicData, HouseholdTypeData, HouseholdTypeTrendData, RaceTrendData } from '../services/csvDataService';
+import { CsvDataService, DemographicData, HouseholdTypeData, HouseholdTypeTrendData, RaceTrendData, RaceBreakdownData } from '../services/csvDataService';
 
 function normalizeText(text: string): string {
   return text
@@ -109,42 +109,165 @@ function formatRaceThresholdYear(rows: RaceTrendData[], year: number): string {
   return response;
 }
 
-// Year-/trend-aware race response, sourced from race-trends.csv. Used for
-// "over time" questions and questions about a specific/previous year.
-function buildRaceTrendResponse(csvService: CsvDataService, text: string): string {
-  if (isTrendQuery(text)) {
-    const named = detectRace(text);
+function raceOtherYearsNote(shownYear: number, availableYears: number[]): string {
+  const others = availableYears.filter((y) => y !== shownYear).sort((a, b) => b - a);
+  if (others.length === 0) return '';
+  return `\nI also have race/ethnicity ALICE data for ${others.join(', ')} — ask for a specific year for those figures.`;
+}
+
+const racePct = (part: number, total: number) => (total > 0 ? Math.round((part / total) * 100) : 0);
+
+// Full band breakdown (Above/ALICE/Poverty/total) for one race.
+function formatRaceBandSingle(
+  rows: RaceBreakdownData[],
+  race: string,
+  year: number,
+  isLatest: boolean,
+  availableYears: number[]
+): string {
+  const row = rows.find((r) => r.race === race);
+  if (!row) return `I don't have ${race} ALICE data for ${year} in my data set.`;
+
+  const head = isLatest ? `latest available data, ${year}` : `${year}`;
+  let response = `${race} households in Arkansas (${head}):\n\n`;
+  response += `Total households: ${row.households.toLocaleString()}\n`;
+  response += `Above ALICE threshold: ${racePct(row.above, row.households)}% (${row.above.toLocaleString()} households)\n`;
+  response += `ALICE households: ${racePct(row.alice, row.households)}% (${row.alice.toLocaleString()} households)\n`;
+  response += `Households in poverty: ${racePct(row.poverty, row.households)}% (${row.poverty.toLocaleString()} households)\n`;
+  response += `Total below ALICE threshold: ${racePct(row.alice, row.households) + racePct(row.poverty, row.households)}%\n`;
+  response += raceOtherYearsNote(year, availableYears);
+  return response;
+}
+
+// Full band breakdown across all races.
+function formatRaceBandAll(rows: RaceBreakdownData[], year: number, isLatest: boolean, availableYears: number[]): string {
+  const head = isLatest ? `latest available data, ${year}` : `${year}`;
+  let response = `Here are ALICE figures by race/ethnicity in Arkansas (${head}):\n\n`;
+  rows.forEach((row) => {
+    response += `${row.race}:\n`;
+    response += `  Total households: ${row.households.toLocaleString()}\n`;
+    response += `  ALICE households: ${racePct(row.alice, row.households)}% (${row.alice.toLocaleString()})\n`;
+    response += `  Households in poverty: ${racePct(row.poverty, row.households)}% (${row.poverty.toLocaleString()})\n`;
+    response += `  Total below ALICE threshold: ${racePct(row.alice, row.households) + racePct(row.poverty, row.households)}%\n\n`;
+  });
+  response += 'Note: ALICE households are above poverty but below the cost of basic needs; the ALICE threshold includes both ALICE and poverty households.';
+  response += raceOtherYearsNote(year, availableYears);
+  return response;
+}
+
+// Legacy race breakdown from demographics.csv (2023 percentages). Used as a
+// fallback when no newer race data (band/trend) is available.
+function formatRaceFromDemographics(demographicData: DemographicData[], lowerText: string): string {
+  const raceData = demographicData.filter((d) =>
+    ['White', 'Black', 'Hispanic/Latino', 'Asian', 'Native American', 'Two or More Races'].includes(d.category.trim())
+  );
+
+  const specificRace: Record<string, string> = {
+    white: 'White', black: 'Black', hispanic: 'Hispanic/Latino', latino: 'Hispanic/Latino',
+    asian: 'Asian', 'native american': 'Native American'
+  };
+  let matchedRace: string | null = null;
+  for (const [keyword, category] of Object.entries(specificRace)) {
+    if (lowerText.includes(keyword)) { matchedRace = category; break; }
+  }
+
+  if (matchedRace) {
+    const specificData = demographicData.find((d) => d.category.trim() === matchedRace);
+    if (!specificData) return `I don't have specific ALICE data for ${matchedRace} households in my dataset.`;
+    const combinedThreshold = specificData.alice_percentage + specificData.poverty_percent;
+    let response = `According to my data set, ${specificData.category} households in Arkansas:\n\n`;
+    response += `ALICE households: ${specificData.alice_percentage}% (${specificData.alice_households.toLocaleString()} households)\n`;
+    response += `Households in poverty: ${specificData.poverty_percent}%\n`;
+    response += `Total below ALICE threshold: ${combinedThreshold}% (ALICE + poverty combined)\n\n`;
+    response += `This means ${specificData.alice_households.toLocaleString()} ${specificData.category} households are specifically ALICE (above poverty but below the cost of basic needs).`;
+    return response;
+  }
+
+  let response = 'According to my data set, here are ALICE rates by race/ethnicity in Arkansas:\n\n';
+  raceData.forEach((demo) => {
+    const combinedThreshold = demo.alice_percentage + demo.poverty_percent;
+    response += `${demo.category}:\n`;
+    response += `  ALICE households: ${demo.alice_percentage}% (${demo.alice_households.toLocaleString()})\n`;
+    response += `  Households in poverty: ${demo.poverty_percent}%\n`;
+    response += `  Total below ALICE threshold: ${combinedThreshold}%\n\n`;
+  });
+  response += 'Note: ALICE households are above poverty but below the cost of basic needs. The ALICE threshold includes both ALICE households and households in poverty.';
+  return response;
+}
+
+// Year-/trend-aware race response. Defaults to the latest year's full band
+// breakdown (race-types.csv); serves trends and prior years on request, and
+// falls back to the legacy demographics breakdown when no newer data exists.
+function buildRaceResponse(csvService: CsvDataService, text: string): string {
+  const lowerText = text.toLowerCase();
+  const demographicData = typeof csvService.getAllDemographics === 'function' ? csvService.getAllDemographics() : [];
+
+  const hasBand =
+    typeof csvService.getAllRaceBreakdown === 'function' &&
+    typeof csvService.getRaceBreakdown === 'function' &&
+    typeof csvService.getRaceBreakdownYears === 'function';
+  const hasTrends =
+    typeof csvService.getAllRaceTrends === 'function' &&
+    typeof csvService.getRaceTrend === 'function' &&
+    typeof csvService.getRaceTrendYears === 'function';
+
+  const named = detectRace(text);
+
+  // "Over time" → historical below-threshold series.
+  if (hasTrends && isTrendQuery(text)) {
     return formatRaceTrend(csvService, named ? [named] : []);
   }
 
-  const years = csvService.getRaceTrendYears();
-  const latest = csvService.getLatestRaceTrendYear();
-  if (latest === undefined) {
-    return formatRaceTrend(csvService, []);
+  const bandYears = hasBand ? csvService.getRaceBreakdownYears() : [];
+  const trendYears = hasTrends ? csvService.getRaceTrendYears() : [];
+  const availableYears = [...new Set([...bandYears, ...trendYears])].sort((a, b) => a - b);
+
+  // No newer race data → legacy demographics breakdown.
+  if (availableYears.length === 0) {
+    return formatRaceFromDemographics(demographicData, lowerText);
   }
 
+  const latestOverall = availableYears[availableYears.length - 1];
   const requested = detectRequestedYear(text);
-  let targetYear = latest;
+
+  // Default (no specific year): prefer the latest full band, else legacy.
+  if (requested === undefined) {
+    if (hasBand && csvService.getRaceBreakdown(latestOverall).length > 0) {
+      const rows = csvService.getRaceBreakdown(latestOverall);
+      return named
+        ? formatRaceBandSingle(rows, named, latestOverall, true, availableYears)
+        : formatRaceBandAll(rows, latestOverall, true, availableYears);
+    }
+    return formatRaceFromDemographics(demographicData, lowerText);
+  }
+
+  // Specific / previous year requested.
+  let targetYear = latestOverall;
   if (typeof requested === 'number') {
     targetYear = requested;
   } else if (requested === 'previous') {
-    const earlier = years.filter((y) => y < latest);
-    targetYear = earlier.length ? earlier[earlier.length - 1] : latest;
+    const earlier = availableYears.filter((y) => y < latestOverall);
+    targetYear = earlier.length ? earlier[earlier.length - 1] : latestOverall;
   }
+  const isLatest = targetYear === latestOverall;
 
-  if (!years.includes(targetYear)) {
-    return `I don't have race/ethnicity ALICE data for ${targetYear}. I have data for ${years.join(', ')}.`;
+  if (hasBand && csvService.getRaceBreakdown(targetYear).length > 0) {
+    const rows = csvService.getRaceBreakdown(targetYear);
+    return named
+      ? formatRaceBandSingle(rows, named, targetYear, isLatest, availableYears)
+      : formatRaceBandAll(rows, targetYear, isLatest, availableYears);
   }
-
-  const rows = csvService.getAllRaceTrends().filter((r) => r.year === targetYear);
-  const named = detectRace(text);
-  if (named) {
-    const row = rows.find((r) => r.race === named);
-    if (row) {
-      return `For ${targetYear}, there were ${row.below_alice_threshold.toLocaleString()} ${row.race} households below the ALICE threshold (ALICE + poverty combined) in Arkansas.\n\n${RACE_TREND_NOTE}`;
+  if (trendYears.includes(targetYear)) {
+    const rows = csvService.getAllRaceTrends().filter((r) => r.year === targetYear);
+    if (named) {
+      const row = rows.find((r) => r.race === named);
+      if (row) {
+        return `For ${targetYear}, there were ${row.below_alice_threshold.toLocaleString()} ${row.race} households below the ALICE threshold (ALICE + poverty combined) in Arkansas.\n\n${RACE_TREND_NOTE}`;
+      }
     }
+    return formatRaceThresholdYear(rows, targetYear);
   }
-  return formatRaceThresholdYear(rows, targetYear);
+  return `I don't have race/ethnicity ALICE data for ${targetYear}. I have data for ${availableYears.join(', ')}.`;
 }
 
 const GENDER_HOUSEHOLD_INTRO =
@@ -538,69 +661,10 @@ export const searchDemographicsAction: Action = {
       const wantsHouseholdYearAware =
         isHouseholdTopic && !isRaceQuery && (isTrendQuery(text) || detectRequestedYear(text) !== undefined);
 
-      // Race trend / specific-year questions use the multi-year race data.
-      const hasRaceTrends =
-        typeof csvService.getAllRaceTrends === 'function' &&
-        typeof csvService.getRaceTrend === 'function' &&
-        typeof csvService.getRaceTrendYears === 'function';
-      const wantsRaceTrend =
-        isRaceQuery && !isGenderQuery && hasRaceTrends &&
-        (isTrendQuery(text) || detectRequestedYear(text) !== undefined);
-
       if (isGenderQuery || wantsHouseholdYearAware) {
         response = buildGenderHouseholdResponse(csvService, text);
-      } else if (wantsRaceTrend) {
-        response = buildRaceTrendResponse(csvService, text);
       } else if (isRaceQuery) {
-        const raceData = demographicData.filter(d => {
-          const category = d.category.trim();
-          return ['White', 'Black', 'Hispanic/Latino', 'Asian', 'Native American', 'Two or More Races'].includes(category);
-        });
-        
-        // Check if asking about a specific race
-        const specificRace = {
-          'white': 'White',
-          'black': 'Black',
-          'hispanic': 'Hispanic/Latino',
-          'latino': 'Hispanic/Latino',
-          'asian': 'Asian',
-          'native american': 'Native American'
-        };
-        
-        let matchedRace = null;
-        for (const [keyword, category] of Object.entries(specificRace)) {
-          if (lowerText.includes(keyword)) {
-            matchedRace = category;
-            break;
-          }
-        }
-        
-        if (matchedRace) {
-          // Return data for specific race
-          const specificData = demographicData.find(d => d.category.trim() === matchedRace);
-          if (specificData) {
-            const combinedThreshold = specificData.alice_percentage + specificData.poverty_percent;
-            response = `According to my data set, ${specificData.category} households in Arkansas:\n\n`;
-            response += `ALICE households: ${specificData.alice_percentage}% (${specificData.alice_households.toLocaleString()} households)\n`;
-            response += `Households in poverty: ${specificData.poverty_percent}%\n`;
-            response += `Total below ALICE threshold: ${combinedThreshold}% (ALICE + poverty combined)\n\n`;
-            response += `This means ${specificData.alice_households.toLocaleString()} ${specificData.category} households are specifically ALICE (above poverty but below the cost of basic needs).`;
-          } else {
-            response = `I don't have specific ALICE data for ${matchedRace} households in my dataset.`;
-          }
-        } else {
-          // Return all race data
-          response = "According to my data set, here are ALICE rates by race/ethnicity in Arkansas:\n\n";
-          raceData.forEach(demo => {
-            const combinedThreshold = demo.alice_percentage + demo.poverty_percent;
-            response += `${demo.category}:\n`;
-            response += `  ALICE households: ${demo.alice_percentage}% (${demo.alice_households.toLocaleString()})\n`;
-            response += `  Households in poverty: ${demo.poverty_percent}%\n`;
-            response += `  Total below ALICE threshold: ${combinedThreshold}%\n\n`;
-          });
-          response += "Note: ALICE households are above poverty but below the cost of basic needs. The ALICE threshold includes both ALICE households and households in poverty.";
-        }
-        
+        response = buildRaceResponse(csvService, text);
       } else if (text.includes('age')) {
         const ageData = demographicData.filter(d => d.category.startsWith('Age'));
         
