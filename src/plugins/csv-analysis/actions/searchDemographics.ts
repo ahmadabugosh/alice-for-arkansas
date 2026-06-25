@@ -1,5 +1,5 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { CsvDataService, DemographicData, HouseholdTypeData, HouseholdTypeTrendData } from '../services/csvDataService';
+import { CsvDataService, DemographicData, HouseholdTypeData, HouseholdTypeTrendData, RaceTrendData } from '../services/csvDataService';
 
 function normalizeText(text: string): string {
   return text
@@ -53,6 +53,98 @@ function detectHouseholdType(text: string): string | undefined {
   if (/\b(single[\s-]*male|male[\s-]*head|single father|single dad)/.test(lower)) return 'Single-Male-Headed';
   if (/\b(married|couples?|two[\s-]*parent)/.test(lower)) return 'Married';
   return undefined;
+}
+
+const RACE_TREND_NOTE =
+  'Note: "below the ALICE threshold" combines ALICE households (above poverty but below the cost of basic needs) and households in poverty.';
+
+// Identify which race/ethnicity, if any, the user named. Names match the
+// canonical labels stored in race-trends.csv.
+function detectRace(text: string): string | undefined {
+  const lower = text.toLowerCase();
+  if (/\b(hispanic|latino|latina|latinx)\b/.test(lower)) return 'Hispanic/Latino';
+  if (/\b(black|african[\s-]*american)\b/.test(lower)) return 'Black';
+  if (/\bwhite\b/.test(lower)) return 'White';
+  if (/\basian\b/.test(lower)) return 'Asian';
+  if (/\b(american indian|native american|alaska native|ai\/an)\b/.test(lower)) return 'American Indian/Alaska Native';
+  if (/\b(hawaiian|pacific islander)\b/.test(lower)) return 'Native Hawaiian/Pacific Islander';
+  if (/\b(two or more races|2\+ races|multiracial|biracial|mixed race)\b/.test(lower)) return 'Two or More Races';
+  return undefined;
+}
+
+const ALL_RACES = [
+  'White', 'Black', 'Hispanic/Latino', 'Asian',
+  'American Indian/Alaska Native', 'Native Hawaiian/Pacific Islander', 'Two or More Races'
+];
+
+// Historical series of households below the ALICE threshold, per race.
+function formatRaceTrend(csvService: CsvDataService, names: string[]): string {
+  const selected = names.length ? names : ALL_RACES;
+  let response =
+    'Here is how the number of households below the ALICE threshold (ALICE + poverty combined) has changed over time by race/ethnicity:\n\n';
+  selected.forEach((race) => {
+    const series = csvService.getRaceTrend(race);
+    if (!series.length) return;
+    response += `${race} (below ALICE threshold):\n`;
+    series.forEach((point) => {
+      response += `  ${point.year}: ${point.below_alice_threshold.toLocaleString()} households\n`;
+    });
+    const first = series[0];
+    const last = series[series.length - 1];
+    const delta = last.below_alice_threshold - first.below_alice_threshold;
+    const direction = delta > 0 ? 'increase' : delta < 0 ? 'decrease' : 'no change';
+    response += `  Net change ${first.year}–${last.year}: ${delta >= 0 ? '+' : ''}${delta.toLocaleString()} (${direction})\n\n`;
+  });
+  response += RACE_TREND_NOTE;
+  return response;
+}
+
+// Below-threshold totals by race for a single year.
+function formatRaceThresholdYear(rows: RaceTrendData[], year: number): string {
+  let response = `For ${year}, here are the households below the ALICE threshold (ALICE + poverty combined) in Arkansas by race/ethnicity:\n\n`;
+  rows.forEach((row) => {
+    response += `${row.race}: ${row.below_alice_threshold.toLocaleString()} households below the ALICE threshold\n`;
+  });
+  response += `\n${RACE_TREND_NOTE}`;
+  return response;
+}
+
+// Year-/trend-aware race response, sourced from race-trends.csv. Used for
+// "over time" questions and questions about a specific/previous year.
+function buildRaceTrendResponse(csvService: CsvDataService, text: string): string {
+  if (isTrendQuery(text)) {
+    const named = detectRace(text);
+    return formatRaceTrend(csvService, named ? [named] : []);
+  }
+
+  const years = csvService.getRaceTrendYears();
+  const latest = csvService.getLatestRaceTrendYear();
+  if (latest === undefined) {
+    return formatRaceTrend(csvService, []);
+  }
+
+  const requested = detectRequestedYear(text);
+  let targetYear = latest;
+  if (typeof requested === 'number') {
+    targetYear = requested;
+  } else if (requested === 'previous') {
+    const earlier = years.filter((y) => y < latest);
+    targetYear = earlier.length ? earlier[earlier.length - 1] : latest;
+  }
+
+  if (!years.includes(targetYear)) {
+    return `I don't have race/ethnicity ALICE data for ${targetYear}. I have data for ${years.join(', ')}.`;
+  }
+
+  const rows = csvService.getAllRaceTrends().filter((r) => r.year === targetYear);
+  const named = detectRace(text);
+  if (named) {
+    const row = rows.find((r) => r.race === named);
+    if (row) {
+      return `For ${targetYear}, there were ${row.below_alice_threshold.toLocaleString()} ${row.race} households below the ALICE threshold (ALICE + poverty combined) in Arkansas.\n\n${RACE_TREND_NOTE}`;
+    }
+  }
+  return formatRaceThresholdYear(rows, targetYear);
 }
 
 const GENDER_HOUSEHOLD_INTRO =
@@ -446,8 +538,19 @@ export const searchDemographicsAction: Action = {
       const wantsHouseholdYearAware =
         isHouseholdTopic && !isRaceQuery && (isTrendQuery(text) || detectRequestedYear(text) !== undefined);
 
+      // Race trend / specific-year questions use the multi-year race data.
+      const hasRaceTrends =
+        typeof csvService.getAllRaceTrends === 'function' &&
+        typeof csvService.getRaceTrend === 'function' &&
+        typeof csvService.getRaceTrendYears === 'function';
+      const wantsRaceTrend =
+        isRaceQuery && !isGenderQuery && hasRaceTrends &&
+        (isTrendQuery(text) || detectRequestedYear(text) !== undefined);
+
       if (isGenderQuery || wantsHouseholdYearAware) {
         response = buildGenderHouseholdResponse(csvService, text);
+      } else if (wantsRaceTrend) {
+        response = buildRaceTrendResponse(csvService, text);
       } else if (isRaceQuery) {
         const raceData = demographicData.filter(d => {
           const category = d.category.trim();

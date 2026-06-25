@@ -81,6 +81,14 @@ export interface HouseholdTypeTrendData {
   below_alice_threshold: number;
 }
 
+// Time series (2021-present) of households BELOW the ALICE threshold
+// (ALICE + poverty combined), broken down by race/ethnicity.
+export interface RaceTrendData {
+  year: number;
+  race: string;
+  below_alice_threshold: number;
+}
+
 // ALICE budget (Survival or Stability) — monthly cost of each line item plus
 // totals, for a given household composition. All figures are dollars.
 export interface BudgetData {
@@ -117,6 +125,7 @@ export class CsvDataService {
   private statewide: StatewideData[] = [];
   private householdTypes: HouseholdTypeData[] = [];
   private householdTypeTrends: HouseholdTypeTrendData[] = [];
+  private raceTrends: RaceTrendData[] = [];
   private budgets: BudgetData[] = [];
   private locationNameIndex: Map<string, LocationEntry[]> = new Map();  // Lookup table for prioritized search
   private initialized = false;
@@ -439,6 +448,27 @@ export class CsvDataService {
       console.log(`*** Loaded ${this.householdTypeTrends.length} household-type trend records from CSV ***`);
     }
 
+    // Load race/ethnicity trend data (below-ALICE-threshold counts over time)
+    const raceTrendsPath = path.join(process.cwd(), 'data', 'race-trends.csv');
+    if (fs.existsSync(raceTrendsPath)) {
+      const raceTrendsContent = fs.readFileSync(raceTrendsPath, 'utf-8');
+      this.raceTrends = parse(raceTrendsContent, {
+        columns: true,
+        skip_empty_lines: true,
+        cast: (value, { column }) => {
+          if (column === 'Year' || column === 'BelowAliceThreshold') {
+            return parseInt(value);
+          }
+          return value;
+        }
+      }).map((row: any) => ({
+        year: row.Year,
+        race: row.Race,
+        below_alice_threshold: row.BelowAliceThreshold,
+      }));
+      console.log(`*** Loaded ${this.raceTrends.length} race trend records from CSV ***`);
+    }
+
     // Load ALICE budget data (Survival / Stability budgets by household type)
     const budgetsPath = path.join(process.cwd(), 'data', 'budgets.csv');
     if (fs.existsSync(budgetsPath)) {
@@ -734,6 +764,28 @@ export class CsvDataService {
     return years.length ? years[years.length - 1] : undefined;
   }
 
+  // Race/ethnicity trend methods (below-ALICE-threshold counts over time)
+  getAllRaceTrends(): RaceTrendData[] {
+    return [...this.raceTrends];
+  }
+
+  // Series for one race/ethnicity, sorted oldest-to-newest.
+  getRaceTrend(race: string): RaceTrendData[] {
+    const target = race.toLowerCase().trim();
+    return this.raceTrends
+      .filter(r => r.race.toLowerCase().trim() === target)
+      .sort((a, b) => a.year - b.year);
+  }
+
+  getRaceTrendYears(): number[] {
+    return [...new Set(this.raceTrends.map(r => r.year))].sort((a, b) => a - b);
+  }
+
+  getLatestRaceTrendYear(): number | undefined {
+    const years = this.getRaceTrendYears();
+    return years.length ? years[years.length - 1] : undefined;
+  }
+
   // Budget methods (ALICE Survival / Stability budgets)
   getAllBudgets(): BudgetData[] {
     return [...this.budgets];
@@ -809,6 +861,7 @@ export class CsvDataService {
       statewide: this.statewide.length,
       householdTypes: this.householdTypes.length,
       householdTypeTrends: this.householdTypeTrends.length,
+      raceTrends: this.raceTrends.length,
       budgets: this.budgets.length,
       initialized: this.initialized
     };
