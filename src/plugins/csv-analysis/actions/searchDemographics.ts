@@ -1,5 +1,5 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { CsvDataService, DemographicData, HouseholdTypeData, HouseholdTypeTrendData, RaceTrendData, RaceBreakdownData, AgeTrendData } from '../services/csvDataService';
+import { CsvDataService, DemographicData, HouseholdTypeData, HouseholdTypeTrendData, RaceTrendData, RaceBreakdownData, AgeTrendData, AgeBreakdownData } from '../services/csvDataService';
 
 function normalizeText(text: string): string {
   return text
@@ -242,40 +242,140 @@ function formatAgeThresholdYear(rows: AgeTrendData[], year: number): string {
   return response;
 }
 
-// Trend-/year-aware age response, sourced from age-trends.csv.
-function buildAgeTrendResponse(csvService: CsvDataService, text: string): string {
+function ageOtherYearsNote(shownYear: number, availableYears: number[]): string {
+  const others = availableYears.filter((y) => y !== shownYear).sort((a, b) => b - a);
+  if (others.length === 0) return '';
+  return `\nI also have age-group ALICE data for ${others.join(', ')} — ask for a specific year for those figures.`;
+}
+
+const agePct = (part: number, total: number) => (total > 0 ? Math.round((part / total) * 100) : 0);
+
+// Full band breakdown (Above/ALICE/Poverty/total) for one age group.
+function formatAgeBandSingle(
+  rows: AgeBreakdownData[],
+  ageGroup: string,
+  year: number,
+  isLatest: boolean,
+  availableYears: number[]
+): string {
+  const row = rows.find((r) => r.age_group === ageGroup);
+  if (!row) return `I don't have ${ageGroup} ALICE data for ${year} in my data set.`;
+
+  const head = isLatest ? `latest available data, ${year}` : `${year}`;
+  let response = `${ageGroup} households in Arkansas (${head}):\n\n`;
+  response += `Total households: ${row.households.toLocaleString()}\n`;
+  response += `Above ALICE threshold: ${agePct(row.above, row.households)}% (${row.above.toLocaleString()} households)\n`;
+  response += `ALICE households: ${agePct(row.alice, row.households)}% (${row.alice.toLocaleString()} households)\n`;
+  response += `Households in poverty: ${agePct(row.poverty, row.households)}% (${row.poverty.toLocaleString()} households)\n`;
+  response += `Total below ALICE threshold: ${agePct(row.alice, row.households) + agePct(row.poverty, row.households)}%\n`;
+  response += ageOtherYearsNote(year, availableYears);
+  return response;
+}
+
+// Full band breakdown across all age groups.
+function formatAgeBandAll(rows: AgeBreakdownData[], year: number, isLatest: boolean, availableYears: number[]): string {
+  const head = isLatest ? `latest available data, ${year}` : `${year}`;
+  let response = `Here are ALICE figures by age of head of household in Arkansas (${head}):\n\n`;
+  rows.forEach((row) => {
+    response += `${row.age_group}:\n`;
+    response += `  Total households: ${row.households.toLocaleString()}\n`;
+    response += `  ALICE households: ${agePct(row.alice, row.households)}% (${row.alice.toLocaleString()})\n`;
+    response += `  Households in poverty: ${agePct(row.poverty, row.households)}% (${row.poverty.toLocaleString()})\n`;
+    response += `  Total below ALICE threshold: ${agePct(row.alice, row.households) + agePct(row.poverty, row.households)}%\n\n`;
+  });
+  response += 'Note: ALICE households are above poverty but below the cost of basic needs; the ALICE threshold includes both ALICE and poverty households.';
+  response += ageOtherYearsNote(year, availableYears);
+  return response;
+}
+
+// Legacy age breakdown from demographics.csv (2023 percentages). Fallback when
+// no newer age data (band/trend) is available.
+function formatAgeFromDemographics(demographicData: DemographicData[]): string {
+  const ageData = demographicData.filter((d) => d.category.startsWith('Age'));
+  let response = 'According to my data set, here are ALICE rates by age group in Arkansas:\n\n';
+  ageData.forEach((demo) => {
+    const combinedThreshold = demo.alice_percentage + demo.poverty_percent;
+    response += `${demo.category}:\n`;
+    response += `  ALICE households: ${demo.alice_percentage}% (${demo.alice_households.toLocaleString()})\n`;
+    response += `  Households in poverty: ${demo.poverty_percent}%\n`;
+    response += `  Total below ALICE threshold: ${combinedThreshold}%\n\n`;
+  });
+  response += 'Note: ALICE households are above poverty but below the cost of basic needs.';
+  return response;
+}
+
+// Year-/trend-aware age response. Defaults to the latest year's full band
+// breakdown (age-types.csv); serves trends and prior years on request, and
+// falls back to the legacy demographics breakdown when no newer data exists.
+function buildAgeResponse(csvService: CsvDataService, text: string): string {
+  const demographicData = typeof csvService.getAllDemographics === 'function' ? csvService.getAllDemographics() : [];
+
+  const hasBand =
+    typeof csvService.getAllAgeBreakdown === 'function' &&
+    typeof csvService.getAgeBreakdown === 'function' &&
+    typeof csvService.getAgeBreakdownYears === 'function';
+  const hasTrends =
+    typeof csvService.getAllAgeTrends === 'function' &&
+    typeof csvService.getAgeTrend === 'function' &&
+    typeof csvService.getAgeTrendYears === 'function';
+
   const named = detectAgeGroup(text);
-  if (isTrendQuery(text)) {
+
+  // "Over time" → historical below-threshold series.
+  if (hasTrends && isTrendQuery(text)) {
     return formatAgeTrend(csvService, named ? [named] : []);
   }
 
-  const years = csvService.getAgeTrendYears();
-  const latest = csvService.getLatestAgeTrendYear();
-  if (latest === undefined) {
-    return formatAgeTrend(csvService, named ? [named] : []);
+  const bandYears = hasBand ? csvService.getAgeBreakdownYears() : [];
+  const trendYears = hasTrends ? csvService.getAgeTrendYears() : [];
+  const availableYears = [...new Set([...bandYears, ...trendYears])].sort((a, b) => a - b);
+
+  // No newer age data → legacy demographics breakdown.
+  if (availableYears.length === 0) {
+    return formatAgeFromDemographics(demographicData);
   }
 
+  const latestOverall = availableYears[availableYears.length - 1];
   const requested = detectRequestedYear(text);
-  let targetYear = latest;
+
+  // Default (no specific year): prefer the latest full band, else legacy.
+  if (requested === undefined) {
+    if (hasBand && csvService.getAgeBreakdown(latestOverall).length > 0) {
+      const rows = csvService.getAgeBreakdown(latestOverall);
+      return named
+        ? formatAgeBandSingle(rows, named, latestOverall, true, availableYears)
+        : formatAgeBandAll(rows, latestOverall, true, availableYears);
+    }
+    return formatAgeFromDemographics(demographicData);
+  }
+
+  // Specific / previous year requested.
+  let targetYear = latestOverall;
   if (typeof requested === 'number') {
     targetYear = requested;
   } else if (requested === 'previous') {
-    const earlier = years.filter((y) => y < latest);
-    targetYear = earlier.length ? earlier[earlier.length - 1] : latest;
+    const earlier = availableYears.filter((y) => y < latestOverall);
+    targetYear = earlier.length ? earlier[earlier.length - 1] : latestOverall;
   }
+  const isLatest = targetYear === latestOverall;
 
-  if (!years.includes(targetYear)) {
-    return `I don't have age-group ALICE data for ${targetYear}. I have data for ${years.join(', ')}.`;
+  if (hasBand && csvService.getAgeBreakdown(targetYear).length > 0) {
+    const rows = csvService.getAgeBreakdown(targetYear);
+    return named
+      ? formatAgeBandSingle(rows, named, targetYear, isLatest, availableYears)
+      : formatAgeBandAll(rows, targetYear, isLatest, availableYears);
   }
-
-  const rows = csvService.getAllAgeTrends().filter((r) => r.year === targetYear);
-  if (named) {
-    const row = rows.find((r) => r.age_group === named);
-    if (row) {
-      return `For ${targetYear}, there were ${row.below_alice_threshold.toLocaleString()} households headed by someone ${named.toLowerCase().startsWith('age') ? named.toLowerCase().replace('age ', 'aged ') : named.toLowerCase()} below the ALICE threshold (ALICE + poverty combined) in Arkansas.\n\n${AGE_TREND_NOTE}`;
+  if (trendYears.includes(targetYear)) {
+    const rows = csvService.getAllAgeTrends().filter((r) => r.year === targetYear);
+    if (named) {
+      const row = rows.find((r) => r.age_group === named);
+      if (row) {
+        return `For ${targetYear}, there were ${row.below_alice_threshold.toLocaleString()} ${row.age_group} households below the ALICE threshold (ALICE + poverty combined) in Arkansas.\n\n${AGE_TREND_NOTE}`;
+      }
     }
+    return formatAgeThresholdYear(rows, targetYear);
   }
-  return formatAgeThresholdYear(rows, targetYear);
+  return `I don't have age-group ALICE data for ${targetYear}. I have data for ${availableYears.join(', ')}.`;
 }
 
 // Year-/trend-aware race response. Defaults to the latest year's full band
@@ -749,28 +849,7 @@ export const searchDemographicsAction: Action = {
       } else if (isRaceQuery) {
         response = buildRaceResponse(csvService, text);
       } else if (text.includes('age')) {
-        // Trend / specific-year questions use the multi-year age data;
-        // a plain "ALICE rates by age" stays on the 2023 demographic rates.
-        const hasAgeTrends =
-          typeof csvService.getAllAgeTrends === 'function' &&
-          typeof csvService.getAgeTrend === 'function' &&
-          typeof csvService.getAgeTrendYears === 'function';
-
-        if (hasAgeTrends && (isTrendQuery(text) || detectRequestedYear(text) !== undefined)) {
-          response = buildAgeTrendResponse(csvService, text);
-        } else {
-          const ageData = demographicData.filter(d => d.category.startsWith('Age'));
-
-          response = "According to my data set, here are ALICE rates by age group in Arkansas:\n\n";
-          ageData.forEach(demo => {
-            const combinedThreshold = demo.alice_percentage + demo.poverty_percent;
-            response += `${demo.category}:\n`;
-            response += `  ALICE households: ${demo.alice_percentage}% (${demo.alice_households.toLocaleString()})\n`;
-            response += `  Households in poverty: ${demo.poverty_percent}%\n`;
-            response += `  Total below ALICE threshold: ${combinedThreshold}%\n\n`;
-          });
-          response += "Note: ALICE households are above poverty but below the cost of basic needs.";
-        }
+        response = buildAgeResponse(csvService, text);
 
       } else if (text.includes('household') || text.includes('parent')) {
         const householdData = demographicData.filter(d => 

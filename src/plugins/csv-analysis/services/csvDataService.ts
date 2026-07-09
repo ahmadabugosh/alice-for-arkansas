@@ -97,6 +97,16 @@ export interface AgeTrendData {
   below_alice_threshold: number;
 }
 
+// Age-group breakdown as absolute counts per ALICE band, by year.
+export interface AgeBreakdownData {
+  year: number;
+  age_group: string;
+  above: number;     // households above the ALICE threshold
+  alice: number;     // ALICE households (above poverty, below cost of living)
+  poverty: number;   // households below the federal poverty line
+  households: number; // total households in this age group
+}
+
 // County-level total households and % below the ALICE threshold, by year.
 // A lighter-weight companion to CountyData (which has the full 2023 breakdown).
 export interface CountyTrendData {
@@ -156,6 +166,7 @@ export class CsvDataService {
   private raceBreakdown: RaceBreakdownData[] = [];
   private countyTrends: CountyTrendData[] = [];
   private ageTrends: AgeTrendData[] = [];
+  private ageBreakdown: AgeBreakdownData[] = [];
   private budgets: BudgetData[] = [];
   private locationNameIndex: Map<string, LocationEntry[]> = new Map();  // Lookup table for prioritized search
   private initialized = false;
@@ -566,6 +577,30 @@ export class CsvDataService {
       console.log(`*** Loaded ${this.ageTrends.length} age trend records from CSV ***`);
     }
 
+    // Load age-group band breakdown (Above/ALICE/Poverty counts by year)
+    const ageTypesPath = path.join(process.cwd(), 'data', 'age-types.csv');
+    if (fs.existsSync(ageTypesPath)) {
+      const ageTypesContent = fs.readFileSync(ageTypesPath, 'utf-8');
+      this.ageBreakdown = parse(ageTypesContent, {
+        columns: true,
+        skip_empty_lines: true,
+        cast: (value, { column }) => {
+          if (column === 'Year' || column === 'Above' || column === 'ALICE' || column === 'Poverty' || column === 'Households') {
+            return parseInt(value);
+          }
+          return value;
+        }
+      }).map((row: any) => ({
+        year: row.Year,
+        age_group: row.AgeGroup,
+        above: row.Above,
+        alice: row.ALICE,
+        poverty: row.Poverty,
+        households: row.Households,
+      }));
+      console.log(`*** Loaded ${this.ageBreakdown.length} age breakdown records from CSV ***`);
+    }
+
     // Load ALICE budget data (Survival / Stability budgets by household type)
     const budgetsPath = path.join(process.cwd(), 'data', 'budgets.csv');
     if (fs.existsSync(budgetsPath)) {
@@ -951,6 +986,24 @@ export class CsvDataService {
     return years.length ? years[years.length - 1] : undefined;
   }
 
+  // Age-group band-breakdown methods (Above/ALICE/Poverty counts)
+  getAllAgeBreakdown(): AgeBreakdownData[] {
+    return [...this.ageBreakdown];
+  }
+
+  getAgeBreakdown(year: number): AgeBreakdownData[] {
+    return this.ageBreakdown.filter(a => a.year === year);
+  }
+
+  getAgeBreakdownYears(): number[] {
+    return [...new Set(this.ageBreakdown.map(a => a.year))].sort((a, b) => a - b);
+  }
+
+  getLatestAgeBreakdownYear(): number | undefined {
+    const years = this.getAgeBreakdownYears();
+    return years.length ? years[years.length - 1] : undefined;
+  }
+
   // Budget methods (ALICE Survival / Stability budgets)
   getAllBudgets(): BudgetData[] {
     return [...this.budgets];
@@ -1030,6 +1083,7 @@ export class CsvDataService {
       raceBreakdown: this.raceBreakdown.length,
       countyTrends: this.countyTrends.length,
       ageTrends: this.ageTrends.length,
+      ageBreakdown: this.ageBreakdown.length,
       budgets: this.budgets.length,
       initialized: this.initialized
     };
