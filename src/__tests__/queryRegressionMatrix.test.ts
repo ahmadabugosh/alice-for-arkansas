@@ -83,9 +83,10 @@ describe('reviewed ALICE query regression matrix', () => {
       const result = await ask(question);
       expect(result.action).toBe('Comparing counties...');
       expect(result.text).toContain('No.');
+      // Uses the latest-year (2024) below-ALICE-threshold rate
       expect(result.text).toContain('Benton County: 29% below the ALICE threshold');
-      expect(result.text).toContain('Washington County: 41% below the ALICE threshold');
-      expect(result.text).toContain('Difference: 12 percentage points');
+      expect(result.text).toContain('Washington County: 38% below the ALICE threshold');
+      expect(result.text).toContain('Difference: 9 percentage points');
     }
   });
 

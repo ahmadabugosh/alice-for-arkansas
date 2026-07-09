@@ -119,19 +119,40 @@ export const compareCountiesAction: Action = {
       return result;
     }
 
+    // 2024 (latest) households + % below ALICE threshold per county, falling
+    // back to the 2023 figures when no newer county data exists. ALICE rate,
+    // poverty, and priority remain 2023-only (not in the newer county file).
+    const latestYear = typeof csvService.getLatestCountyTrendYear === 'function'
+      ? csvService.getLatestCountyTrendYear()
+      : undefined;
+    const detailYear = counties[0]!.year;
+    const latestOf = (c: any) => {
+      const t = typeof csvService.findCountyTrend === 'function' ? csvService.findCountyTrend(c.county) : undefined;
+      return {
+        county: c.county as string,
+        households: t ? t.households : c.households,
+        belowThreshold: t ? t.below_alice_threshold : c.below_alice_percentage,
+        year: t ? t.year : c.year,
+      };
+    };
+    const latestRows = counties.map(c => latestOf(c));
+
     const isYesNoComparison = /^\s*(?:is|are|does|do|did)\b/i.test(text);
     const isThresholdComparison = lowerText.includes('threshold') || lowerText.includes('below alice');
 
     if (isYesNoComparison && isThresholdComparison && counties.length >= 2) {
       const [firstCounty, secondCounty] = counties;
-      const firstRate = firstCounty!.below_alice_percentage;
-      const secondRate = secondCounty!.below_alice_percentage;
+      const first = latestOf(firstCounty);
+      const second = latestOf(secondCounty);
+      const firstRate = first.belowThreshold;
+      const secondRate = second.belowThreshold;
       const answer = firstRate > secondRate ? 'Yes' : 'No';
       const relationship = firstRate > secondRate ? 'higher' : firstRate < secondRate ? 'lower' : 'the same';
       const diff = Math.abs(firstRate - secondRate);
+      const yearNote = first.year === second.year ? ` (${first.year})` : '';
 
       let response =
-        `${answer}. Using the county below-ALICE-threshold rate in my dataset, ${firstCounty!.county} is ${relationship} than ${secondCounty!.county}.\n\n`;
+        `${answer}. Using the county below-ALICE-threshold rate in my dataset${yearNote}, ${firstCounty!.county} is ${relationship} than ${secondCounty!.county}.\n\n`;
       response += `${firstCounty!.county}: ${firstRate}% below the ALICE threshold\n`;
       response += `${secondCounty!.county}: ${secondRate}% below the ALICE threshold`;
       if (diff > 0) {
@@ -148,11 +169,12 @@ export const compareCountiesAction: Action = {
     
     // Show individual county stats
     counties.forEach(county => {
+      const latest = latestOf(county);
       response += `${county!.county}:\n`;
-      response += `Total households: ${county!.households.toLocaleString()}\n`;
-      response += `ALICE households: ${county!.alice_percentage}% (${county!.alice_housholds.toLocaleString()} households)\n`;
-      response += `Poverty rate: ${county!.poverty}%\n`;
-      response += `Below ALICE threshold: ${county!.below_alice_percentage}%\n`;
+      response += `Total households (${latest.year}): ${latest.households.toLocaleString()}\n`;
+      response += `Below ALICE threshold (${latest.year}): ${latest.belowThreshold}%\n`;
+      response += `ALICE households (${county!.year}): ${county!.alice_percentage}% (${county!.alice_housholds.toLocaleString()} households)\n`;
+      response += `Poverty rate (${county!.year}): ${county!.poverty}%\n`;
       response += `\n`;
     });
     
@@ -168,18 +190,14 @@ export const compareCountiesAction: Action = {
     );
     
     const aliceDiff = highest!.alice_percentage - lowest!.alice_percentage;
-    response += `ALICE Rate: ${lowest!.county} has a better (lower) rate at ${lowest!.alice_percentage}%, compared to ${highest!.county} at ${highest!.alice_percentage}% (${aliceDiff} percentage point difference).\n`;
-    
-    // Compare total below ALICE threshold
-    const highestTotal = counties.reduce((max, county) => 
-      county!.below_alice_percentage > max!.below_alice_percentage ? county : max
-    );
-    const lowestTotal = counties.reduce((min, county) => 
-      county!.below_alice_percentage < min!.below_alice_percentage ? county : min
-    );
-    
+    response += `ALICE Rate (${detailYear}): ${lowest!.county} has a better (lower) rate at ${lowest!.alice_percentage}%, compared to ${highest!.county} at ${highest!.alice_percentage}% (${aliceDiff} percentage point difference).\n`;
+
+    // Compare total below ALICE threshold (latest year)
+    const highestTotal = latestRows.reduce((max, r) => (r.belowThreshold > max.belowThreshold ? r : max));
+    const lowestTotal = latestRows.reduce((min, r) => (r.belowThreshold < min.belowThreshold ? r : min));
+
     if (highestTotal !== lowestTotal) {
-      response += `Total Below Threshold: ${lowestTotal!.county} has ${lowestTotal!.below_alice_percentage}% below the ALICE threshold, while ${highestTotal!.county} has ${highestTotal!.below_alice_percentage}%.\n`;
+      response += `Total Below Threshold (${latestYear ?? detailYear}): ${lowestTotal.county} has ${lowestTotal.belowThreshold}% below the ALICE threshold, while ${highestTotal.county} has ${highestTotal.belowThreshold}%.\n`;
     }
     
     // Compare poverty rates
@@ -192,20 +210,16 @@ export const compareCountiesAction: Action = {
     
     if (highestPoverty !== lowestPoverty) {
       const povertyDiff = highestPoverty!.poverty - lowestPoverty!.poverty;
-      response += `Poverty Rate: ${lowestPoverty!.county} has a lower poverty rate at ${lowestPoverty!.poverty}%, compared to ${highestPoverty!.county} at ${highestPoverty!.poverty}% (${povertyDiff} percentage point difference).\n`;
+      response += `Poverty Rate (${detailYear}): ${lowestPoverty!.county} has a lower poverty rate at ${lowestPoverty!.poverty}%, compared to ${highestPoverty!.county} at ${highestPoverty!.poverty}% (${povertyDiff} percentage point difference).\n`;
     }
-    
-    // Compare population sizes
-    const largestPop = counties.reduce((max, county) => 
-      county!.households > max!.households ? county : max
-    );
-    const smallestPop = counties.reduce((min, county) => 
-      county!.households < min!.households ? county : min
-    );
-    
+
+    // Compare population sizes (latest year)
+    const largestPop = latestRows.reduce((max, r) => (r.households > max.households ? r : max));
+    const smallestPop = latestRows.reduce((min, r) => (r.households < min.households ? r : min));
+
     if (largestPop !== smallestPop) {
-      const popRatio = (largestPop!.households / smallestPop!.households).toFixed(1);
-      response += `Population Size: ${largestPop!.county} is ${popRatio}x larger with ${largestPop!.households.toLocaleString()} households vs ${smallestPop!.households.toLocaleString()}.\n`;
+      const popRatio = (largestPop.households / smallestPop.households).toFixed(1);
+      response += `Population Size (${latestYear ?? detailYear}): ${largestPop.county} is ${popRatio}x larger with ${largestPop.households.toLocaleString()} households vs ${smallestPop.households.toLocaleString()}.\n`;
     }
     
     // Priority county status
