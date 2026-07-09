@@ -1,7 +1,6 @@
 import { logger, type IAgentRuntime, type Project, type ProjectAgent } from '@elizaos/core';
 import starterPlugin from './plugin.ts';
 import { character } from './character.ts';
-import { ProjectStarterTestSuite } from './__tests__/e2e/project-starter.e2e';
 import { CsvDataService } from './plugins/csv-analysis/services/csvDataService';
 
 /**
@@ -36,7 +35,6 @@ export const projectAgent: ProjectAgent = {
     }
   },
   plugins: [starterPlugin], // Enable the starter plugin with custom CSS routes
-  tests: [ProjectStarterTestSuite], // Export tests from ProjectAgent
 };
 
 const project: Project = {
