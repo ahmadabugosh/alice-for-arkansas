@@ -1,5 +1,31 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { CsvDataService, BudgetData } from '../services/csvDataService';
+import { CsvDataService, BudgetData, CountyBudgetData } from '../services/csvDataService';
+
+const AR_COUNTIES = [
+  'arkansas', 'ashley', 'baxter', 'benton', 'boone', 'bradley', 'calhoun', 'carroll', 'chicot', 'clark',
+  'clay', 'cleburne', 'cleveland', 'columbia', 'conway', 'craighead', 'crawford', 'crittenden', 'cross',
+  'dallas', 'desha', 'drew', 'faulkner', 'franklin', 'fulton', 'garland', 'grant', 'greene', 'hempstead',
+  'hot spring', 'howard', 'independence', 'izard', 'jackson', 'jefferson', 'johnson', 'lafayette',
+  'lawrence', 'lee', 'lincoln', 'little river', 'logan', 'lonoke', 'madison', 'marion', 'miller',
+  'mississippi', 'monroe', 'montgomery', 'nevada', 'newton', 'ouachita', 'perry', 'phillips', 'pike',
+  'poinsett', 'polk', 'pope', 'prairie', 'pulaski', 'randolph', 'saline', 'scott', 'searcy', 'sebastian',
+  'sevier', 'sharp', 'st. francis', 'stone', 'union', 'van buren', 'washington', 'white', 'woodruff', 'yell'
+];
+
+// Detect a county only in an explicit location context ("in X", "X County") so
+// a word like "Union" or "White" isn't mistaken for a county name.
+function detectCounty(text: string): string | undefined {
+  const t = text.toLowerCase().replace(/[-–—]/g, ' ');
+  for (const c of AR_COUNTIES) {
+    const esc = c.replace(/\./g, '\\.');
+    // "X County" always works.
+    if (new RegExp(`\\b${esc}\\s+count(?:y|ies)\\b`, 'i').test(t)) return c;
+    // "in/for/within X" works too — except bare "Arkansas", which almost always
+    // means the state, so it requires the explicit "Arkansas County" form above.
+    if (c !== 'arkansas' && new RegExp(`\\b(?:in|for|within)\\s+${esc}\\b`, 'i').test(t)) return c;
+  }
+  return undefined;
+}
 
 function normalizeText(text: string): string {
   return text
@@ -88,6 +114,40 @@ function formatFullBudget(b: BudgetData): string {
   return response;
 }
 
+interface CountyLineItem { label: string; field: keyof CountyBudgetData; aliases: string[]; }
+const COUNTY_LINE_ITEMS: CountyLineItem[] = [
+  { label: 'Rent', field: 'rent', aliases: ['rent', 'housing', 'mortgage', 'shelter'] },
+  { label: 'Child Care', field: 'childcare', aliases: ['child care', 'childcare', 'daycare', 'day care'] },
+  { label: 'Food', field: 'food', aliases: ['food', 'groceries', 'grocery'] },
+  { label: 'Transportation', field: 'transportation', aliases: ['transportation', 'transport', 'commute', 'transit', 'car', 'gas'] },
+  { label: 'Utilities', field: 'utilities', aliases: ['utilities', 'utility', 'electric', 'water', 'power'] },
+  { label: 'Health Care', field: 'healthcare', aliases: ['health care', 'healthcare', 'medical', 'health insurance'] },
+  { label: 'Technology', field: 'tech', aliases: ['technology', 'tech', 'phone', 'internet'] },
+  { label: 'Miscellaneous', field: 'misc', aliases: ['miscellaneous', 'misc'] },
+  { label: 'Taxes', field: 'taxes', aliases: ['taxes', 'tax'] },
+  { label: 'Tax Credits', field: 'tax_credits', aliases: ['tax credit', 'tax credits', 'credits'] }
+];
+
+function detectCountyLineItem(text: string): CountyLineItem | undefined {
+  return COUNTY_LINE_ITEMS.find((item) => item.aliases.some((alias) => includesPhrase(text, alias)));
+}
+
+const prettyCounty = (c: string) => c.replace(/\b\w/g, (ch) => ch.toUpperCase()) + ' County';
+
+function formatCountyBudget(b: CountyBudgetData): string {
+  let response = `ALICE Household Survival Budget for a ${b.household_type} in ${prettyCounty(b.county)}, Arkansas (${b.year}):\n\n`;
+  response += 'Monthly costs:\n';
+  COUNTY_LINE_ITEMS.forEach((item) => {
+    const v = b[item.field] as number;
+    if (item.field === 'tax_credits' && v === 0) return; // omit when no credit applies
+    const amount = v < 0 ? `-$${Math.abs(v).toLocaleString('en-US')}` : money(v);
+    response += `  ${item.label}: ${amount}\n`;
+  });
+  response += `\nMonthly total: ${money(b.monthly)}\n`;
+  response += `Annual total: ${money(b.annual)}`;
+  return response;
+}
+
 export const searchBudgetAction: Action = {
   name: 'Searching ALICE budget data...',
   similes: [
@@ -161,6 +221,31 @@ export const searchBudgetAction: Action = {
       const household = detectHousehold(text);
       const lineItem = detectLineItem(text);
       const lower = text.toLowerCase();
+
+      // County-specific budget: when the user names a county and a household
+      // type we have county-level data for, answer from the county budget.
+      const county = detectCounty(text);
+      if (county && household && typeof csvService.hasCountyBudgets === 'function' && csvService.hasCountyBudgets()) {
+        const cb = csvService.findCountyBudget(county, household);
+        if (cb) {
+          const cItem = detectCountyLineItem(text);
+          let cResponse: string;
+          if (cItem) {
+            const v = cb[cItem.field] as number;
+            const amount = v < 0 ? `-$${Math.abs(v).toLocaleString('en-US')}` : money(v);
+            cResponse = `According to the ALICE Household Survival Budget (${cb.year}), the monthly ${cItem.label.toLowerCase()} cost for a ${cb.household_type} in ${prettyCounty(cb.county)}, Arkansas is ${amount}.`;
+          } else if (/\b(annual|annually|yearly|per year|a year|salary)\b/.test(lower)) {
+            cResponse = `The ALICE Household Survival Budget (${cb.year}) for a ${cb.household_type} in ${prettyCounty(cb.county)}, Arkansas is ${money(cb.annual)} per year (${money(cb.monthly)} per month).`;
+          } else {
+            cResponse = formatCountyBudget(cb);
+          }
+          cResponse += '\n\nThese are county-specific Survival Budget figures. Ask about a different county or the statewide budget if you\'d like.';
+          const cResult = { text: cResponse, success: true, action: 'BUDGET_DATA_RETRIEVED' };
+          if (callback) { callback(cResult); return true; }
+          return cResult;
+        }
+      }
+
       const wantsWage = /\b(hourly wage|wage|per hour|hourly|how much.*hour)\b/.test(lower);
       const wantsAnnual = /\b(annual|annually|yearly|per year|a year|salary)\b/.test(lower);
 

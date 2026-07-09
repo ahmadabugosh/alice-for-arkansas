@@ -126,6 +126,26 @@ export interface RaceBreakdownData {
   households: number; // total households of this race/ethnicity
 }
 
+// County-level ALICE Household Survival Budget by household type (monthly
+// dollar line items + totals). Complements the statewide BudgetData.
+export interface CountyBudgetData {
+  year: number;
+  county: string;
+  household_type: string;
+  childcare: number;
+  food: number;
+  rent: number;
+  tech: number;
+  transportation: number;
+  utilities: number;
+  healthcare: number;
+  taxes: number;
+  tax_credits: number;   // can be negative (credits reduce the total)
+  misc: number;
+  monthly: number;
+  annual: number;
+}
+
 // ALICE budget (Survival or Stability) — monthly cost of each line item plus
 // totals, for a given household composition. All figures are dollars.
 export interface BudgetData {
@@ -168,6 +188,7 @@ export class CsvDataService {
   private ageTrends: AgeTrendData[] = [];
   private ageBreakdown: AgeBreakdownData[] = [];
   private budgets: BudgetData[] = [];
+  private countyBudgets: CountyBudgetData[] = [];
   private locationNameIndex: Map<string, LocationEntry[]> = new Map();  // Lookup table for prioritized search
   private initialized = false;
 
@@ -637,6 +658,35 @@ export class CsvDataService {
       console.log(`*** Loaded ${this.budgets.length} budget records from CSV ***`);
     }
 
+    // Load county-level Survival budgets by household type
+    const countyBudgetsPath = path.join(process.cwd(), 'data', 'county-budgets.csv');
+    if (fs.existsSync(countyBudgetsPath)) {
+      const countyBudgetsContent = fs.readFileSync(countyBudgetsPath, 'utf-8');
+      const numeric = new Set(['Year', 'Childcare', 'Food', 'Rent', 'Tech', 'Transportation', 'Utilities', 'Healthcare', 'Taxes', 'TaxCredits', 'Misc', 'Monthly', 'Annual']);
+      this.countyBudgets = parse(countyBudgetsContent, {
+        columns: true,
+        skip_empty_lines: true,
+        cast: (value, { column }) => (numeric.has(column as string) ? parseInt(value) : value)
+      }).map((row: any) => ({
+        year: row.Year,
+        county: row.County,
+        household_type: row.HouseholdType,
+        childcare: row.Childcare,
+        food: row.Food,
+        rent: row.Rent,
+        tech: row.Tech,
+        transportation: row.Transportation,
+        utilities: row.Utilities,
+        healthcare: row.Healthcare,
+        taxes: row.Taxes,
+        tax_credits: row.TaxCredits,
+        misc: row.Misc,
+        monthly: row.Monthly,
+        annual: row.Annual,
+      }));
+      console.log(`*** Loaded ${this.countyBudgets.length} county budget records from CSV ***`);
+    }
+
     // Build location name index for prioritized search
     this.buildLocationIndex();
   }
@@ -1038,6 +1088,32 @@ export class CsvDataService {
     );
   }
 
+  // County-level budget methods
+  getAllCountyBudgets(): CountyBudgetData[] {
+    return [...this.countyBudgets];
+  }
+
+  getCountyBudgetHouseholdTypes(): string[] {
+    return [...new Set(this.countyBudgets.map(b => b.household_type))];
+  }
+
+  hasCountyBudgets(): boolean {
+    return this.countyBudgets.length > 0;
+  }
+
+  // Look up one county budget row. Matches county names with or without a
+  // " County" suffix ("Pulaski County" <-> "Pulaski").
+  findCountyBudget(county: string, householdType: string, year?: number): CountyBudgetData | undefined {
+    const normCounty = (s: string) => s.toLowerCase().replace(/\s+county$/, '').trim();
+    const targetCounty = normCounty(county);
+    const targetHousehold = householdType.toLowerCase().trim();
+    return this.countyBudgets.find(b =>
+      normCounty(b.county) === targetCounty &&
+      b.household_type.toLowerCase().trim() === targetHousehold &&
+      (year === undefined || b.year === year)
+    );
+  }
+
   // Employment methods
   getAllEmployment(): EmploymentData[] {
     return [...this.employment];
@@ -1085,6 +1161,7 @@ export class CsvDataService {
       ageTrends: this.ageTrends.length,
       ageBreakdown: this.ageBreakdown.length,
       budgets: this.budgets.length,
+      countyBudgets: this.countyBudgets.length,
       initialized: this.initialized
     };
   }
