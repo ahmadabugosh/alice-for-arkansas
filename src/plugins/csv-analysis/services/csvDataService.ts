@@ -107,6 +107,20 @@ export interface AgeBreakdownData {
   households: number; // total households in this age group
 }
 
+// County-level time series (2010-2024): household counts by ALICE band plus
+// the ALICE Threshold dollar amounts (under-65 and 65+ head of household).
+export interface CountyTimeSeriesData {
+  year: number;
+  county: string;
+  geoid: string;
+  households: number;
+  poverty: number;
+  alice: number;
+  above: number;
+  threshold_under_65: number;
+  threshold_65_plus: number;
+}
+
 // County-level total households and % below the ALICE threshold, by year.
 // A lighter-weight companion to CountyData (which has the full 2023 breakdown).
 export interface CountyTrendData {
@@ -179,6 +193,7 @@ export class CsvDataService {
   private employment: EmploymentData[] = [];
   private trends: TrendData[] = [];
   private subcounty: SubCountyData[] = [];
+  private subcounty2024: SubCountyData[] = [];
   private statewide: StatewideData[] = [];
   private householdTypes: HouseholdTypeData[] = [];
   private householdTypeTrends: HouseholdTypeTrendData[] = [];
@@ -189,6 +204,7 @@ export class CsvDataService {
   private ageBreakdown: AgeBreakdownData[] = [];
   private budgets: BudgetData[] = [];
   private countyBudgets: CountyBudgetData[] = [];
+  private countyTimeSeries: CountyTimeSeriesData[] = [];
   private locationNameIndex: Map<string, LocationEntry[]> = new Map();  // Lookup table for prioritized search
   private initialized = false;
 
@@ -446,6 +462,58 @@ export class CsvDataService {
       
       console.log(`*** Loaded ${this.subcounty.length} subcounty records from CSV ***`);
       console.log('*** Sample subcounty record:', JSON.stringify(this.subcounty[0]));
+    }
+
+    // Load the newer (2024) subcounty data into a separate array. Single-place
+    // lookups (findSubCounty) prefer it; the fuller 2023 set still backs the
+    // location index and rankings (2024 omits places under 100 households).
+    const subcounty2024Path = path.join(process.cwd(), 'data', 'subcounty-2024.csv');
+    if (fs.existsSync(subcounty2024Path)) {
+      const content2024 = fs.readFileSync(subcounty2024Path, 'utf-8');
+      this.subcounty2024 = parse(content2024, {
+        columns: true,
+        skip_empty_lines: true,
+        cast: (value, { column }) => {
+          if (['Year', 'Households', 'PovertyHouseholds', 'ALICEHouseholds', 'AboveALICEHouseholds'].includes(column as string)) {
+            return parseInt(value);
+          }
+          return value;
+        }
+      }).map((row: any) => ({
+        year: row.Year,
+        type: row.Type,
+        geo_id2: row.GEOID,
+        geo_display_label: row.Label,
+        households: row.Households,
+        poverty_households: row.PovertyHouseholds,
+        alice_households: row.ALICEHouseholds,
+        above_alice_households: row.AboveALICEHouseholds,
+        county: row.County,
+      }));
+      console.log(`*** Loaded ${this.subcounty2024.length} subcounty 2024 records ***`);
+    }
+
+    // Load county time-series data (counts + ALICE Threshold dollars, 2010-2024)
+    const countyTimeSeriesPath = path.join(process.cwd(), 'data', 'county-timeseries.csv');
+    if (fs.existsSync(countyTimeSeriesPath)) {
+      const tsContent = fs.readFileSync(countyTimeSeriesPath, 'utf-8');
+      const numeric = new Set(['Year', 'Households', 'Poverty', 'ALICE', 'Above', 'ThresholdUnder65', 'Threshold65Plus']);
+      this.countyTimeSeries = parse(tsContent, {
+        columns: true,
+        skip_empty_lines: true,
+        cast: (value, { column }) => (numeric.has(column as string) ? parseInt(value) : value)
+      }).map((row: any) => ({
+        year: row.Year,
+        county: row.County,
+        geoid: row.GEOID,
+        households: row.Households,
+        poverty: row.Poverty,
+        alice: row.ALICE,
+        above: row.Above,
+        threshold_under_65: row.ThresholdUnder65,
+        threshold_65_plus: row.Threshold65Plus,
+      }));
+      console.log(`*** Loaded ${this.countyTimeSeries.length} county time-series records from CSV ***`);
     }
 
     // Load statewide data
@@ -712,7 +780,12 @@ export class CsvDataService {
     }
     
     // Add subcounties/cities/towns from subcounty data
-    for (const subcounty of this.subcounty) {
+    // Index a latest-year-preferred view (2024 over 2023 for the same
+    // geography, plus any 2024-only places). Rankings use getAllSubCounty(),
+    // which stays on the 2023 set, so this only affects name lookups.
+    const ids2024 = new Set(this.subcounty2024.map(s => s.geo_id2));
+    const subcountyForIndex = [...this.subcounty2024, ...this.subcounty.filter(s => !ids2024.has(s.geo_id2))];
+    for (const subcounty of subcountyForIndex) {
       // Extract base name from geo_display_label
       // Examples:
       // "Fayetteville city, Arkansas" -> "fayetteville"
@@ -893,6 +966,34 @@ export class CsvDataService {
       if (maxRate !== undefined && county.alice_percentage > maxRate) return false;
       return true;
     });
+  }
+
+  // County time-series methods (counts + ALICE Threshold dollars, 2010-2024)
+  private normCountyName(s: string): string {
+    return s.toLowerCase().replace(/\s+county$/, '').trim();
+  }
+
+  getCountyTimeSeries(county: string): CountyTimeSeriesData[] {
+    const target = this.normCountyName(county);
+    return this.countyTimeSeries
+      .filter(c => this.normCountyName(c.county) === target)
+      .sort((a, b) => a.year - b.year);
+  }
+
+  getCountyTimeSeriesYears(): number[] {
+    return [...new Set(this.countyTimeSeries.map(c => c.year))].sort((a, b) => a - b);
+  }
+
+  getLatestCountyTimeSeriesYear(): number | undefined {
+    const years = this.getCountyTimeSeriesYears();
+    return years.length ? years[years.length - 1] : undefined;
+  }
+
+  findCountyTimeSeries(county: string, year?: number): CountyTimeSeriesData | undefined {
+    const series = this.getCountyTimeSeries(county);
+    if (!series.length) return undefined;
+    const targetYear = year ?? series[series.length - 1].year;
+    return series.find(c => c.year === targetYear);
   }
 
   // County trend methods (households + % below ALICE threshold by year)
@@ -1152,6 +1253,7 @@ export class CsvDataService {
       employment: this.employment.length,
       trends: this.trends.length,
       subcounty: this.subcounty.length,
+      subcounty2024: this.subcounty2024.length,
       statewide: this.statewide.length,
       householdTypes: this.householdTypes.length,
       householdTypeTrends: this.householdTypeTrends.length,
@@ -1162,6 +1264,7 @@ export class CsvDataService {
       ageBreakdown: this.ageBreakdown.length,
       budgets: this.budgets.length,
       countyBudgets: this.countyBudgets.length,
+      countyTimeSeries: this.countyTimeSeries.length,
       initialized: this.initialized
     };
   }
@@ -1185,10 +1288,15 @@ export class CsvDataService {
   // Search by GEO display label or GEO id2
   // Enhanced to match place names like "Fayetteville" to "Fayetteville city"
   findSubCounty(searchTerm: string): SubCountyData | undefined {
+    // Prefer the latest year (2024); fall back to the fuller 2023 set.
+    return this.findSubCountyIn(searchTerm, this.subcounty2024) ?? this.findSubCountyIn(searchTerm, this.subcounty);
+  }
+
+  private findSubCountyIn(searchTerm: string, source: SubCountyData[]): SubCountyData | undefined {
     const normalizedSearch = searchTerm.toLowerCase().trim();
-    
+
     // First, try exact match on display label or GEO id
-    let match = this.subcounty.find(s => 
+    let match = source.find(s =>
       s.geo_display_label.toLowerCase().includes(normalizedSearch) ||
       s.geo_id2.toLowerCase().includes(normalizedSearch)
     );
@@ -1197,7 +1305,7 @@ export class CsvDataService {
     
     // Try with "city" suffix
     const withCity = `${normalizedSearch} city`;
-    match = this.subcounty.find(s => 
+    match = source.find(s => 
       s.geo_display_label.toLowerCase().includes(withCity)
     );
     
@@ -1205,7 +1313,7 @@ export class CsvDataService {
     
     // Try with "town" suffix
     const withTown = `${normalizedSearch} town`;
-    match = this.subcounty.find(s => 
+    match = source.find(s => 
       s.geo_display_label.toLowerCase().includes(withTown)
     );
     
@@ -1213,7 +1321,7 @@ export class CsvDataService {
     
     // If no match, try matching just the base name (without city/town/township suffix)
     // This allows partial matches for subcounty/township data
-    match = this.subcounty.find(s => {
+    match = source.find(s => {
       const displayLabel = s.geo_display_label.toLowerCase();
       
       // Extract the base name part before city/town/township/cdp

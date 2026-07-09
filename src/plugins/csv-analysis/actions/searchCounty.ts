@@ -717,17 +717,55 @@ export const searchCountyAction: Action = {
       // Use actual ALICE households from CSV data
       const aliceHouseholds = countyData.alice_housholds;
       const combinedThreshold = countyData.alice_percentage + countyData.poverty;
-      
+
+      // County trend over time (2010-2024), from the county time series.
+      const isCountyTrendQuery =
+        /\b(trend|trends|over time|over the years|throughout the years|year over year|each year|history|historical|grown|grew|growth|declin\w*|increase[ds]?|decrease[ds]?|chang\w*|since \d{4})\b/i.test(text);
+      const tsSeries =
+        typeof csvService.getCountyTimeSeries === 'function' ? csvService.getCountyTimeSeries(countyData.county) : [];
+      if (isCountyTrendQuery && tsSeries.length > 1) {
+        let tr = `ALICE trend for ${countyData.county} — households below the ALICE threshold (ALICE + poverty combined):\n\n`;
+        tsSeries.forEach((p: any) => {
+          const below = p.poverty + p.alice;
+          const pct = p.households > 0 ? Math.round((below / p.households) * 100) : 0;
+          tr += `  ${p.year}: ${below.toLocaleString()} of ${p.households.toLocaleString()} households (${pct}%)\n`;
+        });
+        const first = tsSeries[0];
+        const last = tsSeries[tsSeries.length - 1];
+        const delta = (last.poverty + last.alice) - (first.poverty + first.alice);
+        const dir = delta > 0 ? 'increase' : delta < 0 ? 'decrease' : 'no change';
+        tr += `\nNet change ${first.year}–${last.year}: ${delta >= 0 ? '+' : ''}${delta.toLocaleString()} households below the ALICE threshold (${dir}).`;
+        const trResult = { text: tr, success: true };
+        if (callback) { callback(trResult); return trResult; }
+        return trResult;
+      }
+
       let response = `According to my data set, ${countyData.county}:\n\n`;
+      const countyTs =
+        typeof csvService.findCountyTimeSeries === 'function'
+          ? csvService.findCountyTimeSeries(countyData.county)
+          : undefined;
+      const showThresholdDollars = isCountyThresholdOrBudgetQuery && !!countyTs && /\bthreshold\b/i.test(text);
+
+      // Lead with the latest-year headline (2024), except for the self-contained
+      // threshold-dollar answer below.
       const latestCountyTrend =
         typeof csvService.findCountyTrend === 'function'
           ? csvService.findCountyTrend(countyData.county)
           : undefined;
-      if (latestCountyTrend && latestCountyTrend.year !== countyData.year) {
+      if (!showThresholdDollars && latestCountyTrend && latestCountyTrend.year !== countyData.year) {
         response += `Latest available data (${latestCountyTrend.year}): ${latestCountyTrend.households.toLocaleString()} households, ${latestCountyTrend.below_alice_threshold}% below the ALICE threshold.\n\n`;
         response += `Detailed ${countyData.year} breakdown:\n`;
       }
-      if (isCountyThresholdOrBudgetQuery) {
+
+      if (showThresholdDollars && countyTs) {
+        response += `ALICE Threshold for ${countyData.county} (${countyTs.year}) — the annual household income needed to afford basic necessities:\n`;
+        response += `  Households under 65: $${countyTs.threshold_under_65.toLocaleString()}/year\n`;
+        response += `  Households 65 and over: $${countyTs.threshold_65_plus.toLocaleString()}/year\n\n`;
+        response += `In ${countyData.county} (${countyTs.year}), ${(countyTs.poverty + countyTs.alice).toLocaleString()} of ${countyTs.households.toLocaleString()} households are below the ALICE threshold ` +
+          `(${Math.round(((countyTs.poverty + countyTs.alice) / countyTs.households) * 100)}%): ${countyTs.alice.toLocaleString()} ALICE + ${countyTs.poverty.toLocaleString()} in poverty.\n\n`;
+        response += `Note: For county-level Household Survival/Stability Budget dollar breakdowns, ask e.g. "survival budget for a family of four in ${countyData.county}".`;
+      } else if (isCountyThresholdOrBudgetQuery) {
         response += `I don't have county-level ALICE Threshold, Household Survival Budget, or Stability Budget dollar amounts in my dataset.\n\n`;
         response += `What I do have for ${countyData.county} is the below-ALICE-threshold rate:\n`;
         response += `Total below ALICE threshold: ${combinedThreshold}% (ALICE + poverty combined)\n`;

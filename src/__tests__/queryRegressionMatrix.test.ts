@@ -62,17 +62,19 @@ describe('reviewed ALICE query regression matrix', () => {
     expect(stability.text).toContain('ALICE Stability Budget');
     expect(stability.text).toContain("don't currently have Arkansas Stability Budget dollar amounts");
 
-    for (const question of [
-      'What is the ALICE threshold for Benton County?',
-      'What is the ALICE survival Budget for Benton County?'
-    ]) {
-      const result = await ask(question);
-      expect(result.action).toBe('SEARCH_COUNTY_DATA');
-      expect(result.text).toContain("I don't have county-level ALICE Threshold");
-      expect(result.text).toContain('Total below ALICE threshold: 29%');
-      expect(result.text).toContain('ALICE households: 21% (23,721 households)');
-      expect(result.text).toContain('Households in poverty: 8%');
-    }
+    // County ALICE Threshold dollar amounts are now available (from the
+    // county time series).
+    const threshold = await ask('What is the ALICE threshold for Benton County?');
+    expect(threshold.action).toBe('SEARCH_COUNTY_DATA');
+    expect(threshold.text).toContain('ALICE Threshold for Benton County (2024)');
+    expect(threshold.text).toContain('Households under 65: $58,857/year');
+    expect(threshold.text).toContain('Households 65 and over: $51,708/year');
+
+    // County-level *budget* dollars are still not in this action's dataset.
+    const budget = await ask('What is the ALICE survival Budget for Benton County?');
+    expect(budget.action).toBe('SEARCH_COUNTY_DATA');
+    expect(budget.text).toContain("I don't have county-level ALICE Threshold");
+    expect(budget.text).toContain('Total below ALICE threshold: 29%');
   });
 
   it('answers Benton vs Washington threshold comparisons directly', async () => {

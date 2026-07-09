@@ -1,6 +1,28 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { CsvDataService } from '../services/csvDataService';
 
+const AR_COUNTY_NAMES = [
+  'arkansas', 'ashley', 'baxter', 'benton', 'boone', 'bradley', 'calhoun', 'carroll', 'chicot', 'clark',
+  'clay', 'cleburne', 'cleveland', 'columbia', 'conway', 'craighead', 'crawford', 'crittenden', 'cross',
+  'dallas', 'desha', 'drew', 'faulkner', 'franklin', 'fulton', 'garland', 'grant', 'greene', 'hempstead',
+  'hot spring', 'howard', 'independence', 'izard', 'jackson', 'jefferson', 'johnson', 'lafayette',
+  'lawrence', 'lee', 'lincoln', 'little river', 'logan', 'lonoke', 'madison', 'marion', 'miller',
+  'mississippi', 'monroe', 'montgomery', 'nevada', 'newton', 'ouachita', 'perry', 'phillips', 'pike',
+  'poinsett', 'polk', 'pope', 'prairie', 'pulaski', 'randolph', 'saline', 'scott', 'searcy', 'sebastian',
+  'sevier', 'sharp', 'st. francis', 'stone', 'union', 'van buren', 'washington', 'white', 'woodruff', 'yell'
+];
+
+// True when the query names a specific county (so the county action, not the
+// statewide trends action, should answer). "in Arkansas" alone is the state.
+function namesSpecificCounty(text: string): boolean {
+  const t = text.toLowerCase().replace(/[-–—]/g, ' ');
+  return AR_COUNTY_NAMES.some((c) => {
+    const esc = c.replace(/\./g, '\\.');
+    if (new RegExp(`\\b${esc}\\s+count(?:y|ies)\\b`, 'i').test(t)) return true;
+    return c !== 'arkansas' && new RegExp(`\\b(?:in|for|within)\\s+${esc}\\b`, 'i').test(t);
+  });
+}
+
 export const analyzeTrendsAction: Action = {
   name: 'Analyzing trends data...',
   similes: [
@@ -47,7 +69,11 @@ export const analyzeTrendsAction: Action = {
     // Exclude demographic queries - if it mentions specific demographics, let demographics action handle it
     const isDemographicQuery = ['black', 'white', 'hispanic', 'latino', 'asian', 'native american', 'age', 'household type', 'parent', 'race', 'ethnicity'].some(keyword => text.includes(keyword));
     
-    const result = (hasTrendKeyword || hasMetricKeyword || isTimeQuery) && !isDemographicQuery;
+    // Defer to the county action when a specific county is named (it can answer
+    // that county's time series); the statewide trends action stays statewide.
+    const isCountySpecific = namesSpecificCounty(text);
+
+    const result = (hasTrendKeyword || hasMetricKeyword || isTimeQuery) && !isDemographicQuery && !isCountySpecific;
     console.error('*** Trend keyword:', hasTrendKeyword);
     console.error('*** Metric keyword:', hasMetricKeyword);
     console.error('*** Time query:', isTimeQuery);
