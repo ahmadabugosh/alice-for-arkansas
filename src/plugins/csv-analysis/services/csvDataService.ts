@@ -1198,6 +1198,13 @@ export class CsvDataService {
     return [...new Set(this.countyBudgets.map(b => b.household_type))];
   }
 
+  // All household-type budgets for one county (name-suffix normalized).
+  getCountyBudgets(county: string): CountyBudgetData[] {
+    const norm = (s: string) => s.toLowerCase().replace(/\s+county$/, '').trim();
+    const target = norm(county);
+    return this.countyBudgets.filter(b => norm(b.county) === target);
+  }
+
   hasCountyBudgets(): boolean {
     return this.countyBudgets.length > 0;
   }

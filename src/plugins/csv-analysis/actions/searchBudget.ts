@@ -246,6 +246,23 @@ export const searchBudgetAction: Action = {
         }
       }
 
+      // County named but no specific household type: show that county's Survival
+      // budget across all household types (instead of the statewide overview).
+      if (county && typeof csvService.getCountyBudgets === 'function') {
+        const countyRows = csvService.getCountyBudgets(county);
+        if (countyRows.length > 0) {
+          const cYear = countyRows[0].year;
+          let cResponse = `ALICE Household Survival Budget for ${prettyCounty(county)}, Arkansas (${cYear}) — monthly / annual cost by household type:\n\n`;
+          countyRows.forEach((b) => {
+            cResponse += `${b.household_type}: ${money(b.monthly)}/month, ${money(b.annual)}/year\n`;
+          });
+          cResponse += `\nAsk about a specific household (e.g. "survival budget for a family of four in ${prettyCounty(county)}") for the full line-item breakdown.`;
+          const cResult = { text: cResponse, success: true, action: 'BUDGET_DATA_RETRIEVED' };
+          if (callback) { callback(cResult); return true; }
+          return cResult;
+        }
+      }
+
       const wantsWage = /\b(hourly wage|wage|per hour|hourly|how much.*hour)\b/.test(lower);
       const wantsAnnual = /\b(annual|annually|yearly|per year|a year|salary)\b/.test(lower);
 

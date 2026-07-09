@@ -82,13 +82,16 @@ export const rankCountiesAction: Action = {
       wantsCount = true;
       wantsPercentage = false;
     } else {
-      // Infer from context: if "households" appears with ranking keywords, assume count
-      const hasHouseholdsWithRanking = text.includes('households') && 
-        (text.includes('most') || text.includes('fewest') || text.includes('fewer') || 
-         text.includes('least') || text.includes('maximum') || text.includes('minimum') ||
-         text.includes('largest') || text.includes('biggest') || text.includes('smallest'));
-      
-      wantsCount = hasHouseholdsWithRanking;
+      // Infer from context: a count noun (households / people / members / etc.)
+      // with a ranking keyword means the user wants absolute counts, e.g.
+      // "most members of the ALICE community" -> most ALICE households.
+      const hasCountNoun = /\b(households?|people|persons?|residents?|families|individuals?|members?|population)\b/.test(text);
+      const hasRankingKeyword =
+        text.includes('most') || text.includes('fewest') || text.includes('fewer') ||
+        text.includes('least') || text.includes('maximum') || text.includes('minimum') ||
+        text.includes('largest') || text.includes('biggest') || text.includes('smallest');
+
+      wantsCount = hasCountNoun && hasRankingKeyword;
       wantsPercentage = !wantsCount; // Default to percentage
     }
     

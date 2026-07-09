@@ -101,6 +101,12 @@ describe('reviewed ALICE query regression matrix', () => {
     expect(highestCounty.action).toBe('Ranking locations...');
     expect(highestCounty.text).toContain('1. Scott County: 45% (13,244 households)');
 
+    // "most members" means absolute count, not rate -> rank by ALICE households
+    const mostMembers = await ask('What county in Arkansas has the most members of the ALICE community?');
+    expect(mostMembers.action).toBe('Ranking locations...');
+    expect(mostMembers.text).toContain('highest ALICE households');
+    expect(mostMembers.text).toContain('1. Pulaski County: 46,080 households');
+
     for (const question of [
       'What city has the lowest ALICE rate?',
       'What city in AR has the lowest ALICE rate?'

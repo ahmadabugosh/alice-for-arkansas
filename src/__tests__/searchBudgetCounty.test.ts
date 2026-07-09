@@ -35,6 +35,14 @@ describe('searchBudget — county-level budgets', () => {
     expect(r.text).toContain('child care cost for a Two Adults Two Children in Washington County, Arkansas is $469');
   });
 
+  it('shows a county budget overview when a county is named without a household type', async () => {
+    const r: any = await ask('What is the ALICE survival Budget for Benton County?');
+    expect(r.text).toContain('Survival Budget for Benton County, Arkansas (2024)');
+    expect(r.text).toContain('Single Adult: $2,601/month');
+    expect(r.text).toContain('Two Adults Two Children: $5,770/month');
+    expect(r.text).not.toContain('the bottom line by household type'); // not the statewide overview
+  });
+
   it('still returns the statewide budget when no county is named', async () => {
     const r: any = await ask('survival budget for a single adult');
     expect(r.text).toContain('ALICE Household Survival Budget for a Single Adult in Arkansas');
