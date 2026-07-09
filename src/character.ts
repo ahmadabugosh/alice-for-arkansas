@@ -12,6 +12,11 @@ export const character: Character = {
     '@elizaos/plugin-openrouter',
     '@elizaos/plugin-openai',
 
+    // RAG knowledge — loads the narrative docs in ./knowledge for contextual
+    // (non-statistical) questions. Numeric ALICE stats still come from the CSV
+    // actions per the system prompt.
+    '@elizaos/plugin-knowledge',
+
     // Platform plugins
     ...(process.env.DISCORD_API_TOKEN?.trim() ? ['@elizaos/plugin-discord'] : []),
     ...(process.env.TWITTER_API_KEY?.trim() &&
@@ -29,6 +34,10 @@ export const character: Character = {
     secrets: {},
     avatar: '/alice-avatar.png',
     ragKnowledge: true,
+    // Auto-load the ./knowledge folder (info.md + the ALICE report) into RAG
+    // at startup. Requires an embeddings provider (OpenAI).
+    LOAD_DOCS_ON_STARTUP: true,
+    KNOWLEDGE_PATH: './knowledge',
     // Response reliability settings
     responseTimeout: 30000, // 30 seconds timeout
     maxRetries: 2, // Retry up to 2 times
