@@ -21,6 +21,10 @@ const money = (n: number): string => `$${n.toLocaleString('en-US')}`;
 // Order matters: the more specific compositions are checked first.
 function detectHousehold(text: string): string | undefined {
   const t = normalizeText(text);
+  if (/(two seniors|senior couple|elderly couple|two retirees|two retired)/.test(t)) return 'Two Seniors';
+  if (/(single senior|one senior|a senior|elderly|retiree|retired)/.test(t)) return 'Single Senior';
+  if (/(one adult one childcare|single parent one childcare|one parent one childcare|single adult one childcare)/.test(t)) return 'One Adult One Childcare';
+  if (/(one adult one child|single parent|one parent|single mother|single father|single mom|single dad|one child)/.test(t)) return 'One Adult One Child';
   if (/(two adults two childcare|two in childcare|both in childcare|children in childcare|kids in childcare|two childcare|with childcare)/.test(t)) {
     return 'Two Adults Two Childcare';
   }
@@ -33,6 +37,14 @@ function detectHousehold(text: string): string | undefined {
   if (/(single adult|one adult|single person|one person|individual|live alone|living alone|by myself|just me|single)/.test(t)) {
     return 'Single Adult';
   }
+  return undefined;
+}
+
+// "survival budget" (the ALICE threshold) vs "stability budget" (higher bar).
+function detectBudgetType(text: string): string | undefined {
+  const t = text.toLowerCase();
+  if (t.includes('survival')) return 'Survival';
+  if (t.includes('stability') || t.includes('stable')) return 'Stability';
   return undefined;
 }
 
@@ -66,6 +78,8 @@ function formatFullBudget(b: BudgetData): string {
   let response = `${budgetLabel(b)} for a ${b.household_type} in Arkansas (${b.year}):\n\n`;
   response += 'Monthly costs:\n';
   LINE_ITEMS.forEach((item) => {
+    // The Survival budget has no savings line; skip it when it's zero.
+    if (item.field === 'savings' && ((b.savings as number) ?? 0) === 0) return;
     response += `  ${item.label}: ${money(b[item.field] as number)}\n`;
   });
   response += `\nMonthly total: ${money(b.monthly_total)}\n`;
@@ -126,9 +140,23 @@ export const searchBudgetAction: Action = {
       }
 
       const latestYear = csvService.getLatestBudgetYear();
-      const yearBudgets = budgets.filter((b) => b.year === latestYear);
-      const budgetType = yearBudgets[0]?.budget_type ?? 'Stability';
+      const availableTypes = typeof csvService.getBudgetTypes === 'function'
+        ? csvService.getBudgetTypes()
+        : [...new Set(budgets.map((b) => b.budget_type))];
+      // Default to the Survival budget (the ALICE threshold); honor an explicit
+      // "survival"/"stability" ask when that type is available.
+      const requestedType = detectBudgetType(text);
+      const budgetType = requestedType && availableTypes.includes(requestedType)
+        ? requestedType
+        : (availableTypes.includes('Survival') ? 'Survival' : (availableTypes[0] ?? 'Stability'));
       const labelPrefix = `ALICE Household ${budgetType} Budget`;
+
+      const yearBudgets = budgets.filter((b) => b.year === latestYear && b.budget_type === budgetType);
+
+      const otherType = availableTypes.find((t) => t !== budgetType);
+      const otherNote = otherType
+        ? `\n\nI also have the ALICE Household ${otherType} Budget${otherType === 'Stability' ? ' (a higher, more sustainable standard that adds savings)' : ' (the bare-minimum ALICE threshold)'} — ask for it by name.`
+        : '';
 
       const household = detectHousehold(text);
       const lineItem = detectLineItem(text);
@@ -139,7 +167,7 @@ export const searchBudgetAction: Action = {
       let response = '';
 
       if (household) {
-        const b = csvService.findBudget(household, undefined, latestYear);
+        const b = csvService.findBudget(household, budgetType, latestYear);
         if (!b) {
           response = `I don't have a budget for a ${household} in my data set.`;
         } else if (lineItem) {
@@ -149,7 +177,7 @@ export const searchBudgetAction: Action = {
         } else if (wantsAnnual) {
           response = `The ${labelPrefix} (${b.year}) for a ${b.household_type} in Arkansas is ${money(b.annual_total)} per year (${money(b.monthly_total)} per month).`;
         } else {
-          response = formatFullBudget(b);
+          response = formatFullBudget(b) + otherNote;
         }
       } else if (lineItem) {
         response = `According to the ${labelPrefix} (${latestYear}), here is the monthly ${lineItem.label.toLowerCase()} cost in Arkansas by household type:\n\n`;
@@ -162,6 +190,7 @@ export const searchBudgetAction: Action = {
           response += `${b.household_type}: ${money(b.monthly_total)}/month, ${money(b.annual_total)}/year ($${b.hourly_wage.toFixed(2)}/hr full-time)\n`;
         });
         response += `\nAsk about a specific household (e.g. "budget for a single adult") or a line item (e.g. "housing cost for a family of four") for the full breakdown.`;
+        response += otherNote;
       }
 
       const result = {
@@ -191,7 +220,7 @@ export const searchBudgetAction: Action = {
       {
         name: 'Alice',
         content: {
-          text: 'ALICE Household Stability Budget for a Single Adult in Arkansas (2024):\n\nMonthly total: $3,954\nAnnual total: $47,448\nHourly wage needed (full-time): $23.72'
+          text: 'ALICE Household Survival Budget for a Single Adult in Arkansas (2024):\n\nMonthly total: $2,273\nAnnual total: $27,276\nHourly wage needed (full-time): $13.64'
         }
       }
     ]
