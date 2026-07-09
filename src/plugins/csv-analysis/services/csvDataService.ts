@@ -89,6 +89,15 @@ export interface RaceTrendData {
   below_alice_threshold: number;
 }
 
+// County-level total households and % below the ALICE threshold, by year.
+// A lighter-weight companion to CountyData (which has the full 2023 breakdown).
+export interface CountyTrendData {
+  year: number;
+  county: string;                // bare name, e.g. "Arkansas" (no "County" suffix)
+  households: number;
+  below_alice_threshold: number; // percent
+}
+
 // Race/ethnicity breakdown as absolute counts per ALICE band, by year.
 export interface RaceBreakdownData {
   year: number;
@@ -137,6 +146,7 @@ export class CsvDataService {
   private householdTypeTrends: HouseholdTypeTrendData[] = [];
   private raceTrends: RaceTrendData[] = [];
   private raceBreakdown: RaceBreakdownData[] = [];
+  private countyTrends: CountyTrendData[] = [];
   private budgets: BudgetData[] = [];
   private locationNameIndex: Map<string, LocationEntry[]> = new Map();  // Lookup table for prioritized search
   private initialized = false;
@@ -504,6 +514,28 @@ export class CsvDataService {
       console.log(`*** Loaded ${this.raceBreakdown.length} race breakdown records from CSV ***`);
     }
 
+    // Load county-level trend data (households + % below ALICE threshold by year)
+    const countyTrendsPath = path.join(process.cwd(), 'data', 'county-trends.csv');
+    if (fs.existsSync(countyTrendsPath)) {
+      const countyTrendsContent = fs.readFileSync(countyTrendsPath, 'utf-8');
+      this.countyTrends = parse(countyTrendsContent, {
+        columns: true,
+        skip_empty_lines: true,
+        cast: (value, { column }) => {
+          if (column === 'Year' || column === 'Households' || column === 'BelowAliceThreshold') {
+            return parseInt(value);
+          }
+          return value;
+        }
+      }).map((row: any) => ({
+        year: row.Year,
+        county: row.County,
+        households: row.Households,
+        below_alice_threshold: row.BelowAliceThreshold,
+      }));
+      console.log(`*** Loaded ${this.countyTrends.length} county trend records from CSV ***`);
+    }
+
     // Load ALICE budget data (Survival / Stability budgets by household type)
     const budgetsPath = path.join(process.cwd(), 'data', 'budgets.csv');
     if (fs.existsSync(budgetsPath)) {
@@ -748,6 +780,35 @@ export class CsvDataService {
     });
   }
 
+  // County trend methods (households + % below ALICE threshold by year)
+  getAllCountyTrends(): CountyTrendData[] {
+    return [...this.countyTrends];
+  }
+
+  getCountyTrendYears(): number[] {
+    return [...new Set(this.countyTrends.map(c => c.year))].sort((a, b) => a - b);
+  }
+
+  getLatestCountyTrendYear(): number | undefined {
+    const years = this.getCountyTrendYears();
+    return years.length ? years[years.length - 1] : undefined;
+  }
+
+  getCountyTrendsByYear(year: number): CountyTrendData[] {
+    return this.countyTrends.filter(c => c.year === year);
+  }
+
+  // Find a county's trend row, defaulting to the latest year. Matches names
+  // with or without a " County" suffix ("Arkansas County" <-> "Arkansas").
+  findCountyTrend(county: string, year?: number): CountyTrendData | undefined {
+    const norm = (s: string) => s.toLowerCase().replace(/\s+county$/, '').trim();
+    const target = norm(county);
+    const targetYear = year ?? this.getLatestCountyTrendYear();
+    return this.countyTrends.find(c =>
+      norm(c.county) === target && (targetYear === undefined || c.year === targetYear)
+    );
+  }
+
   // Demographics methods
   getAllDemographics(): DemographicData[] {
     return [...this.demographics];
@@ -916,6 +977,7 @@ export class CsvDataService {
       householdTypeTrends: this.householdTypeTrends.length,
       raceTrends: this.raceTrends.length,
       raceBreakdown: this.raceBreakdown.length,
+      countyTrends: this.countyTrends.length,
       budgets: this.budgets.length,
       initialized: this.initialized
     };

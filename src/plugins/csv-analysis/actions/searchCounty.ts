@@ -1,5 +1,37 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { CsvDataService } from '../services/csvDataService';
+import { CsvDataService, CountyData } from '../services/csvDataService';
+
+// Build a single-county response. When newer (latest-year) county data exists,
+// lead with it as the headline and keep the detailed breakdown labeled by its
+// own (earlier) year; otherwise fall back to the single-year format.
+function buildCountyResponse(csvService: CsvDataService, countyData: CountyData): string {
+  let response = `According to my data set, ${countyData.county}:\n\n`;
+
+  const latest =
+    typeof csvService.findCountyTrend === 'function'
+      ? csvService.findCountyTrend(countyData.county)
+      : undefined;
+
+  if (latest && latest.year !== countyData.year) {
+    response += `Latest available data (${latest.year}):\n`;
+    response += `  Total households: ${latest.households.toLocaleString()}\n`;
+    response += `  Below ALICE threshold: ${latest.below_alice_threshold}%\n\n`;
+    response += `Detailed breakdown (${countyData.year}):\n`;
+    response += `  Total households: ${countyData.households.toLocaleString()}\n`;
+    response += `  ALICE households: ${countyData.alice_percentage}% (${countyData.alice_housholds.toLocaleString()} households)\n`;
+    response += `  Households in poverty: ${countyData.poverty}%\n`;
+    response += `  Below ALICE threshold: ${countyData.below_alice_percentage}%\n`;
+    if (countyData.priority) response += `  Priority County: Yes\n`;
+  } else {
+    response += `Total households: ${countyData.households.toLocaleString()}\n`;
+    response += `ALICE households: ${countyData.alice_percentage}% (${countyData.alice_housholds.toLocaleString()} households)\n`;
+    response += `Households in poverty: ${countyData.poverty}%\n`;
+    response += `Below ALICE threshold: ${countyData.below_alice_percentage}%\n`;
+    response += `Year: ${countyData.year}\n`;
+    if (countyData.priority) response += `Priority County: Yes\n`;
+  }
+  return response;
+}
 
 export const searchCountyAction: Action = {
   name: 'SEARCH_COUNTY_DATA',
@@ -403,16 +435,7 @@ export const searchCountyAction: Action = {
               const countyData = csvService.findCounty(searchTerm);
               
               if (countyData) {
-                let response = `According to my data set, ${countyData.county}:\n\n`;
-                response += `Total households: ${countyData.households.toLocaleString()}\n`;
-                response += `ALICE households: ${countyData.alice_percentage}% (${countyData.alice_housholds.toLocaleString()} households)\n`;
-                response += `Households in poverty: ${countyData.poverty}%\n`;
-                response += `Below ALICE threshold: ${countyData.below_alice_percentage}%\n`;
-                response += `Year: ${countyData.year}\n`;
-                if (countyData.priority) {
-                  response += `Priority County: Yes\n`;
-                }
-                
+                const response = buildCountyResponse(csvService, countyData);
                 const result = { text: response, success: true };
                 if (callback) callback(result);
                 return result;
@@ -478,18 +501,10 @@ export const searchCountyAction: Action = {
           // Handle based on type
           if (selectedEntry.type === 'County') {
             // Return county data with ambiguity note
-            const countyData = selectedData as import('../services/csvDataService').CountyData;
-            
-            let response = `According to my data set, ${countyData.county}:\n\n`;
-            response += `Total households: ${countyData.households.toLocaleString()}\n`;
-            response += `ALICE households: ${countyData.alice_percentage}% (${countyData.alice_housholds.toLocaleString()} households)\n`;
-            response += `Households in poverty: ${countyData.poverty}%\n`;
-            response += `Below ALICE threshold: ${countyData.below_alice_percentage}%\n`;
-            response += `Year: ${countyData.year}\n`;
-            if (countyData.priority) {
-              response += `Priority County: Yes\n`;
-            }
-            
+            const countyData = selectedData as CountyData;
+
+            let response = buildCountyResponse(csvService, countyData);
+
             // Add ambiguity note
             response += ambiguityNote;
             
@@ -704,6 +719,14 @@ export const searchCountyAction: Action = {
       const combinedThreshold = countyData.alice_percentage + countyData.poverty;
       
       let response = `According to my data set, ${countyData.county}:\n\n`;
+      const latestCountyTrend =
+        typeof csvService.findCountyTrend === 'function'
+          ? csvService.findCountyTrend(countyData.county)
+          : undefined;
+      if (latestCountyTrend && latestCountyTrend.year !== countyData.year) {
+        response += `Latest available data (${latestCountyTrend.year}): ${latestCountyTrend.households.toLocaleString()} households, ${latestCountyTrend.below_alice_threshold}% below the ALICE threshold.\n\n`;
+        response += `Detailed ${countyData.year} breakdown:\n`;
+      }
       if (isCountyThresholdOrBudgetQuery) {
         response += `I don't have county-level ALICE Threshold, Household Survival Budget, or Stability Budget dollar amounts in my dataset.\n\n`;
         response += `What I do have for ${countyData.county} is the below-ALICE-threshold rate:\n`;
