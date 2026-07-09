@@ -378,6 +378,68 @@ function buildAgeResponse(csvService: CsvDataService, text: string): string {
   return `I don't have age-group ALICE data for ${targetYear}. I have data for ${availableYears.join(', ')}.`;
 }
 
+// A cross-dimension ranking question ("which groups are most below the ALICE
+// threshold?"). Fires only for generic group phrasing — if the user named a
+// specific dimension (race/age/gender/county/etc.), that dimension handles it.
+function isGroupRankingQuery(text: string): boolean {
+  const t = text.toLowerCase();
+  const rankWord = /\b(rank|ranked|ranking|most|highest|greatest|worst|hardest hit|most affected|which groups?|which demographic|compare)\b/.test(t);
+  const groupWord = /\b(groups?|demographics?)\b/.test(t);
+  if (!(rankWord && groupWord)) return false;
+  const namedDimension = /\b(race|racial|ethnic|white|black|hispanic|latino|asian|native american|age|senior|elderly|under 25|gender|female|male|married|single parent|single-female|single-male|county|counties|occupation|employ|job|wage)\b/.test(t);
+  return !namedDimension;
+}
+
+const GROUP_RANK_AGE_LABEL: Record<string, string> = {
+  'Under 25': 'Under 25 Years',
+  'Age 25 to 44': '25 to 44 Years',
+  'Age 45 to 64': '45 to 64 Years',
+  'Age 65 and Over': '65 Years and Over'
+};
+
+// Assemble the ranking rows from the latest household + age band data (computed,
+// not stored) plus the no-children category from demographics.
+function groupRankingRows(csvService: CsvDataService, demographicData: DemographicData[]): { label: string; pct: number; year: number }[] {
+  const rows: { label: string; pct: number; year: number }[] = [];
+  const belowPct = (r: { alice: number; poverty: number; households: number }) =>
+    r.households > 0 ? Math.round(((r.alice + r.poverty) / r.households) * 100) : 0;
+
+  if (typeof csvService.getLatestHouseholdTypeYear === 'function' && typeof csvService.getHouseholdTypes === 'function') {
+    const y = csvService.getLatestHouseholdTypeYear();
+    if (y !== undefined) {
+      csvService.getHouseholdTypes(y).forEach((r) => rows.push({ label: `${r.name} (with children)`, pct: belowPct(r), year: y }));
+    }
+  }
+  if (typeof csvService.getLatestAgeBreakdownYear === 'function' && typeof csvService.getAgeBreakdown === 'function') {
+    const y = csvService.getLatestAgeBreakdownYear();
+    if (y !== undefined) {
+      csvService.getAgeBreakdown(y).forEach((r) => rows.push({ label: GROUP_RANK_AGE_LABEL[r.age_group] ?? r.age_group, pct: belowPct(r), year: y }));
+    }
+  }
+  const noKids = demographicData.find((d) => /no Children/i.test(d.category));
+  if (noKids) {
+    rows.push({ label: 'Single or Cohabiting (no children)', pct: noKids.alice_percentage + noKids.poverty_percent, year: noKids.year });
+  }
+  return rows;
+}
+
+function buildGroupRanking(csvService: CsvDataService, demographicData: DemographicData[]): string {
+  const rows = groupRankingRows(csvService, demographicData);
+  if (rows.length === 0) {
+    return "I don't have the group breakdown needed to rank below-threshold rates right now.";
+  }
+  rows.sort((a, b) => b.pct - a.pct);
+
+  let response =
+    'Here are Arkansas household groups ranked by the share of households below the ALICE threshold (ALICE + poverty combined), highest first:\n\n';
+  rows.forEach((r, i) => {
+    response += `${i + 1}. ${r.label}: ${r.pct}%\n`;
+  });
+  response +=
+    '\nNote: "below the ALICE threshold" combines ALICE and poverty households, using each group\'s latest available year (2024 for household-type and age groups; 2023 for the no-children category).';
+  return response;
+}
+
 // Year-/trend-aware race response. Defaults to the latest year's full band
 // breakdown (race-types.csv); serves trends and prior years on request, and
 // falls back to the legacy demographics breakdown when no newer data exists.
@@ -729,7 +791,7 @@ export const searchDemographicsAction: Action = {
       (text.includes('rate') || text.includes('percentage') || text.includes('breakdown')) &&
       (hasDemographicKeyword || hasCategoryKeyword || hasGenderKeyword);
     
-    const result = hasDemographicKeyword || hasCategoryKeyword || hasGenderKeyword || hasAliceDemographicQuery;
+    const result = hasDemographicKeyword || hasCategoryKeyword || hasGenderKeyword || hasAliceDemographicQuery || isGroupRankingQuery(text);
     console.error('*** Demographic keyword:', hasDemographicKeyword);
     console.error('*** Category keyword:', hasCategoryKeyword);
     console.error('*** Gender keyword:', hasGenderKeyword);
@@ -844,7 +906,9 @@ export const searchDemographicsAction: Action = {
       const wantsHouseholdYearAware =
         isHouseholdTopic && !isRaceQuery && (isTrendQuery(text) || detectRequestedYear(text) !== undefined);
 
-      if (isGenderQuery || wantsHouseholdYearAware) {
+      if (isGroupRankingQuery(text)) {
+        response = buildGroupRanking(csvService, demographicData);
+      } else if (isGenderQuery || wantsHouseholdYearAware) {
         response = buildGenderHouseholdResponse(csvService, text);
       } else if (isRaceQuery) {
         response = buildRaceResponse(csvService, text);
