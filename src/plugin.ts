@@ -397,6 +397,24 @@ button[title*="Settings"] {
       },
     },
     {
+      // Hosted demo page for the WordPress chat widget — exercises the exact
+      // same /api/chat path the WordPress plugin uses. Open /widget/demo on
+      // the deployed server to test the widget without a WordPress site.
+      name: 'alice-chat-widget-demo',
+      path: '/widget/demo',
+      type: 'GET',
+      handler: async (_req: any, res: any) => {
+        try {
+          const demoPath = path.join(process.cwd(), 'widget', 'demo.html');
+          res.setHeader('Content-Type', 'text/html');
+          res.sendFile(demoPath);
+        } catch (error) {
+          logger.error('Failed to serve widget demo page:', error);
+          res.status(404).send('Widget demo page not found');
+        }
+      },
+    },
+    {
       name: 'CHAT_API',
       path: '/api/chat',
       type: 'POST',

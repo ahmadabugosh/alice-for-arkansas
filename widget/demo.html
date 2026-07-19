@@ -139,13 +139,13 @@
       <p>Add this single line of code to your website before the closing <code>&lt;/body&gt;</code> tag:</p>
       
       <div class="code-block">
-&lt;script src="http://localhost:3000/widget/alice-chat-widget.js"
-        data-api-url="http://localhost:3000/api/chat"
+&lt;script src="https://YOUR-ALICE-SERVER/widget/alice-chat-widget.js"
         data-title="Chat with Alice"
         data-subtitle="Ask about Arkansas ALICE data"
         data-color="#4F46E5"
         data-position="bottom-right"&gt;&lt;/script&gt;
       </div>
+      <p><em>The widget automatically talks to <code>/api/chat</code> on the server it was loaded from — no <code>data-api-url</code> needed unless the API lives on a different origin.</em></p>
     </div>
 
     <div class="demo-section">
@@ -186,14 +186,15 @@
     <p>Alice for Arkansas &copy; 2025 | Powered by ElizaOS</p>
   </footer>
 
-  <!-- Alice Chat Widget -->
-  <script 
+  <!-- Alice Chat Widget: no data-api-url needed — the widget calls /api/chat
+       on the same origin this page (and the script) is served from. -->
+  <script
     src="./alice-chat-widget.js"
-    data-api-url="http://localhost:3000/api/chat"
     data-title="Chat with Alice"
     data-subtitle="Ask about Arkansas ALICE data"
     data-color="#4F46E5"
     data-position="bottom-right"
+    data-show-popup="true"
   ></script>
 </body>
 </html>
