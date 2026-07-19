@@ -833,8 +833,18 @@
       script = scripts[scripts.length - 1]; // Get the last one (most recent)
     }
     
+    // Derive the API URL from where this script was loaded from: the widget
+    // is served by the same Alice server that exposes /api/chat, so using the
+    // script's own origin picks the right host AND port automatically. An
+    // explicit data-api-url still wins; localhost is the last resort.
+    let derivedApiUrl = '';
+    try {
+      const src = script?.getAttribute('src') || '';
+      if (src) derivedApiUrl = new URL(src, window.location.href).origin + '/api/chat';
+    } catch (e) { /* fall through to defaults */ }
+
     const config = {
-      apiUrl: script?.getAttribute('data-api-url') || DEFAULT_CONFIG.apiUrl,
+      apiUrl: script?.getAttribute('data-api-url') || derivedApiUrl || DEFAULT_CONFIG.apiUrl,
       title: script?.getAttribute('data-title') || DEFAULT_CONFIG.title,
       subtitle: script?.getAttribute('data-subtitle') || DEFAULT_CONFIG.subtitle,
       primaryColor: script?.getAttribute('data-color') || DEFAULT_CONFIG.primaryColor,

@@ -596,10 +596,15 @@ class Alice_Chat_Plugin {
         $show_popup = get_option('alice_chat_show_popup', true) ? 'true' : 'false';
         $popup_text = esc_js(get_option('alice_chat_popup_text', 'Chat with Alice'));
         
+        // The widget is served by the same Alice server as the chat API:
+        // derive its URL from the API origin (strip the /api/chat suffix)
+        // instead of relying on dot-segment path resolution.
+        $server_origin = preg_replace('#/api/chat/?$#', '', $api_url);
+
         // Output the widget script
         ?>
-        <script 
-            src="<?php echo esc_url($api_url); ?>/../../widget/alice-chat-widget.js"
+        <script
+            src="<?php echo esc_url($server_origin); ?>/widget/alice-chat-widget.js"
             data-api-url="<?php echo $api_url; ?>"
             data-title="<?php echo $title; ?>"
             data-subtitle="<?php echo $subtitle; ?>"

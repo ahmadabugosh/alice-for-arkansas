@@ -32,12 +32,21 @@ Add this single line before `</body>`:
 
 ```html
 <script 
-  src="http://localhost:3000/widget/alice-chat-widget.js"
-  data-api-url="http://localhost:3000/api/chat"
+  src="https://YOUR-ALICE-SERVER/widget/alice-chat-widget.js"
   data-title="Chat with Alice"
   data-color="#4F46E5"
 ></script>
 ```
+
+`data-api-url` is optional: the widget automatically calls `/api/chat` on the
+same host and port it was loaded from, so pointing `src` at your Alice server
+is enough. Only set `data-api-url` if the chat API lives on a different origin
+than the widget script.
+
+> **Port note:** the API is served by the ElizaOS agent server (default port
+> 3000). If that port is busy the server auto-increments (e.g. 3001) — check
+> the startup log line `AgentServer is listening on port ...` and use that
+> port in `src`. On a hosted deploy (e.g. Railway) just use the public URL.
 
 ### Option B: WordPress Plugin
 
