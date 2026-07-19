@@ -1,5 +1,6 @@
 import { IAgentRuntime, Memory, State } from '@elizaos/core';
 import { logger } from '@elizaos/core';
+import { aliceActions } from '../plugins/csv-analysis/actions/index';
 
 interface ChatMessage {
   id?: string;
@@ -107,23 +108,12 @@ export class ChatApiService {
 
       // Process with agent
       let agentResponse = '';
-      
-      // Filter to only our CSV data actions (skip system actions like REPLY, CONTINUE, etc.)
-      const csvActionNames = [
-        'Searching Arkansas statewide data...',
-        'Searching demographic data...',
-        'Searching employment data...',
-        'Analyzing trends data...',
-        'SEARCH_COUNTY_DATA',
-        'Comparing counties...',
-        'Ranking locations...',
-        'Searching subcounty records...'
-      ];
-      
-      const actions = (this.runtime.actions || []).filter(action => 
-        csvActionNames.includes(action.name)
-      );
-      
+
+      // Use the shared, ordered action registry — the exact same list (and
+      // priority order) as the main agent, so the WordPress widget can never
+      // drift out of sync with the ElizaOS chat.
+      const actions = aliceActions;
+
       logger.info(`[ChatAPI] Checking ${actions.length} CSV actions`);
       
       for (const action of actions) {

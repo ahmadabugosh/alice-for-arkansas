@@ -15,6 +15,7 @@ import {
   logger,
 } from '@elizaos/core';
 import { z } from 'zod';
+import { aliceActions } from './plugins/csv-analysis/actions/index';
 import { searchCountyAction } from './plugins/csv-analysis/actions/searchCounty';
 import { compareCountiesAction } from './plugins/csv-analysis/actions/compareCounties';
 import { rankCountiesAction } from './plugins/csv-analysis/actions/rankCounties';
@@ -208,17 +209,9 @@ console.error('*** searchCountyAction:', !!searchCountyAction, searchCountyActio
 console.error('*** compareCountiesAction:', !!compareCountiesAction, compareCountiesAction?.name);
 console.error('*** rankCountiesAction:', !!rankCountiesAction, rankCountiesAction?.name);
 
-const actions = [
-  explainAliceAction,     // MUST BE FIRST to handle "tell me about ALICE" concept queries
-  searchBudgetAction,     // BEFORE demographics/statewide so "how much to live"/"single adult" budget queries aren't intercepted
-  searchStatewideAction,  // Second to prevent county action from matching "Arkansas"
-  searchDemographicsAction,
-  searchEmploymentAction,
-  analyzeTrendsAction,
-  rankCountiesAction,      // BEFORE searchCounty to prevent county action from intercepting ranking queries
-  compareCountiesAction,
-  searchCountyAction
-].filter(action => {
+// Single source of truth for the ordered action list — shared with the
+// WordPress /api/chat path so the two surfaces can never drift apart.
+const actions = aliceActions.filter(action => {
   if (!action) {
     console.error('*** WARNING: Null/undefined action filtered out ***');
     return false;
