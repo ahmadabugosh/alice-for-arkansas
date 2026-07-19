@@ -161,38 +161,13 @@ export class ChatApiService {
         }
       }
 
-      // If no response from actions, try to generate a response using the character's knowledge
+      // If no action matched, fall back to the capability menu. Never invent
+      // numbers here: every statistic must come from the CSV actions above
+      // (concept questions like "what is the threshold" are handled by the
+      // explain-ALICE action, which pulls real figures from the CSV data).
       if (!agentResponse) {
-        logger.info('[ChatAPI] No action matched, using character knowledge');
-        
-        // For generic ALICE questions, provide a helpful response
-        const lowerText = messageText.toLowerCase();
-        
-        // ALICE Threshold questions
-        if (lowerText.includes('threshold') && (lowerText.includes('alice') || lowerText.includes('what is') || lowerText.includes('explain'))) {
-          agentResponse = "The **ALICE Threshold** (Household Survival Budget) is the minimum income a household needs to afford basic necessities without assistance.\n\nIt includes:\n• Housing (rent/mortgage)\n• Childcare (if applicable)\n• Food\n• Transportation\n• Healthcare\n• Technology (phone/internet)\n• Taxes\n\nThe threshold **varies by county and household size** in Arkansas. For example:\n• Single adult: ~$30,000-$35,000/year\n• Family of 4: ~$60,000-$75,000/year\n\nUnlike the Federal Poverty Level, the ALICE Threshold reflects the **actual cost of living** in each county. ALICE households earn above poverty but below this threshold.\n\nWant to know the ALICE rate for a specific Arkansas county?";
-        }
-        // Poverty line / Federal Poverty Level questions
-        // Allow 'in Arkansas' (state) but not 'in [X] County' (county-specific)
-        else if (lowerText.includes('poverty line') || lowerText.includes('poverty level') || lowerText.includes('fpl') || lowerText.includes('federal poverty')) {
-          const hasCountySpecific = /\bcounty\b/i.test(lowerText);
-          if (!hasCountySpecific) {
-            agentResponse = "The **Federal Poverty Level (FPL)** is the government's official poverty measure. For 2023 in Arkansas:\n\n• Individual: $14,580/year\n• Family of 2: $19,720/year\n• Family of 3: $24,860/year\n• Family of 4: $30,000/year\n\n**Key difference from ALICE:**\nThe FPL was created in the 1960s and doesn't account for:\n• Geographic cost differences\n• Childcare needs\n• Healthcare costs\n• Transportation\n• Actual cost of living\n\nThe **ALICE Threshold** is more accurate—it's based on real costs in each Arkansas county. Many households earn above the FPL but still can't afford basics (that's ALICE).\n\nIn Arkansas, 13% live below the FPL, but 28% are ALICE—meaning 41% total struggle financially.\n\nWant specific data for an Arkansas county?";
-          }
-        }
-        // What is ALICE / ALICE meaning
-        else if (lowerText.includes('what is alice') || lowerText.includes('define alice') || 
-            lowerText.includes('explain alice') || lowerText.includes('alice mean') || lowerText.includes('alice stand for')) {
-          agentResponse = "**ALICE stands for: Asset Limited, Income Constrained, Employed**\n\nALICE households are working families who:\n• Earn ABOVE the Federal Poverty Level\n• But still can't afford basic necessities\n• Live paycheck to paycheck\n• Are one crisis away from financial trouble\n\nWho is ALICE?\n• Early education workers & childcare providers\n• Home health aides & nursing assistants\n• Retail workers & cashiers\n• Food service workers\n• Office assistants\n• Truck drivers & delivery workers\n\n**In Arkansas (2023):**\n• 28% of households are ALICE (~537,000 households)\n• 13% live in poverty\n• Combined: 41% of Arkansas families struggle financially\n\nALICE families work hard but wages haven't kept up with the cost of living. They're the backbone of our communities but often invisible in poverty statistics.\n\nI can provide specific ALICE data for any Arkansas county, city, demographic, or employment sector. What would you like to know?";
-        }
-        // How is ALICE calculated
-        else if (lowerText.includes('how') && lowerText.includes('alice') && (lowerText.includes('calculated') || lowerText.includes('measured') || lowerText.includes('determined'))) {
-          agentResponse = "A household is classified as **ALICE** if their income is:\n\n1. **Above** the Federal Poverty Level\n2. **Below** the ALICE Threshold (Household Survival Budget) for their county\n\n**The ALICE Threshold varies by:**\n• County (cost of living differs across Arkansas)\n• Household size (number of adults and children)\n• Ages of children (infant care costs more than school-age)\n\n**Example for a family of 4 in Arkansas:**\n• Federal Poverty Level: $30,000/year\n• ALICE Threshold: $60,000-$75,000/year (depending on county)\n• If income is $30,001-$74,999: They're ALICE\n• Below $30,000: They're in poverty\n• Above threshold: They can afford basics\n\nThe threshold is calculated using **actual local costs** for housing, childcare, food, transportation, healthcare, technology, and taxes in each county.\n\nWant to see ALICE data for a specific Arkansas county?";
-        }
-        // General help / fallback
-        else {
-          agentResponse = "I'm here to help with ALICE (Asset Limited, Income Constrained, Employed) data for Arkansas! I can provide information about:\n\n• County-level ALICE rates and household counts\n• City and town data\n• Statewide Arkansas statistics\n• Demographic breakdowns by race and household type\n• Employment sector data\n• Historical trends\n• Comparisons between counties\n\n**I can also explain:**\n• What ALICE means\n• The ALICE threshold\n• The poverty line vs. ALICE\n• How ALICE is calculated\n\nWhat would you like to know?";
-        }
+        logger.info('[ChatAPI] No action matched, returning capability menu');
+        agentResponse = "I'm here to help with ALICE (Asset Limited, Income Constrained, Employed) data for Arkansas! I can provide information about:\n\n• County-level ALICE rates and household counts\n• City and town data\n• Statewide Arkansas statistics\n• Demographic breakdowns by race and household type\n• Employment sector data\n• Survival and Stability budgets (statewide and by county)\n• Historical trends\n• Comparisons between counties\n\n**I can also explain:**\n• What ALICE means\n• The ALICE threshold\n• The poverty line vs. ALICE\n• How ALICE is calculated\n\nWhat would you like to know?";
       }
 
       // Add agent response to session

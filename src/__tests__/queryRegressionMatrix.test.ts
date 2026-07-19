@@ -57,10 +57,11 @@ async function ask(text: string) {
 
 describe('reviewed ALICE query regression matrix', () => {
   it('answers budget and county-threshold questions using only data we have', async () => {
+    // Concept + real dollar figures, pulled live from budgets.csv
     const stability = await ask('What is the ALICE stability budget?');
     expect(stability.action).toBe('Explaining ALICE concept...');
-    expect(stability.text).toContain('ALICE Stability Budget');
-    expect(stability.text).toContain("don't currently have Arkansas Stability Budget dollar amounts");
+    expect(stability.text).toContain('Stability Budget');
+    expect(stability.text).toContain('Single Adult: $3,954/month — $47,448/year');
 
     // County ALICE Threshold dollar amounts are now available (from the
     // county time series).
