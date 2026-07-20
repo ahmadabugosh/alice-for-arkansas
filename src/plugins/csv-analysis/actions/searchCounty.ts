@@ -1,34 +1,39 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { CsvDataService, CountyData } from '../services/csvDataService';
+import { searchStatewideAction } from './searchStatewide';
 
-// Build a single-county response. When newer (latest-year) county data exists,
-// lead with it as the headline and keep the detailed breakdown labeled by its
-// own (earlier) year; otherwise fall back to the single-year format.
+// Build a single-county response, defaulting the FULL breakdown to the latest
+// year available. The county time series carries the complete ALICE/poverty
+// split per year, so nothing has to fall back to an earlier year unless the
+// time series is missing entirely.
 function buildCountyResponse(csvService: CsvDataService, countyData: CountyData): string {
   let response = `According to my data set, ${countyData.county}:\n\n`;
 
-  const latest =
-    typeof csvService.findCountyTrend === 'function'
-      ? csvService.findCountyTrend(countyData.county)
+  const ts =
+    typeof csvService.findCountyTimeSeries === 'function'
+      ? csvService.findCountyTimeSeries(countyData.county)
       : undefined;
 
-  if (latest && latest.year !== countyData.year) {
-    response += `Latest available data (${latest.year}):\n`;
-    response += `  Total households: ${latest.households.toLocaleString()}\n`;
-    response += `  Below ALICE threshold: ${latest.below_alice_threshold}%\n\n`;
-    response += `Detailed breakdown (${countyData.year}):\n`;
-    response += `  Total households: ${countyData.households.toLocaleString()}\n`;
-    response += `  ALICE households: ${countyData.alice_percentage}% (${countyData.alice_housholds.toLocaleString()} households)\n`;
-    response += `  Households in poverty: ${countyData.poverty}%\n`;
-    response += `  Below ALICE threshold: ${countyData.below_alice_percentage}%\n`;
-    if (countyData.priority) response += `  Priority County: Yes\n`;
+  if (ts && ts.year >= countyData.year && ts.households > 0) {
+    const alicePct = Math.round((ts.alice / ts.households) * 100);
+    const povertyPct = Math.round((ts.poverty / ts.households) * 100);
+    const below = ts.alice + ts.poverty;
+    const belowPct = Math.round((below / ts.households) * 100);
+    response += `ALICE households: ${alicePct}% (${ts.alice.toLocaleString()} households)\n`;
+    response += `Households in poverty: ${povertyPct}% (${ts.poverty.toLocaleString()} households)\n`;
+    response += `Total below ALICE threshold: ${belowPct}% (${below.toLocaleString()} households, ALICE + poverty combined)\n`;
+    response += `Total households: ${ts.households.toLocaleString()}\n`;
+    response += `Year: ${ts.year} (latest available)\n`;
+    if (countyData.priority) response += `Priority County: Yes\n`;
+    response += `\nThis means ${ts.alice.toLocaleString()} households in ${countyData.county} are specifically ALICE (above poverty but below the cost of basic needs). I also have data for earlier years if you'd like to see the trend.`;
   } else {
-    response += `Total households: ${countyData.households.toLocaleString()}\n`;
     response += `ALICE households: ${countyData.alice_percentage}% (${countyData.alice_housholds.toLocaleString()} households)\n`;
     response += `Households in poverty: ${countyData.poverty}%\n`;
-    response += `Below ALICE threshold: ${countyData.below_alice_percentage}%\n`;
+    response += `Total below ALICE threshold: ${countyData.below_alice_percentage}% (ALICE + poverty combined)\n`;
+    response += `Total households: ${countyData.households.toLocaleString()}\n`;
     response += `Year: ${countyData.year}\n`;
     if (countyData.priority) response += `Priority County: Yes\n`;
+    response += `\nThis means ${countyData.alice_housholds.toLocaleString()} households in ${countyData.county} are specifically ALICE (above poverty but below the cost of basic needs).`;
   }
   return response;
 }
@@ -89,11 +94,20 @@ export const searchCountyAction: Action = {
     // Check for matches
     const hasCountyKeyword = countyKeywords.some(keyword => text.includes(keyword));
     // Use word boundary matching to prevent partial matches (e.g., 'how' matching 'howard')
+    // Bare "arkansas" means the state; Arkansas County requires the explicit
+    // "Arkansas County" form.
     const hasSpecificCounty = allCounties.some(county => {
+      if (county === 'arkansas') return /\barkansas\s+county\b/i.test(text);
       const regex = new RegExp(`\\b${county}\\b`, 'i');
       return regex.test(text);
     });
     const hasSubCountyKeyword = subcountyKeywords.some(keyword => text.includes(keyword));
+
+    // "... in Arkansas" (the state) as the trailing location is a statewide
+    // reference, not a county/place this action serves.
+    const isBareStateReference =
+      /\b(?:in|for|about)\s+(?:the\s+state\s+of\s+)?arkansas\s*[?.!]*$/i.test(text) &&
+      !/\barkansas\s+county\b/i.test(text);
     
     // Check if query might be asking about a township/place without using the keyword
     // Look for ALICE-related terms + "in/for/about" + potential location name
@@ -119,7 +133,7 @@ export const searchCountyAction: Action = {
     // Check if there's a word after the preposition (potential location)
     const hasWordAfterPreposition = /(?:in|for|about)\s+[a-z]+/i.test(text);
     
-    const mightBeSubcountyQuery = hasAliceTerm && hasLocationPreposition && hasWordAfterPreposition && !hasSpecificCounty && !isAskingAboutAliceConcept;
+    const mightBeSubcountyQuery = hasAliceTerm && hasLocationPreposition && hasWordAfterPreposition && !hasSpecificCounty && !isAskingAboutAliceConcept && !isBareStateReference;
     
     // Exclude employment and demographic queries from county action
     const isEmploymentQuery = text.includes('employment') || text.includes('job') || text.includes('occupation') || 
@@ -280,10 +294,23 @@ export const searchCountyAction: Action = {
         'sevier', 'sharp', 'st. francis', 'stone', 'union', 'van buren', 'washington', 'white', 'woodruff', 'yell'
       ];
       // Use word boundary matching to prevent partial matches (e.g., 'how' matching 'howard')
+      // Bare "arkansas" means the state; Arkansas County requires "Arkansas County".
       const hasSpecificCounty = allCounties.some(county => {
+        if (county === 'arkansas') return /\barkansas\s+county\b/i.test(text);
         const regex = new RegExp(`\\b${county}\\b`, 'i');
         return regex.test(text);
       });
+
+      // Safety net for the non-deterministic (ElizaOS) path: a query whose only
+      // location is the state itself belongs to the statewide action.
+      const isBareStateReference =
+        /\b(?:in|for|about)\s+(?:the\s+state\s+of\s+)?arkansas\s*[?.!]*$/i.test(text) &&
+        !/\barkansas\s+county\b/i.test(text);
+      if (isBareStateReference && !hasSpecificCounty && !hasZipCode &&
+          !hasSubcountyKeyword && !/\bcounty\b/i.test(text)) {
+        console.error('*** Bare "in Arkansas" state reference — delegating to statewide action ***');
+        return searchStatewideAction.handler(runtime, message, state, options, callback);
+      }
       // Bare names (e.g. "Benton") can go through the lookup table so it can
       // disambiguate Benton city vs Benton County. But when the user explicitly
       // writes "county" (e.g. "...for Benton County"), it is a county query -
@@ -365,6 +392,20 @@ export const searchCountyAction: Action = {
             if (beforeKeywordMatch && beforeKeywordMatch[1]) {
               searchTerm = beforeKeywordMatch[1].trim();
               console.error('*** Extracted term before keyword:', searchTerm);
+            }
+          }
+
+          // A trailing "arkansas" is the state suffix ("Springdale Arkansas"),
+          // not part of the place name; and "arkansas" alone means the state —
+          // unless anchored to a place keyword ("Arkansas City").
+          if (searchTerm) {
+            const words = searchTerm.split(/\s+/);
+            if (words.length > 1 && words[words.length - 1] === 'arkansas') {
+              searchTerm = words.slice(0, -1).join(' ');
+              console.error('*** Stripped trailing state suffix, search term:', searchTerm);
+            } else if (searchTerm === 'arkansas' && !hasSubcountyKeyword) {
+              console.error('*** Bare "arkansas" is the state, not a place — clearing search term');
+              searchTerm = '';
             }
           }
         }
@@ -747,17 +788,6 @@ export const searchCountyAction: Action = {
           : undefined;
       const showThresholdDollars = isCountyThresholdOrBudgetQuery && !!countyTs && /\bthreshold\b/i.test(text);
 
-      // Lead with the latest-year headline (2024), except for the self-contained
-      // threshold-dollar answer below.
-      const latestCountyTrend =
-        typeof csvService.findCountyTrend === 'function'
-          ? csvService.findCountyTrend(countyData.county)
-          : undefined;
-      if (!showThresholdDollars && latestCountyTrend && latestCountyTrend.year !== countyData.year) {
-        response += `Latest available data (${latestCountyTrend.year}): ${latestCountyTrend.households.toLocaleString()} households, ${latestCountyTrend.below_alice_threshold}% below the ALICE threshold.\n\n`;
-        response += `Detailed ${countyData.year} breakdown:\n`;
-      }
-
       if (showThresholdDollars && countyTs) {
         response += `ALICE Threshold for ${countyData.county} (${countyTs.year}) — the annual household income needed to afford basic necessities:\n`;
         response += `  Households under 65: $${countyTs.threshold_under_65.toLocaleString()}/year\n`;
@@ -774,12 +804,8 @@ export const searchCountyAction: Action = {
         response += `Total households: ${countyData.households.toLocaleString()}\n`;
         response += `Year: ${countyData.year}`;
       } else {
-        response += `ALICE households: ${countyData.alice_percentage}% (${aliceHouseholds.toLocaleString()} households)\n`;
-        response += `Households in poverty: ${countyData.poverty}%\n`;
-        response += `Total below ALICE threshold: ${combinedThreshold}% (ALICE + poverty combined)\n`;
-        response += `Total households: ${countyData.households.toLocaleString()}\n`;
-        response += `Year: ${countyData.year}\n\n`;
-        response += `This means ${aliceHouseholds.toLocaleString()} households in ${countyData.county} are specifically ALICE (above poverty but below the cost of basic needs).`;
+        // Full latest-year breakdown (shared with the location-lookup path).
+        response = buildCountyResponse(csvService, countyData);
       }
       
       console.error('*** Returning successful response:', response);

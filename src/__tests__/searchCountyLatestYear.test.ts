@@ -25,10 +25,12 @@ describe('county latest-year (2024) data', () => {
     expect(svc.findCountyTrend('St. Francis')?.below_alice_threshold).toBe(62);
   });
 
-  it('leads a county lookup with the latest (2024) figures, keeping the 2023 detail', async () => {
+  it('answers a county lookup with the full latest-year (2024) breakdown', async () => {
     const r: any = await ask('ALICE data for Pulaski County');
-    expect(r.text).toContain('Latest available data (2024): 178,578 households, 40% below the ALICE threshold');
-    expect(r.text).toContain('Detailed 2023 breakdown');
-    expect(r.text).toContain('ALICE households: 27% (46,080 households)');
+    expect(r.text).toContain('ALICE households: 24% (42,754 households)');
+    expect(r.text).toContain('Households in poverty: 16% (28,863 households)');
+    expect(r.text).toContain('Total below ALICE threshold: 40% (71,617 households, ALICE + poverty combined)');
+    expect(r.text).toContain('Total households: 178,578');
+    expect(r.text).toContain('Year: 2024 (latest available)');
   });
 });

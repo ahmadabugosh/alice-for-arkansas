@@ -61,6 +61,6 @@ describe('WordPress /api/chat — RAG fallback guard rails', () => {
     );
     const r = await chat.processChatMessage('rag-4', 'What percent of Pulaski County is ALICE?');
     expect(r.success).toBe(true);
-    expect(r.message).toContain('46,080');
+    expect(r.message).toContain('42,754');
   });
 });

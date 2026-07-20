@@ -34,10 +34,11 @@ describe('county time-series + subcounty 2024', () => {
     expect(fay?.alice_households).toBe(11697);
   });
 
-  it('still leads a plain county lookup with the 2024 headline', async () => {
+  it('answers a plain county lookup entirely with the latest (2024) breakdown', async () => {
     const r: any = await ask('ALICE data for Pulaski County');
-    expect(r.text).toContain('Latest available data (2024)');
-    expect(r.text).toContain('Detailed 2023 breakdown');
+    expect(r.text).toContain('Year: 2024 (latest available)');
+    expect(r.text).toContain('ALICE households: 24% (42,754 households)');
+    expect(r.text).not.toContain('2023');
   });
 
   it('routes county-named trend queries to the county (not statewide)', async () => {

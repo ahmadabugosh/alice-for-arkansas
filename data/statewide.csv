@@ -4,7 +4,7 @@ ALICE Households,345062,households,2023,Households above poverty but below cost 
 ALICE Percentage,28,percent,2023,Percent of households that are ALICE
 Poverty Households,192032,households,2023,Households below federal poverty line
 Poverty Percentage,16,percent,2023,Percent below poverty
-Below ALICE Threshold,729126,households,2023,Combined ALICE + poverty households
+Below ALICE Threshold,537094,households,2023,Combined ALICE + poverty households
 Below ALICE Threshold Percentage,44,percent,2023,Combined ALICE + poverty rate (28% + 16% rounded)
 Above ALICE Threshold,675898,households,2023,Households above ALICE threshold
 Rural Households,410053,households,2023,Total rural households

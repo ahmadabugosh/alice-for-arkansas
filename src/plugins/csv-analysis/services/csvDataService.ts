@@ -1248,6 +1248,47 @@ export class CsvDataService {
     return this.trends.filter(t => t.year === year);
   }
 
+  // Latest-year statewide snapshot computed from the statewide trend series
+  // (trends.csv), so statewide answers default to the newest year even when
+  // the detailed statewide.csv breakdown lags a year behind.
+  getLatestStatewideSnapshot():
+    | {
+        year: number;
+        households: number;
+        alice: number;
+        poverty: number;
+        above: number;
+        below: number;
+        alicePct: number;
+        povertyPct: number;
+        belowPct: number;
+      }
+    | undefined {
+    const metric = (name: string) =>
+      this.trends.filter(t => t.metric === name).sort((a, b) => a.year - b.year);
+    const totals = metric('Total Households');
+    if (!totals.length) return undefined;
+    const year = totals[totals.length - 1].year;
+    const at = (name: string) => metric(name).find(t => t.year === year)?.value;
+    const households = at('Total Households');
+    const alice = at('ALICE Households');
+    const poverty = at('Poverty Households');
+    const above = at('Above ALICE Households');
+    if (!households || alice === undefined || poverty === undefined) return undefined;
+    const below = alice + poverty;
+    return {
+      year,
+      households,
+      alice,
+      poverty,
+      above: above ?? households - below,
+      below,
+      alicePct: Math.round((alice / households) * 100),
+      povertyPct: Math.round((poverty / households) * 100),
+      belowPct: Math.round((below / households) * 100),
+    };
+  }
+
   // Utility methods
   isInitialized(): boolean {
     return this.initialized;
