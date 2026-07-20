@@ -119,23 +119,42 @@ export const compareCountiesAction: Action = {
       return result;
     }
 
-    // 2024 (latest) households + % below ALICE threshold per county, falling
-    // back to the 2023 figures when no newer county data exists. ALICE rate,
-    // poverty, and priority remain 2023-only (not in the newer county file).
-    const latestYear = typeof csvService.getLatestCountyTrendYear === 'function'
-      ? csvService.getLatestCountyTrendYear()
-      : undefined;
-    const detailYear = counties[0]!.year;
-    const latestOf = (c: any) => {
-      const t = typeof csvService.findCountyTrend === 'function' ? csvService.findCountyTrend(c.county) : undefined;
+    // Full latest-year stats per county from the county time series (which
+    // carries the complete ALICE/poverty split), falling back to the legacy
+    // county file only if the series is missing. Priority is the designation
+    // from the county file.
+    const statsOf = (c: any) => {
+      const ts = typeof csvService.findCountyTimeSeries === 'function'
+        ? csvService.findCountyTimeSeries(c.county)
+        : undefined;
+      if (ts && ts.households > 0) {
+        return {
+          county: c.county as string,
+          households: ts.households,
+          aliceCount: ts.alice,
+          alicePct: Math.round((ts.alice / ts.households) * 100),
+          povertyCount: ts.poverty,
+          povertyPct: Math.round((ts.poverty / ts.households) * 100),
+          belowThreshold: Math.round(((ts.alice + ts.poverty) / ts.households) * 100),
+          year: ts.year,
+          priority: Boolean(c.priority),
+        };
+      }
       return {
         county: c.county as string,
-        households: t ? t.households : c.households,
-        belowThreshold: t ? t.below_alice_threshold : c.below_alice_percentage,
-        year: t ? t.year : c.year,
+        households: c.households as number,
+        aliceCount: c.alice_housholds as number,
+        alicePct: c.alice_percentage as number,
+        povertyCount: Math.round(c.households * c.poverty / 100),
+        povertyPct: c.poverty as number,
+        belowThreshold: c.below_alice_percentage as number,
+        year: c.year as number,
+        priority: Boolean(c.priority),
       };
     };
-    const latestRows = counties.map(c => latestOf(c));
+    const latestRows = counties.map(c => statsOf(c));
+    const comparisonYear = latestRows[0].year;
+    const latestOf = (c: any) => statsOf(c);
 
     const isYesNoComparison = /^\s*(?:is|are|does|do|did)\b/i.test(text);
     const isThresholdComparison = lowerText.includes('threshold') || lowerText.includes('below alice');
@@ -164,68 +183,62 @@ export const compareCountiesAction: Action = {
       return result;
     }
     
-    // Build detailed comparison response
-    let response = `County Comparison Analysis\n\n`;
-    
+    // Build detailed comparison response — every figure from the same
+    // (latest) year, labeled once up front.
+    let response = `County Comparison Analysis (${comparisonYear}, latest available)\n\n`;
+
     // Show individual county stats
-    counties.forEach(county => {
-      const latest = latestOf(county);
-      response += `${county!.county}:\n`;
-      response += `Total households (${latest.year}): ${latest.households.toLocaleString()}\n`;
-      response += `Below ALICE threshold (${latest.year}): ${latest.belowThreshold}%\n`;
-      response += `ALICE households (${county!.year}): ${county!.alice_percentage}% (${county!.alice_housholds.toLocaleString()} households)\n`;
-      response += `Poverty rate (${county!.year}): ${county!.poverty}%\n`;
+    latestRows.forEach(row => {
+      response += `${row.county}:\n`;
+      response += `Total households: ${row.households.toLocaleString()}\n`;
+      response += `ALICE households: ${row.alicePct}% (${row.aliceCount.toLocaleString()} households)\n`;
+      response += `Households in poverty: ${row.povertyPct}% (${row.povertyCount.toLocaleString()} households)\n`;
+      response += `Below ALICE threshold: ${row.belowThreshold}% (ALICE + poverty combined)\n`;
       response += `\n`;
     });
-    
+
     // Comparative analysis
     response += `Analysis:\n`;
-    
-    // Compare ALICE rates
-    const highest = counties.reduce((max, county) => 
-      county!.alice_percentage > max!.alice_percentage ? county : max
-    );
-    const lowest = counties.reduce((min, county) => 
-      county!.alice_percentage < min!.alice_percentage ? county : min
-    );
-    
-    const aliceDiff = highest!.alice_percentage - lowest!.alice_percentage;
-    response += `ALICE Rate (${detailYear}): ${lowest!.county} has a better (lower) rate at ${lowest!.alice_percentage}%, compared to ${highest!.county} at ${highest!.alice_percentage}% (${aliceDiff} percentage point difference).\n`;
 
-    // Compare total below ALICE threshold (latest year)
+    // Compare ALICE rates
+    const highest = latestRows.reduce((max, r) => (r.alicePct > max.alicePct ? r : max));
+    const lowest = latestRows.reduce((min, r) => (r.alicePct < min.alicePct ? r : min));
+
+    if (highest !== lowest) {
+      const aliceDiff = highest.alicePct - lowest.alicePct;
+      response += `ALICE Rate: ${lowest.county} has a better (lower) rate at ${lowest.alicePct}%, compared to ${highest.county} at ${highest.alicePct}% (${aliceDiff} percentage point difference).\n`;
+    }
+
+    // Compare total below ALICE threshold
     const highestTotal = latestRows.reduce((max, r) => (r.belowThreshold > max.belowThreshold ? r : max));
     const lowestTotal = latestRows.reduce((min, r) => (r.belowThreshold < min.belowThreshold ? r : min));
 
     if (highestTotal !== lowestTotal) {
-      response += `Total Below Threshold (${latestYear ?? detailYear}): ${lowestTotal.county} has ${lowestTotal.belowThreshold}% below the ALICE threshold, while ${highestTotal.county} has ${highestTotal.belowThreshold}%.\n`;
-    }
-    
-    // Compare poverty rates
-    const highestPoverty = counties.reduce((max, county) => 
-      county!.poverty > max!.poverty ? county : max
-    );
-    const lowestPoverty = counties.reduce((min, county) => 
-      county!.poverty < min!.poverty ? county : min
-    );
-    
-    if (highestPoverty !== lowestPoverty) {
-      const povertyDiff = highestPoverty!.poverty - lowestPoverty!.poverty;
-      response += `Poverty Rate (${detailYear}): ${lowestPoverty!.county} has a lower poverty rate at ${lowestPoverty!.poverty}%, compared to ${highestPoverty!.county} at ${highestPoverty!.poverty}% (${povertyDiff} percentage point difference).\n`;
+      response += `Total Below Threshold: ${lowestTotal.county} has ${lowestTotal.belowThreshold}% below the ALICE threshold, while ${highestTotal.county} has ${highestTotal.belowThreshold}%.\n`;
     }
 
-    // Compare population sizes (latest year)
+    // Compare poverty rates
+    const highestPoverty = latestRows.reduce((max, r) => (r.povertyPct > max.povertyPct ? r : max));
+    const lowestPoverty = latestRows.reduce((min, r) => (r.povertyPct < min.povertyPct ? r : min));
+
+    if (highestPoverty !== lowestPoverty) {
+      const povertyDiff = highestPoverty.povertyPct - lowestPoverty.povertyPct;
+      response += `Poverty Rate: ${lowestPoverty.county} has a lower poverty rate at ${lowestPoverty.povertyPct}%, compared to ${highestPoverty.county} at ${highestPoverty.povertyPct}% (${povertyDiff} percentage point difference).\n`;
+    }
+
+    // Compare population sizes
     const largestPop = latestRows.reduce((max, r) => (r.households > max.households ? r : max));
     const smallestPop = latestRows.reduce((min, r) => (r.households < min.households ? r : min));
 
     if (largestPop !== smallestPop) {
       const popRatio = (largestPop.households / smallestPop.households).toFixed(1);
-      response += `Population Size (${latestYear ?? detailYear}): ${largestPop.county} is ${popRatio}x larger with ${largestPop.households.toLocaleString()} households vs ${smallestPop.households.toLocaleString()}.\n`;
+      response += `Population Size: ${largestPop.county} is ${popRatio}x larger with ${largestPop.households.toLocaleString()} households vs ${smallestPop.households.toLocaleString()}.\n`;
     }
-    
+
     // Priority county status
-    const priorityCounties = counties.filter(c => c!.priority);
-    if (priorityCounties.length > 0 && priorityCounties.length < counties.length) {
-      response += `Priority Status: ${priorityCounties.map(c => c!.county).join(', ')} ${priorityCounties.length === 1 ? 'is' : 'are'} designated as priority for state assistance.\n`;
+    const priorityCounties = latestRows.filter(r => r.priority);
+    if (priorityCounties.length > 0 && priorityCounties.length < latestRows.length) {
+      response += `Priority Status: ${priorityCounties.map(r => r.county).join(', ')} ${priorityCounties.length === 1 ? 'is' : 'are'} designated as priority for state assistance.\n`;
     }
     
     const result = {
@@ -243,8 +256,10 @@ export const compareCountiesAction: Action = {
         content: { text: "Compare Johnson County vs Lee County" }
       },
       {
+        // Placeholders only - real figures must always come from the CSV data
+        // at answer time, never from a memorized example.
         name: "Alice",
-        content: { text: "According to my data set, here's the comparison:\n\nJohnson County: 10,047 households, 54% below ALICE threshold\nLee County: 2,641 households, 66% below ALICE threshold\n\nLee County has the highest rate at 66%, while Johnson County has the lowest at 54%.\nThe difference between Lee County and Johnson County is 12%." }
+        content: { text: "According to my data set, here's the comparison:\n\n[County A]: [households from CSV] households, [percent from CSV]% below ALICE threshold\n[County B]: [households from CSV] households, [percent from CSV]% below ALICE threshold\n\n[County B] has the higher rate at [percent from CSV]%, a [difference] percentage point difference ([year from CSV])." }
       }
     ]
   ]
