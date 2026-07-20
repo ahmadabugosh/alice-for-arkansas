@@ -118,7 +118,15 @@ export const explainAliceAction: Action = {
         ? figures + `\n\nCosts vary by county — ask e.g. "survival budget for a family of four in Benton County" for county-specific figures.`
         : `\n\nI don't currently have Survival Budget dollar amounts loaded.`;
     } else if (isPovertyLineQuery) {
-      response = `The Federal Poverty Level (FPL) is the government's official poverty measure. It is a single national number that does not account for geographic cost differences, child care, health care, or the actual local cost of living. For 2024, the FPL was $15,060 for a single adult and $31,200 for a family of four.
+      // FPL dollar figures come from data/fpl.csv so a new year's numbers are
+      // a data update; the sentence is omitted if the file is missing.
+      const fpl = typeof csvService?.getLatestFpl === 'function' ? csvService.getLatestFpl() : undefined;
+      const single = fpl?.byCategory.get('Single Adult');
+      const family = fpl?.byCategory.get('Family of Four');
+      const fplSentence = fpl && single && family
+        ? ` For ${fpl.year}, the FPL was $${single.toLocaleString()} for a single adult and $${family.toLocaleString()} for a family of four.`
+        : '';
+      response = `The Federal Poverty Level (FPL) is the government's official poverty measure. It is a single national number that does not account for geographic cost differences, child care, health care, or the actual local cost of living.${fplSentence}
 
 The ALICE Threshold is different: it is built from the real cost of basic necessities in each county (the Household Survival Budget). Many working households earn above the FPL but below the ALICE Threshold — those households are ALICE: Asset Limited, Income Constrained, Employed.`;
       const figures = budgetFigures(csvService, 'Survival');

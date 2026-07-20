@@ -853,8 +853,10 @@ export const searchCountyAction: Action = {
         content: { text: "What's the ALICE rate for Johnson County?" }
       },
       {
+        // Placeholders only - real figures must always come from the CSV data
+        // at answer time, never from a memorized example.
         name: "Alice",
-        content: { text: "According to my data set, Johnson County has 10,047 households with 54% below the ALICE threshold in 2023." }
+        content: { text: "According to my data set, [County] County has [households from CSV] households with [percent from CSV]% below the ALICE threshold in [year from CSV]." }
       }
     ],
     [
@@ -863,8 +865,8 @@ export const searchCountyAction: Action = {
         content: { text: "Tell me about Lee County households" }
       },
       {
-        name: "Alice", 
-        content: { text: "According to my data set, Lee County has 2,641 households with 66% below the ALICE threshold in 2023." }
+        name: "Alice",
+        content: { text: "According to my data set, [County] County has [households from CSV] households with [percent from CSV]% below the ALICE threshold in [year from CSV]." }
       }
     ]
   ]

@@ -333,7 +333,9 @@ export const analyzeTrendsAction: Action = {
       },
       {
         name: "Alice",
-        content: { text: "According to my data set, here are the Arkansas ALICE trends:\n\nStatewide ALICE Rate:\n2021: 28%\n2022: 29%\n2023: 30%\n\nThe statewide ALICE rate increased by 1% from 2022 to 2023." }
+        // Placeholders only - real figures must always come from the CSV data
+        // at answer time, never from a memorized example.
+        content: { text: "According to my data set, here are the Arkansas ALICE trends:\n\nStatewide ALICE Rate:\n[year]: [percent from CSV]%\n[year]: [percent from CSV]%\n[year]: [percent from CSV]%\n\nThe statewide ALICE rate [increased/decreased] by [points from CSV] from [year] to [year]." }
       }
     ]
   ]

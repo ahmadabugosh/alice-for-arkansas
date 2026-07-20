@@ -205,6 +205,7 @@ export class CsvDataService {
   private budgets: BudgetData[] = [];
   private countyBudgets: CountyBudgetData[] = [];
   private countyTimeSeries: CountyTimeSeriesData[] = [];
+  private fpl: { year: number; category: string; annual: number }[] = [];
   private locationNameIndex: Map<string, LocationEntry[]> = new Map();  // Lookup table for prioritized search
   private initialized = false;
 
@@ -755,6 +756,23 @@ export class CsvDataService {
       console.log(`*** Loaded ${this.countyBudgets.length} county budget records from CSV ***`);
     }
 
+    // Federal Poverty Level reference figures (optional file). Kept as data so
+    // a new year's FPL is a CSV update, not a code change.
+    const fplPath = path.join(process.cwd(), 'data', 'fpl.csv');
+    if (fs.existsSync(fplPath)) {
+      this.fpl = parse(fs.readFileSync(fplPath, 'utf-8'), {
+        columns: true,
+        skip_empty_lines: true,
+        cast: (value, { column }) =>
+          column === 'Year' || column === 'Annual' ? parseInt(value) : value,
+      }).map((row: any) => ({
+        year: row.Year,
+        category: row.Category,
+        annual: row.Annual,
+      }));
+      console.log(`*** Loaded ${this.fpl.length} FPL records from CSV ***`);
+    }
+
     // Build location name index for prioritized search
     this.buildLocationIndex();
   }
@@ -1163,6 +1181,16 @@ export class CsvDataService {
   }
 
   // Budget methods (ALICE Survival / Stability budgets)
+  // Latest-year Federal Poverty Level figures, keyed by category label.
+  getLatestFpl(): { year: number; byCategory: Map<string, number> } | undefined {
+    if (!this.fpl.length) return undefined;
+    const year = Math.max(...this.fpl.map(f => f.year));
+    const byCategory = new Map(
+      this.fpl.filter(f => f.year === year).map(f => [f.category, f.annual])
+    );
+    return { year, byCategory };
+  }
+
   getAllBudgets(): BudgetData[] {
     return [...this.budgets];
   }

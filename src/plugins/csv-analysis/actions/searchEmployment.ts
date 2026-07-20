@@ -224,7 +224,9 @@ export const searchEmploymentAction: Action = {
       },
       {
         name: "Alice",
-        content: { text: "According to my data set, here are the employment sectors with the highest ALICE rates:\n\n1. Hotel Housekeepers: 80% (9,877 of 12,345 workers)\n2. Farm Workers: 80% (12,542 of 15,678 workers)\n3. Food Service Workers: 70% (62,386 of 89,123 workers)" }
+        // Placeholders only - real figures must always come from the CSV data
+        // at answer time, never from a memorized example.
+        content: { text: "According to my data set, here are the employment sectors with the highest ALICE rates:\n\n1. [Occupation]: [percent from CSV]% ([count from CSV] of [total from CSV] workers)\n2. [Occupation]: [percent from CSV]% ([count from CSV] of [total from CSV] workers)\n3. [Occupation]: [percent from CSV]% ([count from CSV] of [total from CSV] workers)" }
       }
     ]
   ]

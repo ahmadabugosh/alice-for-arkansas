@@ -415,8 +415,10 @@ export const rankCountiesAction: Action = {
         content: { text: "Which counties have the highest ALICE rates?" }
       },
       {
+        // Placeholders only - real figures must always come from the CSV data
+        // at answer time, never from a memorized example.
         name: "Alice",
-        content: { text: "According to my data set, here are the Counties with highest ALICE rates:\n\n1. Lee County: 66% (2,641 households)\n2. Phillips County: 60% (8,234 households)\n3. Johnson County: 54% (10,047 households)" }
+        content: { text: "According to my data set, here are the counties with highest ALICE rate ([year from CSV] data):\n\n1. [County]: [percent from CSV]% ([count from CSV] households)\n2. [County]: [percent from CSV]% ([count from CSV] households)\n3. [County]: [percent from CSV]% ([count from CSV] households)" }
       }
     ]
   ]
