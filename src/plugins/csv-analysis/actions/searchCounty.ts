@@ -1,5 +1,6 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { CsvDataService, CountyData } from '../services/csvDataService';
+import { AR_COUNTY_NAMES, countyNameInText } from '../constants/arkansasCounties';
 import { searchStatewideAction } from './searchStatewide';
 
 // Build a single-county response, defaulting the FULL breakdown to the latest
@@ -76,16 +77,7 @@ export const searchCountyAction: Action = {
     // Match county queries AND subcounty queries (zip codes, townships, places)
     const countyKeywords = ['county', 'counties'];
     const subcountyKeywords = ['township', 'zip code', 'zipcode', 'zip', 'place', 'city', 'town'];
-    const allCounties = [
-      'arkansas', 'ashley', 'baxter', 'benton', 'boone', 'bradley', 'calhoun', 'carroll', 'chicot', 'clark',
-      'clay', 'cleburne', 'cleveland', 'columbia', 'conway', 'craighead', 'crawford', 'crittenden', 'cross',
-      'dallas', 'desha', 'drew', 'faulkner', 'franklin', 'fulton', 'garland', 'grant', 'greene', 'hempstead',
-      'hot spring', 'howard', 'independence', 'izard', 'jackson', 'jefferson', 'johnson', 'lafayette',
-      'lawrence', 'lee', 'lincoln', 'little river', 'logan', 'lonoke', 'madison', 'marion', 'miller',
-      'mississippi', 'monroe', 'montgomery', 'nevada', 'newton', 'ouachita', 'perry', 'phillips', 'pike',
-      'poinsett', 'polk', 'pope', 'prairie', 'pulaski', 'randolph', 'saline', 'scott', 'searcy', 'sebastian',
-      'sevier', 'sharp', 'st. francis', 'stone', 'union', 'van buren', 'washington', 'white', 'woodruff', 'yell'
-    ];
+    const allCounties = AR_COUNTY_NAMES;
     
     // Check for 5-digit zip code (e.g., "72703", "tell me about 72703")
     const zipCodeMatch = text.match(/\b\d{5}\b/);
@@ -96,11 +88,7 @@ export const searchCountyAction: Action = {
     // Use word boundary matching to prevent partial matches (e.g., 'how' matching 'howard')
     // Bare "arkansas" means the state; Arkansas County requires the explicit
     // "Arkansas County" form.
-    const hasSpecificCounty = allCounties.some(county => {
-      if (county === 'arkansas') return /\barkansas\s+county\b/i.test(text);
-      const regex = new RegExp(`\\b${county}\\b`, 'i');
-      return regex.test(text);
-    });
+    const hasSpecificCounty = allCounties.some(county => countyNameInText(county, text));
     const hasSubCountyKeyword = subcountyKeywords.some(keyword => text.includes(keyword));
 
     // "... in Arkansas" (the state) as the trailing location is a statewide
@@ -283,23 +271,10 @@ export const searchCountyAction: Action = {
       const hasAliceTerm = aliceTerms.some(term => text.toLowerCase().includes(term));
       const hasLocationPreposition = text.toLowerCase().includes(' in ') || text.toLowerCase().includes(' for ') || text.toLowerCase().includes(' about ');
       const hasWordAfterPreposition = /(?:in|for|about)\s+[a-z]+/i.test(text.toLowerCase());
-      const allCounties = [
-        'arkansas', 'ashley', 'baxter', 'benton', 'boone', 'bradley', 'calhoun', 'carroll', 'chicot', 'clark',
-        'clay', 'cleburne', 'cleveland', 'columbia', 'conway', 'craighead', 'crawford', 'crittenden', 'cross',
-        'dallas', 'desha', 'drew', 'faulkner', 'franklin', 'fulton', 'garland', 'grant', 'greene', 'hempstead',
-        'hot spring', 'howard', 'independence', 'izard', 'jackson', 'jefferson', 'johnson', 'lafayette',
-        'lawrence', 'lee', 'lincoln', 'little river', 'logan', 'lonoke', 'madison', 'marion', 'miller',
-        'mississippi', 'monroe', 'montgomery', 'nevada', 'newton', 'ouachita', 'perry', 'phillips', 'pike',
-        'poinsett', 'polk', 'pope', 'prairie', 'pulaski', 'randolph', 'saline', 'scott', 'searcy', 'sebastian',
-        'sevier', 'sharp', 'st. francis', 'stone', 'union', 'van buren', 'washington', 'white', 'woodruff', 'yell'
-      ];
+      const allCounties = AR_COUNTY_NAMES;
       // Use word boundary matching to prevent partial matches (e.g., 'how' matching 'howard')
       // Bare "arkansas" means the state; Arkansas County requires "Arkansas County".
-      const hasSpecificCounty = allCounties.some(county => {
-        if (county === 'arkansas') return /\barkansas\s+county\b/i.test(text);
-        const regex = new RegExp(`\\b${county}\\b`, 'i');
-        return regex.test(text);
-      });
+      const hasSpecificCounty = allCounties.some(county => countyNameInText(county, text));
 
       // Safety net for the non-deterministic (ElizaOS) path: a query whose only
       // location is the state itself belongs to the statewide action.
@@ -459,16 +434,7 @@ export const searchCountyAction: Action = {
           if (locationEntries.length === 0) {
             // Fallback: Check if search term matches a known county name
             console.error('*** Lookup table returned no results, checking if it\'s a county name:', searchTerm);
-            const allCounties = [
-              'arkansas', 'ashley', 'baxter', 'benton', 'boone', 'bradley', 'calhoun', 'carroll', 'chicot', 'clark',
-              'clay', 'cleburne', 'cleveland', 'columbia', 'conway', 'craighead', 'crawford', 'crittenden', 'cross',
-              'dallas', 'desha', 'drew', 'faulkner', 'franklin', 'fulton', 'garland', 'grant', 'greene', 'hempstead',
-              'hot spring', 'howard', 'independence', 'izard', 'jackson', 'jefferson', 'johnson', 'lafayette',
-              'lawrence', 'lee', 'lincoln', 'little river', 'logan', 'lonoke', 'madison', 'marion', 'miller',
-              'mississippi', 'monroe', 'montgomery', 'nevada', 'newton', 'ouachita', 'perry', 'phillips', 'pike',
-              'poinsett', 'polk', 'pope', 'prairie', 'pulaski', 'randolph', 'saline', 'scott', 'searcy', 'sebastian',
-              'sevier', 'sharp', 'st. francis', 'stone', 'union', 'van buren', 'washington', 'white', 'woodruff', 'yell'
-            ];
+            const allCounties = AR_COUNTY_NAMES;
             
             const normalizedSearch = searchTerm.toLowerCase().trim();
             if (allCounties.includes(normalizedSearch)) {

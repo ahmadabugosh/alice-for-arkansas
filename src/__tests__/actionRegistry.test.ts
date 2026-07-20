@@ -64,6 +64,13 @@ describe('WordPress /api/chat path (ChatApiService)', () => {
     expect(r.message).not.toContain('Arkansas County');
   });
 
+  it('routes "<place> Arkansas" to the location, not statewide', async () => {
+    const r = await chat.processChatMessage('sess-place-1', 'ALICE rate in Springdale Arkansas');
+    expect(r.success).toBe(true);
+    expect(r.message).toContain('Springdale, Arkansas');
+    expect(r.message).not.toContain('statewide');
+  });
+
   it('answers "how many" statewide questions (word-boundary keyword fix)', async () => {
     const r = await chat.processChatMessage('sess-state-3', 'How many households are in poverty in Arkansas?');
     expect(r.success).toBe(true);

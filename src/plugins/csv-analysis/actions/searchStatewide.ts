@@ -67,8 +67,17 @@ export const searchStatewideAction: Action = {
     const isBareStateOverview = isArkansasQuery &&
       /\b(?:tell me )?about\s+(?:the\s+state\s+of\s+)?arkansas\b|\boverview of arkansas\b/.test(text);
 
-    const result = (hasStatewideKeyword || isGeneralArkansasAlice || isBareStateOverview ||
-                    (isArkansasQuery && text.includes('alice'))) &&
+    // "<place> Arkansas" ("Springdale Arkansas", "Fayetteville, Arkansas") is a
+    // location suffix — that query belongs to the county/subcounty action, not
+    // statewide. Prepositions and state-context words before "arkansas" don't
+    // count as place names.
+    const looksLikePlaceSuffix =
+      /\b(?!(?:in|for|about|of|the|state|across|throughout|entire|all|central|northern|southern|eastern|western|northwest|northeast|southwest|southeast|rural|urban)\b)[a-z]+\s*,?\s+arkansas\b/.test(text) &&
+      !/\barkansas\s+count(?:y|ies)\b/.test(text);
+
+    const result = (hasStatewideKeyword ||
+                    ((isGeneralArkansasAlice || isBareStateOverview || (isArkansasQuery && text.includes('alice'))) &&
+                     !looksLikePlaceSuffix)) &&
                    !isDemographicQuery && !isTrendQuery && !isCountyQuery;
     
     console.error('*** Statewide keyword:', hasStatewideKeyword);

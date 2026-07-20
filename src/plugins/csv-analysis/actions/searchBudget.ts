@@ -1,16 +1,7 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { CsvDataService, BudgetData, CountyBudgetData } from '../services/csvDataService';
+import { AR_COUNTY_NAMES as AR_COUNTIES } from '../constants/arkansasCounties';
 
-const AR_COUNTIES = [
-  'arkansas', 'ashley', 'baxter', 'benton', 'boone', 'bradley', 'calhoun', 'carroll', 'chicot', 'clark',
-  'clay', 'cleburne', 'cleveland', 'columbia', 'conway', 'craighead', 'crawford', 'crittenden', 'cross',
-  'dallas', 'desha', 'drew', 'faulkner', 'franklin', 'fulton', 'garland', 'grant', 'greene', 'hempstead',
-  'hot spring', 'howard', 'independence', 'izard', 'jackson', 'jefferson', 'johnson', 'lafayette',
-  'lawrence', 'lee', 'lincoln', 'little river', 'logan', 'lonoke', 'madison', 'marion', 'miller',
-  'mississippi', 'monroe', 'montgomery', 'nevada', 'newton', 'ouachita', 'perry', 'phillips', 'pike',
-  'poinsett', 'polk', 'pope', 'prairie', 'pulaski', 'randolph', 'saline', 'scott', 'searcy', 'sebastian',
-  'sevier', 'sharp', 'st. francis', 'stone', 'union', 'van buren', 'washington', 'white', 'woodruff', 'yell'
-];
 
 // Detect a county only in an explicit location context ("in X", "X County") so
 // a word like "Union" or "White" isn't mistaken for a county name.

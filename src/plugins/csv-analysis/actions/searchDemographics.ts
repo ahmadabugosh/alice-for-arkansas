@@ -1,5 +1,6 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { CsvDataService, DemographicData, HouseholdTypeData, HouseholdTypeTrendData, RaceTrendData, RaceBreakdownData, AgeTrendData, AgeBreakdownData } from '../services/csvDataService';
+import { AR_COUNTY_NAMES } from '../constants/arkansasCounties';
 
 function normalizeText(text: string): string {
   return text
@@ -846,16 +847,9 @@ export const searchDemographicsAction: Action = {
       // named a specific county, say so rather than passing off statewide
       // numbers as county-level figures. Require a location cue ("in X",
       // "X County") so a race named "White" isn't mistaken for White County.
-      const demoCountyList = [
-        'ashley', 'baxter', 'benton', 'boone', 'bradley', 'calhoun', 'carroll', 'chicot', 'clark',
-        'clay', 'cleburne', 'cleveland', 'columbia', 'conway', 'craighead', 'crawford', 'crittenden', 'cross',
-        'dallas', 'desha', 'drew', 'faulkner', 'franklin', 'fulton', 'garland', 'grant', 'greene', 'hempstead',
-        'hot spring', 'howard', 'independence', 'izard', 'jackson', 'jefferson', 'johnson', 'lafayette',
-        'lawrence', 'lee', 'lincoln', 'little river', 'logan', 'lonoke', 'madison', 'marion', 'miller',
-        'mississippi', 'monroe', 'montgomery', 'nevada', 'newton', 'ouachita', 'perry', 'phillips', 'pike',
-        'poinsett', 'polk', 'pope', 'prairie', 'pulaski', 'randolph', 'saline', 'scott', 'searcy', 'sebastian',
-        'sevier', 'sharp', 'st. francis', 'stone', 'union', 'van buren', 'washington', 'white', 'woodruff', 'yell'
-      ];
+      // Bare "arkansas" is the state, and this matcher requires a location cue
+      // anyway, so the shared list minus the ambiguous state name is used.
+      const demoCountyList = AR_COUNTY_NAMES.filter(c => c !== 'arkansas');
       const lowerForCounty = text.toLowerCase().replace(/[-–—]/g, ' ');
       const namedCounty = demoCountyList.find(c => {
         const escaped = c.replace(/\./g, '\\.');

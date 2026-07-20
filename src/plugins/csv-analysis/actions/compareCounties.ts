@@ -1,5 +1,6 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { CsvDataService } from '../services/csvDataService';
+import { AR_COUNTY_NAMES, countyNameRegex } from '../constants/arkansasCounties';
 
 export const compareCountiesAction: Action = {
   name: 'Comparing counties...',
@@ -18,23 +19,8 @@ export const compareCountiesAction: Action = {
 
     // County names, used both for explicit phrasing ("Compare X and Y", with or
     // without the word "county") and implicit comparisons ("Is X higher than Y?").
-    const arkansasCounties = [
-      'arkansas', 'ashley', 'baxter', 'benton', 'boone', 'bradley', 'calhoun', 'carroll', 'chicot', 'clark',
-      'clay', 'cleburne', 'cleveland', 'columbia', 'conway', 'craighead', 'crawford', 'crittenden', 'cross',
-      'dallas', 'desha', 'drew', 'faulkner', 'franklin', 'fulton', 'garland', 'grant', 'greene', 'hempstead',
-      'hot spring', 'howard', 'independence', 'izard', 'jackson', 'jefferson', 'johnson', 'lafayette',
-      'lawrence', 'lee', 'lincoln', 'little river', 'logan', 'lonoke', 'madison', 'marion', 'miller',
-      'mississippi', 'monroe', 'montgomery', 'nevada', 'newton', 'ouachita', 'perry', 'phillips', 'pike',
-      'poinsett', 'polk', 'pope', 'prairie', 'pulaski', 'randolph', 'saline', 'scott', 'searcy', 'sebastian',
-      'sevier', 'sharp', 'st. francis', 'stone', 'union', 'van buren', 'washington', 'white', 'woodruff', 'yell'
-    ];
-    const namesFound = arkansasCounties.filter(c => {
-      // "arkansas" is also the state name - only count it when written "arkansas county"
-      const re = c === 'arkansas'
-        ? /\barkansas count(?:y|ies)\b/i
-        : new RegExp(`\\b${c.replace(/\./g, '\\.')}\\b`, 'i');
-      return re.test(text);
-    });
+    const arkansasCounties = AR_COUNTY_NAMES;
+    const namesFound = arkansasCounties.filter(c => countyNameRegex(c).test(text));
     const hasComparative =
       text.includes('than') || text.includes('compared to') ||
       text.includes('higher') || text.includes('lower') ||
@@ -58,16 +44,7 @@ export const compareCountiesAction: Action = {
     // Extract county names by matching the message against the known county
     // list, so natural phrasing works ("Compare Washington and Union counties",
     // "X vs Y", "difference between X and Y", with or without the word "county").
-    const arkansasCounties = [
-      'arkansas', 'ashley', 'baxter', 'benton', 'boone', 'bradley', 'calhoun', 'carroll', 'chicot', 'clark',
-      'clay', 'cleburne', 'cleveland', 'columbia', 'conway', 'craighead', 'crawford', 'crittenden', 'cross',
-      'dallas', 'desha', 'drew', 'faulkner', 'franklin', 'fulton', 'garland', 'grant', 'greene', 'hempstead',
-      'hot spring', 'howard', 'independence', 'izard', 'jackson', 'jefferson', 'johnson', 'lafayette',
-      'lawrence', 'lee', 'lincoln', 'little river', 'logan', 'lonoke', 'madison', 'marion', 'miller',
-      'mississippi', 'monroe', 'montgomery', 'nevada', 'newton', 'ouachita', 'perry', 'phillips', 'pike',
-      'poinsett', 'polk', 'pope', 'prairie', 'pulaski', 'randolph', 'saline', 'scott', 'searcy', 'sebastian',
-      'sevier', 'sharp', 'st. francis', 'stone', 'union', 'van buren', 'washington', 'white', 'woodruff', 'yell'
-    ];
+    const arkansasCounties = AR_COUNTY_NAMES;
 
     const lowerText = text.toLowerCase().replace(/[-–—]/g, ' ');
 
@@ -75,12 +52,7 @@ export const compareCountiesAction: Action = {
     // checked first so "little river" / "hot spring" win over a short substring.
     const foundCounties: { name: string; index: number }[] = [];
     for (const county of [...arkansasCounties].sort((a, b) => b.length - a.length)) {
-      // "arkansas" is also the state name - only treat it as a county when
-      // explicitly written as "arkansas county/counties".
-      const pattern = county === 'arkansas'
-        ? /\barkansas count(?:y|ies)\b/i
-        : new RegExp(`\\b${county.replace(/\./g, '\\.')}\\b`, 'i');
-      const match = pattern.exec(lowerText);
+      const match = countyNameRegex(county).exec(lowerText);
       if (match && !foundCounties.some(f => f.name === county)) {
         foundCounties.push({ name: county, index: match.index });
       }
