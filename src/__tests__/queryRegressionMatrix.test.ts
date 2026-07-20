@@ -96,17 +96,17 @@ describe('reviewed ALICE query regression matrix', () => {
   it('ranks counties, cities, zip codes, demographics, and employment from CSV data', async () => {
     const lowestCounty = await ask('What county in AR has the lowest ALICE rate?');
     expect(lowestCounty.action).toBe('Ranking locations...');
-    expect(lowestCounty.text).toContain('1. Saline County: 9% (2,906 households)');
+    expect(lowestCounty.text).toContain('1. Benton County: 21% (25,261 households)');
 
     const highestCounty = await ask('What county in AR has the highest ALICE rate?');
     expect(highestCounty.action).toBe('Ranking locations...');
-    expect(highestCounty.text).toContain('1. Scott County: 45% (13,244 households)');
+    expect(highestCounty.text).toContain('1. Izard County: 39% (2,040 households)');
 
     // "most members" means absolute count, not rate -> rank by ALICE households
     const mostMembers = await ask('What county in Arkansas has the most members of the ALICE community?');
     expect(mostMembers.action).toBe('Ranking locations...');
     expect(mostMembers.text).toContain('highest ALICE households');
-    expect(mostMembers.text).toContain('1. Pulaski County: 46,080 households');
+    expect(mostMembers.text).toContain('1. Pulaski County: 42,754 households');
 
     for (const question of [
       'What city has the lowest ALICE rate?',

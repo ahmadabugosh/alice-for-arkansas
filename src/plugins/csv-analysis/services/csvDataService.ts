@@ -989,6 +989,13 @@ export class CsvDataService {
     return years.length ? years[years.length - 1] : undefined;
   }
 
+  // All counties' rows for one year (defaults to the latest year available).
+  getCountyTimeSeriesByYear(year?: number): CountyTimeSeriesData[] {
+    const targetYear = year ?? this.getLatestCountyTimeSeriesYear();
+    if (targetYear === undefined) return [];
+    return this.countyTimeSeries.filter(c => c.year === targetYear);
+  }
+
   findCountyTimeSeries(county: string, year?: number): CountyTimeSeriesData | undefined {
     const series = this.getCountyTimeSeries(county);
     if (!series.length) return undefined;

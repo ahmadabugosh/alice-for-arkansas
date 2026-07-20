@@ -180,10 +180,40 @@ export const rankCountiesAction: Action = {
       return result;
     }
 
+    let rankingYear: number | undefined;
+
     if (wantsCounty) {
-      const allCounties = csvService.getAllCounties();
-      
-      if (allCounties.length === 0) {
+      // Rank on the latest-year county time series (exact counts per ALICE
+      // band), falling back to the legacy 2023 county file if it's missing.
+      const tsRows =
+        typeof csvService.getCountyTimeSeriesByYear === 'function'
+          ? csvService.getCountyTimeSeriesByYear()
+          : [];
+      const countyRows = tsRows.length
+        ? tsRows.map(r => ({
+            county: /\bcounty$/i.test(r.county) ? r.county : `${r.county} County`,
+            households: r.households,
+            alice_count: r.alice,
+            alice_percentage: r.households > 0 ? Math.round((r.alice / r.households) * 100) : 0,
+            poverty_count: r.poverty,
+            poverty_percentage: r.households > 0 ? Math.round((r.poverty / r.households) * 100) : 0,
+            below_count: r.alice + r.poverty,
+            below_percentage: r.households > 0 ? Math.round(((r.alice + r.poverty) / r.households) * 100) : 0,
+            year: r.year
+          }))
+        : csvService.getAllCounties().map(c => ({
+            county: c.county,
+            households: c.households,
+            alice_count: c.alice_housholds,
+            alice_percentage: c.alice_percentage,
+            poverty_count: Math.round(c.households * c.poverty / 100),
+            poverty_percentage: c.poverty,
+            below_count: Math.round(c.households * c.below_alice_percentage / 100),
+            below_percentage: c.below_alice_percentage,
+            year: c.year
+          }));
+
+      if (countyRows.length === 0) {
         const errResult = {
           text: "I couldn't access the county data. Please try again.",
           success: false
@@ -191,75 +221,42 @@ export const rankCountiesAction: Action = {
         if (callback) { callback(errResult); return true; }
         return errResult;
       }
-      
+
       locationScope = 'counties';
-      
-      if (isAlice && wantsPercentage) {
-        metricName = 'ALICE rate';
-        valueType = 'percentage';
-        results = allCounties.map(c => ({
+      rankingYear = countyRows[0].year;
+
+      if (isAlice) {
+        metricName = wantsCount ? 'ALICE households' : 'ALICE rate';
+        valueType = wantsCount ? 'count' : 'percentage';
+        results = countyRows.map(c => ({
           name: c.county,
           percentage: c.alice_percentage,
-          count: c.alice_housholds,
+          count: c.alice_count,
           totalHouseholds: c.households
         }));
-        results.sort((a, b) => isDescending ? b.percentage - a.percentage : a.percentage - b.percentage);
-      } else if (isAlice && wantsCount) {
-        metricName = 'ALICE households';
-        valueType = 'count';
-        results = allCounties.map(c => ({
-          name: c.county,
-          percentage: c.alice_percentage,
-          count: c.alice_housholds,
-          totalHouseholds: c.households
-        }));
-        results.sort((a, b) => isDescending ? b.count - a.count : a.count - b.count);
-      } else if (isThreshold && wantsPercentage) {
+      } else if (isThreshold) {
         metricName = 'households below ALICE threshold';
-        valueType = 'percentage';
-        results = allCounties.map(c => ({
+        valueType = wantsCount ? 'count' : 'percentage';
+        results = countyRows.map(c => ({
           name: c.county,
-          percentage: c.below_alice_percentage,
-          count: Math.round(c.households * c.below_alice_percentage / 100),
+          percentage: c.below_percentage,
+          count: c.below_count,
           totalHouseholds: c.households
         }));
-        results.sort((a, b) => isDescending ? b.percentage - a.percentage : a.percentage - b.percentage);
-      } else if (isThreshold && wantsCount) {
-        metricName = 'households below ALICE threshold';
-        valueType = 'count';
-        results = allCounties.map(c => {
-          const count = Math.round(c.households * c.below_alice_percentage / 100);
-          return {
-            name: c.county,
-            percentage: c.below_alice_percentage,
-            count: count,
-            totalHouseholds: c.households
-          };
-        });
-        results.sort((a, b) => isDescending ? b.count - a.count : a.count - b.count);
-      } else if (isPoverty && wantsPercentage) {
-        metricName = 'poverty rate';
-        valueType = 'percentage';
-        results = allCounties.map(c => ({
+      } else if (isPoverty) {
+        metricName = wantsCount ? 'households in poverty' : 'poverty rate';
+        valueType = wantsCount ? 'count' : 'percentage';
+        results = countyRows.map(c => ({
           name: c.county,
-          percentage: c.poverty,
-          count: Math.round(c.households * c.poverty / 100),
+          percentage: c.poverty_percentage,
+          count: c.poverty_count,
           totalHouseholds: c.households
         }));
-        results.sort((a, b) => isDescending ? b.percentage - a.percentage : a.percentage - b.percentage);
-      } else if (isPoverty && wantsCount) {
-        metricName = 'households in poverty';
-        valueType = 'count';
-        results = allCounties.map(c => {
-          const count = Math.round(c.households * c.poverty / 100);
-          return {
-            name: c.county,
-            percentage: c.poverty,
-            count: count,
-            totalHouseholds: c.households
-          };
-        });
+      }
+      if (valueType === 'count') {
         results.sort((a, b) => isDescending ? b.count - a.count : a.count - b.count);
+      } else {
+        results.sort((a, b) => isDescending ? b.percentage - a.percentage : a.percentage - b.percentage);
       }
     } else {
       // Handle cities/towns/places or zip codes. getAllSubCounty() mixes
@@ -295,6 +292,7 @@ export const rankCountiesAction: Action = {
       }
 
       locationScope = wantsZipCode ? 'zip codes' : wantsCityOnly ? 'cities' : wantsTownOnly ? 'towns' : 'places';
+      rankingYear = allSubcounty[0]?.year;
       
       if (isAlice && wantsPercentage) {
         metricName = 'ALICE rate';
@@ -381,12 +379,13 @@ export const rankCountiesAction: Action = {
     
     // Get top 10
     const top10 = results.slice(0, 10);
-    
+
     // Build response
     const direction = isDescending ? 'highest' : 'lowest';
     let title = `${locationScope} with ${direction} ${metricName}`;
-    
-    let response = `According to my data set, here are the ${title}:\n\n`;
+    const yearLabel = rankingYear ? ` (${rankingYear} data)` : '';
+
+    let response = `According to my data set, here are the ${title}${yearLabel}:\n\n`;
     
     top10.forEach((item, index) => {
       if (valueType === 'count') {
