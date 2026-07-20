@@ -426,7 +426,9 @@ export const searchCountyAction: Action = {
             // Build zip code response (no ambiguity check needed for zip codes)
             const alicePercentage = Math.round((subcountyData.alice_households / subcountyData.households) * 100);
             const povertyPercentage = Math.round((subcountyData.poverty_households / subcountyData.households) * 100);
-            const combinedThreshold = alicePercentage + povertyPercentage;
+            const combinedThreshold = Math.round(
+              ((subcountyData.alice_households + subcountyData.poverty_households) / subcountyData.households) * 100
+            );
             
             let typeDescription = subcountyData.type === 'Sub_County' ? 'Subcounty/Township' : 
               subcountyData.geo_display_label.includes('city') ? 'City' : 
@@ -561,7 +563,9 @@ export const searchCountyAction: Action = {
             // Calculate percentages
             const alicePercentage = Math.round((subcountyData.alice_households / subcountyData.households) * 100);
             const povertyPercentage = Math.round((subcountyData.poverty_households / subcountyData.households) * 100);
-            const combinedThreshold = alicePercentage + povertyPercentage;
+            const combinedThreshold = Math.round(
+              ((subcountyData.alice_households + subcountyData.poverty_households) / subcountyData.households) * 100
+            );
             
             // Determine type description
             let typeDescription = '';
@@ -757,7 +761,9 @@ export const searchCountyAction: Action = {
       
       // Use actual ALICE households from CSV data
       const aliceHouseholds = countyData.alice_housholds;
-      const combinedThreshold = countyData.alice_percentage + countyData.poverty;
+      // Use the exact-derived below-threshold rate; summing the two rounded
+      // percentages can be off by a point.
+      const combinedThreshold = countyData.below_alice_percentage;
 
       // County trend over time (2010-2024), from the county time series.
       const isCountyTrendQuery =
