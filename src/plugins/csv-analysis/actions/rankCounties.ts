@@ -173,7 +173,7 @@ export const rankCountiesAction: Action = {
       response += `Total households: ${top.households.toLocaleString()}\n`;
       response += `ALICE households: ${alicePercentage}% (${top.alice_households.toLocaleString()} households)\n`;
       response += `Households in poverty: ${top.poverty_households.toLocaleString()} households\n`;
-      response += `Year: ${top.year}`;
+      response += `Year: ${top.year} (latest available for this location)`;
 
       const result = { text: response, success: true };
       if (callback) { callback(result); return true; }
@@ -383,7 +383,13 @@ export const rankCountiesAction: Action = {
     // Build response
     const direction = isDescending ? 'highest' : 'lowest';
     let title = `${locationScope} with ${direction} ${metricName}`;
-    const yearLabel = rankingYear ? ` (${rankingYear} data)` : '';
+    // Counties rank on the latest year; city/town/zip rankings use the newest
+    // year with full coverage of small places - say which year that is.
+    const yearLabel = rankingYear
+      ? wantsCounty
+        ? ` (${rankingYear} data)`
+        : ` (${rankingYear} data — the latest year with full coverage of ${locationScope})`
+      : '';
 
     let response = `According to my data set, here are the ${title}${yearLabel}:\n\n`;
     

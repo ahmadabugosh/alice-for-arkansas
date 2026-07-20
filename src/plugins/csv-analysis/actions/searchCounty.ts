@@ -445,7 +445,7 @@ export const searchCountyAction: Action = {
             response += `Total below ALICE threshold: ${combinedThreshold}% (ALICE + poverty combined)\n`;
             response += `Above ALICE threshold: ${subcountyData.above_alice_households.toLocaleString()} households\n`;
             response += `Total households: ${subcountyData.households.toLocaleString()}\n`;
-            response += `Year: ${subcountyData.year}`;
+            response += `Year: ${subcountyData.year} (latest available for this location)`;
             
             const result = { text: response, success: true };
             if (callback) callback(result);
@@ -605,7 +605,7 @@ export const searchCountyAction: Action = {
             response += `Total below ALICE threshold: ${combinedThreshold}% (ALICE + poverty combined)\n`;
             response += `Above ALICE threshold: ${subcountyData.above_alice_households.toLocaleString()} households\n`;
             response += `Total households: ${subcountyData.households.toLocaleString()}\n`;
-            response += `Year: ${subcountyData.year}\n\n`;
+            response += `Year: ${subcountyData.year} (latest available for this location)\n\n`;
             response += `This means ${subcountyData.alice_households.toLocaleString()} households in this ${locationContext} are specifically ALICE (above poverty but below the cost of basic needs).`;
             
             // Add ambiguity note if applicable
