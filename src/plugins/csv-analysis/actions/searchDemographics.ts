@@ -765,12 +765,14 @@ export const searchDemographicsAction: Action = {
     }
     
     // Check for demographic keywords
+    // Word-boundary matching: plain substring checks misfire badly here
+    // ("wAGE"/"averAGE" contain "age", "gRACE" contains "race").
     const demographicKeywords = [
       'demographic', 'race', 'ethnicity', 'ethnic', 'age', 'household type'
     ];
-    
-    const hasDemographicKeyword = demographicKeywords.some(keyword => 
-      text.includes(keyword)
+
+    const hasDemographicKeyword = demographicKeywords.some(keyword =>
+      new RegExp(`\\b${keyword}\\b`).test(text)
     );
     
     // Check for specific demographic categories

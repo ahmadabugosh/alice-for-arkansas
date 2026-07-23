@@ -1,5 +1,6 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { CsvDataService } from '../services/csvDataService';
+import { isEmploymentTopic } from './searchEmployment';
 
 export const searchStatewideAction: Action = {
   name: 'Searching Arkansas statewide data...',
@@ -61,6 +62,11 @@ export const searchStatewideAction: Action = {
 
     const isCountyQuery = text.includes('county') || text.includes('counties');
 
+    // Exclude employment/labor-force queries ("How many cashiers are below
+    // the ALICE threshold in Arkansas?") - the employment action serves those
+    // from the sector/occupation data.
+    const isEmploymentQuery = isEmploymentTopic(text);
+
     // Bare state-overview queries ("tell me about Arkansas") — "Arkansas"
     // alone means the state, never Arkansas County (that requires the word
     // "county", which is excluded above anyway).
@@ -78,9 +84,10 @@ export const searchStatewideAction: Action = {
     const result = (hasStatewideKeyword ||
                     ((isGeneralArkansasAlice || isBareStateOverview || (isArkansasQuery && text.includes('alice'))) &&
                      !looksLikePlaceSuffix)) &&
-                   !isDemographicQuery && !isTrendQuery && !isCountyQuery;
-    
+                   !isDemographicQuery && !isTrendQuery && !isCountyQuery && !isEmploymentQuery;
+
     console.error('*** Statewide keyword:', hasStatewideKeyword);
+    console.error('*** Employment query (excluded):', isEmploymentQuery);
     console.error('*** Arkansas query:', isArkansasQuery);
     console.error('*** General Arkansas ALICE:', isGeneralArkansasAlice);
     console.error('*** Demographic query (excluded):', isDemographicQuery);

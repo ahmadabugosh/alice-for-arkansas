@@ -142,7 +142,7 @@ describe('reviewed ALICE query regression matrix', () => {
 
     const employment = await ask('What employment sector has the highest ALICE rate in the state?');
     expect(employment.action).toBe('Searching employment data...');
-    expect(employment.text).toContain('1. Orderlies and Psychiatric Aides: 67% (12,596 of 18,800 workers)');
+    expect(employment.text).toContain('1. Accommodation and Food Services: 27% (25,055 of 91,477 workers)');
   });
 
   it('answers county-scoped town size questions from available place data', async () => {

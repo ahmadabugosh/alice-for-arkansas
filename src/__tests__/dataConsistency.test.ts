@@ -213,3 +213,48 @@ describe('county budgets (county-budgets.csv)', () => {
     }
   });
 });
+
+describe('labor force sectors (labor-sectors.csv)', () => {
+  const rows = load('labor-sectors.csv');
+
+  it('has 20 uniquely named sectors, all for the same year', () => {
+    expect(rows.length).toBe(20);
+    expect(new Set(rows.map((r) => r['Sector'])).size).toBe(20);
+    expect(new Set(rows.map((r) => int(r['Year']))).size).toBe(1);
+  });
+
+  it('above + ALICE + poverty = total workers for every sector', () => {
+    for (const r of rows) {
+      expect(int(r['Above']) + int(r['ALICE']) + int(r['Poverty'])).toBe(int(r['Total']));
+    }
+  });
+
+  it('matches the source workbook spot values (Construction)', () => {
+    const c = rows.find((r) => r['Sector'] === 'Construction')!;
+    expect(int(c['ALICE'])).toBe(23603);
+    expect(int(c['Poverty'])).toBe(10748);
+    expect(int(c['Total'])).toBe(103526);
+  });
+});
+
+describe('labor force jobs (labor-jobs.csv)', () => {
+  const rows = load('labor-jobs.csv');
+
+  it('has 20 uniquely named occupations, all for the same year', () => {
+    expect(rows.length).toBe(20);
+    expect(new Set(rows.map((r) => r['Occupation'])).size).toBe(20);
+    expect(new Set(rows.map((r) => int(r['Year']))).size).toBe(1);
+  });
+
+  it('percentages are valid and wages are internally consistent', () => {
+    for (const r of rows) {
+      const p = int(r['PercentBelowALICE']);
+      expect(p).toBeGreaterThanOrEqual(0);
+      expect(p).toBeLessThanOrEqual(100);
+      expect(int(r['TotalEmployment'])).toBeGreaterThan(0);
+      // Median annual wage / 2080 working hours should equal the hourly wage
+      const hourly = parseFloat(String(r['MedianHourlyWage']));
+      expect(Math.abs(int(r['MedianAnnualWage']) / 2080 - hourly)).toBeLessThan(0.01);
+    }
+  });
+});

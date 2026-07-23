@@ -153,7 +153,8 @@ The project includes CSV data files in the `data/` directory:
 - `subcounty.csv` - City, town, and township data
 - `statewide.csv` - Arkansas-wide statistics
 - `demographics.csv` - Demographic breakdowns
-- `employment.csv` - Employment sector data
+- `labor-sectors.csv` - Labor force by industry sector (workers per ALICE band)
+- `labor-jobs.csv` - Largest occupations: employment, % below ALICE threshold, median wages
 - `trends.csv` - Historical trend data
 
 These files are loaded automatically on startup.
@@ -191,7 +192,8 @@ my-agent/
 │   ├── subcounty.csv
 │   ├── statewide.csv
 │   ├── demographics.csv
-│   ├── employment.csv
+│   ├── labor-sectors.csv
+│   ├── labor-jobs.csv
 │   └── trends.csv
 ├── knowledge/               # Knowledge base documents
 │   └── info.md

@@ -58,10 +58,14 @@ export const explainAliceAction: Action = {
       !namesHouseholdType(text);
 
     // Threshold concept ("what is the ALICE threshold?"); county-specific
-    // threshold questions are excluded via hasLocationContext.
+    // threshold questions are excluded via hasLocationContext. The bare form
+    // must be the ENTIRE message — data questions that merely end with
+    // "...below the ALICE threshold?" ("How many cashiers are below the ALICE
+    // threshold?") belong to the data actions, not the explainer.
     const isThresholdConceptQuery =
-      /\b(?:what\s+is|what'?s|explain|define|tell\s+me\s+about)\b.*\bthreshold\b/i.test(text) ||
-      /\balice\s+threshold\b\s*\??$/i.test(text.trim());
+      (/\b(?:what\s+is|what'?s|explain|define|tell\s+me\s+about)\b.*\bthreshold\b/i.test(text) ||
+       /^\s*(?:the\s+)?alice\s+threshold\s*\??\s*$/i.test(text)) &&
+      !/\bhow\s+(?:many|much)\b/i.test(text);
 
     // "How is ALICE calculated/measured/determined?"
     const isCalculationQuery =

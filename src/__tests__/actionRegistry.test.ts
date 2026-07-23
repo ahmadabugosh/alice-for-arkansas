@@ -71,6 +71,27 @@ describe('WordPress /api/chat path (ChatApiService)', () => {
     expect(r.message).not.toContain('statewide');
   });
 
+  it('answers sector employment questions from the labor force data', async () => {
+    const r = await chat.processChatMessage('sess-labor-1', 'How many ALICE households work in construction?');
+    expect(r.success).toBe(true);
+    expect(r.message).toContain('Construction sector in 2024 (latest available)');
+    expect(r.message).toContain('Workers from ALICE households: 23,603 (23%)');
+  });
+
+  it('answers occupation employment questions from the labor force data', async () => {
+    const r = await chat.processChatMessage('sess-labor-2', 'What is the median wage for construction laborers?');
+    expect(r.success).toBe(true);
+    expect(r.message).toContain('Construction Laborers in 2024 (latest available)');
+    expect(r.message).toContain('$37,057 per year ($17.82 per hour)');
+  });
+
+  it('routes occupation count questions to employment even with "Arkansas" and "threshold" present', async () => {
+    const r = await chat.processChatMessage('sess-labor-3', 'How many cashiers are below the ALICE threshold in Arkansas?');
+    expect(r.success).toBe(true);
+    expect(r.message).toContain('Cashiers in 2024 (latest available)');
+    expect(r.message).toContain('Total employment: 22,654 workers');
+  });
+
   it('answers "how many" statewide questions (word-boundary keyword fix)', async () => {
     const r = await chat.processChatMessage('sess-state-3', 'How many households are in poverty in Arkansas?');
     expect(r.success).toBe(true);

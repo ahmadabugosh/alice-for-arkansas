@@ -24,13 +24,27 @@ export interface DemographicData {
   year: number;
 }
 
-export interface EmploymentData {
-  occupation: string;
-  total_workers: number;
-  alice_workers: number;
-  alice_percentage: number;
-  median_wage: number;
+// Statewide workers per industry sector, broken down by the ALICE band of
+// the worker's household. Source: Arkansas Labor Force Data (Sectors tab).
+export interface LaborSectorData {
   year: number;
+  sector: string;
+  above: number;    // workers in households above the ALICE threshold
+  alice: number;    // workers in ALICE households
+  poverty: number;  // workers in households below the federal poverty line
+  total: number;    // all workers in the sector
+}
+
+// Occupation-level employment: total jobs, share of workers whose household
+// is below the ALICE threshold (ALICE + poverty), and median wages.
+// Source: Arkansas Labor Force Data (Jobs tab).
+export interface LaborJobData {
+  year: number;
+  occupation: string;
+  total_employment: number;
+  percent_below_alice: number;   // percent of workers below the ALICE threshold
+  median_annual_wage: number;
+  median_hourly_wage: number;
 }
 
 export interface TrendData {
@@ -190,7 +204,8 @@ export interface LocationEntry {
 export class CsvDataService {
   private counties: CountyData[] = [];
   private demographics: DemographicData[] = [];
-  private employment: EmploymentData[] = [];
+  private laborSectors: LaborSectorData[] = [];
+  private laborJobs: LaborJobData[] = [];
   private trends: TrendData[] = [];
   private subcounty: SubCountyData[] = [];
   private subcounty2024: SubCountyData[] = [];
@@ -223,10 +238,11 @@ export class CsvDataService {
         this.loadCsvData();
         
         this.initialized = true;
-        console.log('*** CSV Data Service initialized successfully with', 
-          this.counties.length, 'counties,', 
+        console.log('*** CSV Data Service initialized successfully with',
+          this.counties.length, 'counties,',
           this.demographics.length, 'demographic records,',
-          this.employment.length, 'employment records,',
+          this.laborSectors.length, 'labor sector records,',
+          this.laborJobs.length, 'labor job records,',
           this.trends.length, 'trend records,',
           this.statewide.length, 'statewide records ***');
         return; // Success, exit retry loop
@@ -294,7 +310,6 @@ export class CsvDataService {
 
     // Load other CSV files from /data folder only
     const demographicsPath = path.join(process.cwd(), 'data', 'demographics.csv');
-    const employmentPath = path.join(process.cwd(), 'data', 'employment.csv');
     const trendsPath = path.join(process.cwd(), 'data', 'trends.csv');
 
     if (fs.existsSync(demographicsPath)) {
@@ -311,21 +326,52 @@ export class CsvDataService {
       });
     }
 
-    if (fs.existsSync(employmentPath)) {
-      const employmentContent = fs.readFileSync(employmentPath, 'utf-8');
-      this.employment = parse(employmentContent, {
+    // Labor force data: workers by household ALICE band per industry sector,
+    // and occupation-level employment/wages. Both come from the Arkansas
+    // Labor Force Data workbook (Sectors and Jobs tabs).
+    const laborSectorsPath = path.join(process.cwd(), 'data', 'labor-sectors.csv');
+    if (fs.existsSync(laborSectorsPath)) {
+      this.laborSectors = parse(fs.readFileSync(laborSectorsPath, 'utf-8'), {
+        columns: true,
+        skip_empty_lines: true,
+        cast: (value, { column }) =>
+          ['Year', 'Above', 'ALICE', 'Poverty', 'Total'].includes(column as string)
+            ? parseInt(value)
+            : value,
+      }).map((row: any) => ({
+        year: row.Year,
+        sector: row.Sector,
+        above: row.Above,
+        alice: row.ALICE,
+        poverty: row.Poverty,
+        total: row.Total,
+      }));
+      console.log(`*** Loaded ${this.laborSectors.length} labor sector records from CSV ***`);
+    }
+
+    const laborJobsPath = path.join(process.cwd(), 'data', 'labor-jobs.csv');
+    if (fs.existsSync(laborJobsPath)) {
+      this.laborJobs = parse(fs.readFileSync(laborJobsPath, 'utf-8'), {
         columns: true,
         skip_empty_lines: true,
         cast: (value, { column }) => {
-          if (column === 'total_workers' || column === 'alice_workers' || column === 'alice_percentage' || column === 'year') {
+          if (['Year', 'TotalEmployment', 'PercentBelowALICE', 'MedianAnnualWage'].includes(column as string)) {
             return parseInt(value);
           }
-          if (column === 'median_wage') {
+          if (column === 'MedianHourlyWage') {
             return parseFloat(value);
           }
           return value;
         }
-      });
+      }).map((row: any) => ({
+        year: row.Year,
+        occupation: row.Occupation,
+        total_employment: row.TotalEmployment,
+        percent_below_alice: row.PercentBelowALICE,
+        median_annual_wage: row.MedianAnnualWage,
+        median_hourly_wage: row.MedianHourlyWage,
+      }));
+      console.log(`*** Loaded ${this.laborJobs.length} labor job records from CSV ***`);
     }
 
     if (fs.existsSync(trendsPath)) {
@@ -890,27 +936,6 @@ export class CsvDataService {
     this.demographics = records;
   }
 
-  private loadEmployment(): void {
-    const csvPath = path.join(process.cwd(), 'data', 'employment.csv');
-    const csvContent = fs.readFileSync(csvPath, 'utf-8');
-    
-    const records = parse(csvContent, {
-      columns: true,
-      skip_empty_lines: true,
-      cast: (value, context) => {
-        if (['total_workers', 'alice_workers', 'alice_percentage', 'year'].includes(context.column as string)) {
-          return parseInt(value);
-        }
-        if (context.column === 'median_wage') {
-          return parseFloat(value);
-        }
-        return value;
-      }
-    });
-
-    this.employment = records;
-  }
-
   private loadTrends(): void {
     const csvPath = path.join(process.cwd(), 'data', 'trends.csv');
     const csvContent = fs.readFileSync(csvPath, 'utf-8');
@@ -1257,15 +1282,14 @@ export class CsvDataService {
     );
   }
 
-  // Employment methods
-  getAllEmployment(): EmploymentData[] {
-    return [...this.employment];
+  // Labor force methods (sector = industry the worker is employed in;
+  // job = the worker's occupation)
+  getLaborSectors(): LaborSectorData[] {
+    return [...this.laborSectors];
   }
 
-  getEmploymentByOccupation(occupation: string): EmploymentData | undefined {
-    return this.employment.find(e => 
-      e.occupation.toLowerCase().includes(occupation.toLowerCase())
-    );
+  getLaborJobs(): LaborJobData[] {
+    return [...this.laborJobs];
   }
 
   // Trends methods
@@ -1333,7 +1357,8 @@ export class CsvDataService {
     return {
       counties: this.counties.length,
       demographics: this.demographics.length,
-      employment: this.employment.length,
+      laborSectors: this.laborSectors.length,
+      laborJobs: this.laborJobs.length,
       trends: this.trends.length,
       subcounty: this.subcounty.length,
       subcounty2024: this.subcounty2024.length,
