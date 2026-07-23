@@ -71,6 +71,15 @@ describe('WordPress /api/chat path (ChatApiService)', () => {
     expect(r.message).not.toContain('statewide');
   });
 
+  it('ranks cities on the latest year (fewest ALICE households)', async () => {
+    const r = await chat.processChatMessage('sess-rank-city-1', 'What city has the fewest number of ALICE households?');
+    expect(r.success).toBe(true);
+    expect(r.message).toContain('(2024 data, latest available)');
+    expect(r.message).toContain('1. Greenland city: 105 households (21%)');
+    expect(r.message).toContain('at least 500 households');
+    expect(r.message).not.toContain('2023');
+  });
+
   it('answers sector employment questions from the labor force data', async () => {
     const r = await chat.processChatMessage('sess-labor-1', 'How many ALICE households work in construction?');
     expect(r.success).toBe(true);

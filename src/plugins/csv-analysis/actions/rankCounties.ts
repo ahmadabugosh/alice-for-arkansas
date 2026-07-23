@@ -139,7 +139,7 @@ export const rankCountiesAction: Action = {
     if (isLocationSizeQuery && countyForLocationSize) {
       const wantsCityOnly = text.includes('city') || text.includes('cities');
       const wantsTownOnly = !wantsCityOnly && (text.includes('town') || text.includes('towns'));
-      const allPlacesInCounty = csvService.getAllSubCounty()
+      const allPlacesInCounty = csvService.getSubCountyLatestPerPlace()
         .filter(s => s.type === 'Place' && s.county === countyForLocationSize.county);
       const matchingPlaces = allPlacesInCounty.filter((place) => {
         const label = place.geo_display_label.toLowerCase();
@@ -259,14 +259,16 @@ export const rankCountiesAction: Action = {
         results.sort((a, b) => isDescending ? b.percentage - a.percentage : a.percentage - b.percentage);
       }
     } else {
-      // Handle cities/towns/places or zip codes. getAllSubCounty() mixes
-      // Place, Sub_County and Zip_Code rows, so filter to the requested type.
-      // Also drop very small entries whose rates would be statistical noise.
+      // Handle cities/towns/places or zip codes on the latest-year subcounty
+      // set, so every entry in the ranking comes from the same (newest) year.
+      // The data mixes Place, Sub_County and Zip_Code rows, so filter to the
+      // requested type; also drop very small entries whose rates would be
+      // statistical noise.
       const targetType = wantsZipCode ? 'Zip_Code' : 'Place';
       const MIN_HOUSEHOLDS = 500;
       const wantsCityOnly = !wantsZipCode && (text.includes('city') || text.includes('cities'));
       const wantsTownOnly = !wantsZipCode && !wantsCityOnly && (text.includes('town') || text.includes('towns'));
-      const allSubcounty = csvService.getAllSubCounty()
+      const allSubcounty = csvService.getAllSubCountyLatest()
         .filter(s => {
           if (s.type !== targetType || s.households < MIN_HOUSEHOLDS) {
             return false;
@@ -383,13 +385,8 @@ export const rankCountiesAction: Action = {
     // Build response
     const direction = isDescending ? 'highest' : 'lowest';
     let title = `${locationScope} with ${direction} ${metricName}`;
-    // Counties rank on the latest year; city/town/zip rankings use the newest
-    // year with full coverage of small places - say which year that is.
-    const yearLabel = rankingYear
-      ? wantsCounty
-        ? ` (${rankingYear} data)`
-        : ` (${rankingYear} data — the latest year with full coverage of ${locationScope})`
-      : '';
+    // Every ranking uses the latest year available for its geography level.
+    const yearLabel = rankingYear ? ` (${rankingYear} data, latest available)` : '';
 
     let response = `According to my data set, here are the ${title}${yearLabel}:\n\n`;
     
@@ -400,7 +397,13 @@ export const rankCountiesAction: Action = {
         response += `${index + 1}. ${item.name}: ${item.percentage}% (${item.count.toLocaleString()} households)\n`;
       }
     });
-    
+
+    // "Lowest/fewest" place rankings are shaped by the small-place filter -
+    // say so instead of implying every tiny town was considered.
+    if (!wantsCounty && !isDescending) {
+      response += `\nNote: this ranking only includes ${locationScope} with at least 500 households, so very small places aren't listed.`;
+    }
+
     const result = {
       text: response,
       success: true

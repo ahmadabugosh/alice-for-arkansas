@@ -535,7 +535,9 @@ export class CsvDataService {
         poverty_households: row.PovertyHouseholds,
         alice_households: row.ALICEHouseholds,
         above_alice_households: row.AboveALICEHouseholds,
-        county: row.County,
+        // The 2024 file stores bare county names ("Scott"); normalize to the
+        // "Scott County" form the rest of the data (and code) uses.
+        county: row.County && !/county$/i.test(row.County) ? `${row.County} County` : row.County,
       }));
       console.log(`*** Loaded ${this.subcounty2024.length} subcounty 2024 records ***`);
     }
@@ -845,10 +847,8 @@ export class CsvDataService {
     
     // Add subcounties/cities/towns from subcounty data
     // Index a latest-year-preferred view (2024 over 2023 for the same
-    // geography, plus any 2024-only places). Rankings use getAllSubCounty(),
-    // which stays on the 2023 set, so this only affects name lookups.
-    const ids2024 = new Set(this.subcounty2024.map(s => s.geo_id2));
-    const subcountyForIndex = [...this.subcounty2024, ...this.subcounty.filter(s => !ids2024.has(s.geo_id2))];
+    // geography, plus any 2024-only places).
+    const subcountyForIndex = this.getSubCountyLatestPerPlace();
     for (const subcounty of subcountyForIndex) {
       // Extract base name from geo_display_label
       // Examples:
@@ -1391,6 +1391,21 @@ export class CsvDataService {
   // SubCounty methods
   getAllSubCounty(): SubCountyData[] {
     return [...this.subcounty];
+  }
+
+  // Latest-year subcounty rows only (2024). Rankings use this so every entry
+  // in one ranking comes from the same year; falls back to the older set when
+  // the 2024 file is absent.
+  getAllSubCountyLatest(): SubCountyData[] {
+    return this.subcounty2024.length ? [...this.subcounty2024] : [...this.subcounty];
+  }
+
+  // Latest-known row per geography: 2024 where available, otherwise the
+  // older set. Used for per-place lookups where each answer is labeled with
+  // its own year.
+  getSubCountyLatestPerPlace(): SubCountyData[] {
+    const ids = new Set(this.subcounty2024.map(s => s.geo_id2));
+    return [...this.subcounty2024, ...this.subcounty.filter(s => !ids.has(s.geo_id2))];
   }
 
   // Search by GEO display label or GEO id2

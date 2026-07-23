@@ -115,18 +115,19 @@ describe('reviewed ALICE query regression matrix', () => {
       const city = await ask(question);
       expect(city.action).toBe('Ranking locations...');
       expect(city.text).toContain('here are the cities with lowest ALICE rate');
-      expect(city.text).toContain('1. Lavaca city: 9% (78 households)');
+      expect(city.text).toContain('(2024 data, latest available)');
+      expect(city.text).toContain('1. Elm Springs city: 10% (106 households)');
       expect(city.text).not.toContain('Avilla CDP');
       expect(city.text).not.toContain('Goshen town');
     }
 
     const lowestZip = await ask('What zip code in AR has the lowest ALICE rate?');
     expect(lowestZip.action).toBe('Ranking locations...');
-    expect(lowestZip.text).toContain('1. 72718: 12% (202 households)');
+    expect(lowestZip.text).toContain('1. 72201: 7% (37 households)');
 
     const highestZip = await ask('What zip code in AR has the highest ALICE rate?');
     expect(highestZip.action).toBe('Ranking locations...');
-    expect(highestZip.text).toContain('1. 71945: 59% (410 households)');
+    expect(highestZip.text).toContain('1. 72773: 70% (367 households)');
 
     const hispanicStatewide = await ask('How many Hispanic individuals are ALICE in AR?');
     expect(hispanicStatewide.action).toBe('Searching demographic data...');
@@ -151,8 +152,8 @@ describe('reviewed ALICE query regression matrix', () => {
     expect(result.action).toBe('Ranking locations...');
     expect(result.text).toContain("I don't have any town-labeled records for Scott County");
     expect(result.text).toContain('largest city/place record I have is Waldron city');
-    expect(result.text).toContain('Total households: 1,329');
-    expect(result.text).toContain('ALICE households: 31% (416 households)');
+    expect(result.text).toContain('Total households: 1,389');
+    expect(result.text).toContain('ALICE households: 31% (431 households)');
     expect(result.text).not.toContain("s biggest");
   });
 });
