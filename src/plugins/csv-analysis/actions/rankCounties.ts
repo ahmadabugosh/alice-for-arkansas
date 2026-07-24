@@ -131,49 +131,30 @@ export const rankCountiesAction: Action = {
         return new RegExp(`\\b${countyName.replace(/\./g, '\\.')}\\b`).test(text);
       })
       : undefined;
+    // Pure size questions ("biggest town in Scott County?") aren't ALICE
+    // questions — decline and steer toward questions the data can answer.
     const isLocationSizeQuery =
-      Boolean(countyForLocationSize) &&
+      wantsSubcounty && !wantsZipCode &&
       (text.includes('largest') || text.includes('biggest') || text.includes('smallest')) &&
       !hasAliceTerms;
 
-    if (isLocationSizeQuery && countyForLocationSize) {
-      const wantsCityOnly = text.includes('city') || text.includes('cities');
-      const wantsTownOnly = !wantsCityOnly && (text.includes('town') || text.includes('towns'));
-      const allPlacesInCounty = csvService.getSubCountyLatestPerPlace()
-        .filter(s => s.type === 'Place' && s.county === countyForLocationSize.county);
-      const matchingPlaces = allPlacesInCounty.filter((place) => {
-        const label = place.geo_display_label.toLowerCase();
-        if (wantsCityOnly) return label.includes(' city,');
-        if (wantsTownOnly) return label.includes(' town,');
-        return true;
-      });
-      const rowsToRank = matchingPlaces.length > 0 ? matchingPlaces : allPlacesInCounty;
-
-      if (rowsToRank.length === 0) {
-        const result = {
-          text: `I don't have city, town, or place records for ${countyForLocationSize.county} in my dataset. I do have county-level ALICE data for ${countyForLocationSize.county}.`,
-          success: true
-        };
-        if (callback) { callback(result); return true; }
-        return result;
+    if (isLocationSizeQuery) {
+      // Bare "Arkansas" means the state, not Arkansas County.
+      const countyName =
+        countyForLocationSize?.county === 'Arkansas County' && !text.includes('arkansas county')
+          ? undefined
+          : countyForLocationSize?.county;
+      let response = `I focus on ALICE data for Arkansas — households that are Asset Limited, Income Constrained, Employed — so ranking cities or towns by size isn't something my data set covers.\n\n`;
+      response += `I'd be happy to help with an ALICE question instead. For example:\n`;
+      if (countyName) {
+        response += `- What's the ALICE rate in ${countyName}?\n`;
+        response += `- How many households in ${countyName} are below the ALICE threshold?\n`;
+        response += `- Which Arkansas city has the highest ALICE rate?`;
+      } else {
+        response += `- What's the ALICE rate in Arkansas?\n`;
+        response += `- Which county has the highest ALICE rate?\n`;
+        response += `- Which Arkansas city has the highest ALICE rate?`;
       }
-
-      rowsToRank.sort((a, b) => isDescending ? b.households - a.households : a.households - b.households);
-      const top = rowsToRank[0];
-      const label = top.geo_display_label.split(',')[0].trim();
-      const alicePercentage = top.households > 0 ? Math.round((top.alice_households / top.households) * 100) : 0;
-      const direction = isDescending ? 'largest' : 'smallest';
-      const requestedType = wantsCityOnly ? 'city' : wantsTownOnly ? 'town' : 'place';
-      const fallbackNote = matchingPlaces.length === 0 && wantsTownOnly
-        ? `I don't have any town-labeled records for ${countyForLocationSize.county}. The ${direction} city/place record I have is ${label}.`
-        : `The ${direction} ${requestedType} record I have for ${countyForLocationSize.county} is ${label}.`;
-
-      let response = `According to my data set, ${fallbackNote}\n\n`;
-      response += `${label}:\n`;
-      response += `Total households: ${top.households.toLocaleString()}\n`;
-      response += `ALICE households: ${alicePercentage}% (${top.alice_households.toLocaleString()} households)\n`;
-      response += `Households in poverty: ${top.poverty_households.toLocaleString()} households\n`;
-      response += `Year: ${top.year} (latest available for this location)`;
 
       const result = { text: response, success: true };
       if (callback) { callback(result); return true; }

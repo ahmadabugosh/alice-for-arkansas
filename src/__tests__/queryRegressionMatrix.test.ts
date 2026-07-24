@@ -146,14 +146,26 @@ describe('reviewed ALICE query regression matrix', () => {
     expect(employment.text).toContain('1. Accommodation and Food Services: 27% (25,055 of 91,477 workers)');
   });
 
-  it('answers county-scoped town size questions from available place data', async () => {
+  it('declines pure town-size questions and redirects to ALICE questions', async () => {
     const result = await ask("What's the biggest town in Scott county?");
 
     expect(result.action).toBe('Ranking locations...');
-    expect(result.text).toContain("I don't have any town-labeled records for Scott County");
-    expect(result.text).toContain('largest city/place record I have is Waldron city');
-    expect(result.text).toContain('Total households: 1,389');
-    expect(result.text).toContain('ALICE households: 31% (431 households)');
-    expect(result.text).not.toContain("s biggest");
+    expect(result.text).toContain("ranking cities or towns by size isn't something my data set covers");
+    expect(result.text).toContain("What's the ALICE rate in Scott County?");
+    expect(result.text).not.toContain('Waldron');
+    expect(result.text).not.toContain('Total households');
+
+    // Bare "Arkansas" means the state — the redirect must not suggest
+    // Arkansas County questions.
+    const statewide = await ask('What is the largest city in Arkansas?');
+    expect(statewide.action).toBe('Ranking locations...');
+    expect(statewide.text).toContain("isn't something my data set covers");
+    expect(statewide.text).toContain('Which county has the highest ALICE rate?');
+    expect(statewide.text).not.toContain('Arkansas County');
+
+    // Size questions that ARE about ALICE still get ranked answers
+    const aliceSize = await ask('Which city has the biggest number of ALICE households?');
+    expect(aliceSize.action).toBe('Ranking locations...');
+    expect(aliceSize.text).toContain('highest ALICE households');
   });
 });
