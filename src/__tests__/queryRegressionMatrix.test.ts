@@ -146,6 +146,30 @@ describe('reviewed ALICE query regression matrix', () => {
     expect(employment.text).toContain('1. Accommodation and Food Services: 27% (25,055 of 91,477 workers)');
   });
 
+  it('serves household-type questions from the 2024 families-with-children data', async () => {
+    for (const question of [
+      'What can you tell me about single parents in Arkansas?',
+      'ALICE rates by household type'
+    ]) {
+      const result = await ask(question);
+      expect(result.action).toBe('Searching demographic data...');
+      expect(result.text).toContain('latest available data (2024)');
+      expect(result.text).toContain('Single-Female-Headed:');
+      expect(result.text).toContain('ALICE households: 30% (24,748 households)');
+      expect(result.text).toContain('Households in poverty: 45% (37,384 households)');
+      // The stale demographics.csv table must never surface
+      expect(result.text).not.toContain('Couples Age');
+      expect(result.text).not.toContain('64,120');
+      expect(result.text).not.toContain('Single or Cohabiting');
+    }
+
+    // Age-flavored household questions still get the households-by-age data
+    const byAge = await ask('How many households by age are ALICE in Arkansas?');
+    expect(byAge.text).toContain('by age of head of household in Arkansas (latest available data, 2024)');
+    expect(byAge.text).toContain('Age 65 and Over');
+    expect(byAge.text).toContain('ALICE households: 37% (128,862)');
+  });
+
   it('declines pure town-size questions and redirects to ALICE questions', async () => {
     const result = await ask("What's the biggest town in Scott county?");
 

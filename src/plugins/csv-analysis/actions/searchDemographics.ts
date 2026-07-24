@@ -518,6 +518,9 @@ function buildRaceResponse(csvService: CsvDataService, text: string): string {
 
 const GENDER_HOUSEHOLD_INTRO =
   'The only gender-related ALICE data I have for Arkansas is the Married, Single-Female-Headed, and Single-Male-Headed household breakdown for families with children.';
+// Same data, framed for household/parent/family questions instead of gender ones.
+const FAMILY_HOUSEHOLD_INTRO =
+  'My ALICE data for Arkansas families with children covers three household types: Married, Single-Female-Headed, and Single-Male-Headed.';
 const GENDER_HOUSEHOLD_FOOTER =
   'Note: These figures describe household structure among families with children. They are not a full statewide gender breakdown for all ALICE households.';
 
@@ -532,11 +535,12 @@ function formatHouseholdTypeYear(
   rows: HouseholdTypeData[],
   year: number,
   isLatest: boolean,
-  availableYears: number[]
+  availableYears: number[],
+  intro: string = GENDER_HOUSEHOLD_INTRO
 ): string {
   const pct = (part: number, total: number) => (total > 0 ? Math.round((part / total) * 100) : 0);
 
-  let response = `${GENDER_HOUSEHOLD_INTRO}\n\n`;
+  let response = `${intro}\n\n`;
   response += isLatest
     ? `Here is that breakdown using my latest available data (${year}):\n\n`
     : `Here is that breakdown for ${year}:\n\n`;
@@ -563,9 +567,10 @@ function formatHouseholdDemographicYear(
   rows: DemographicData[],
   year: number,
   isLatest: boolean,
-  availableYears: number[]
+  availableYears: number[],
+  intro: string = GENDER_HOUSEHOLD_INTRO
 ): string {
-  let response = `${GENDER_HOUSEHOLD_INTRO}\n\n`;
+  let response = `${intro}\n\n`;
   response += isLatest
     ? `Here is that breakdown using my latest available data (${year}):\n\n`
     : `Here is that breakdown for ${year}:\n\n`;
@@ -585,11 +590,11 @@ function formatHouseholdDemographicYear(
 }
 
 // Historical series of households below the ALICE threshold, per household type.
-function formatHouseholdTrend(csvService: CsvDataService, names: string[]): string {
+function formatHouseholdTrend(csvService: CsvDataService, names: string[], intro: string = GENDER_HOUSEHOLD_INTRO): string {
   const allTypes = ['Married', 'Single-Female-Headed', 'Single-Male-Headed'];
   const selected = names.length ? names : allTypes;
 
-  let response = `${GENDER_HOUSEHOLD_INTRO}\n\n`;
+  let response = `${intro}\n\n`;
   response +=
     'Here is how the number of households below the ALICE threshold (ALICE + poverty combined) has changed over time:\n\n';
 
@@ -616,9 +621,10 @@ function formatHouseholdTrend(csvService: CsvDataService, names: string[]): stri
 function formatHouseholdThresholdYear(
   rows: HouseholdTypeTrendData[],
   year: number,
-  bandYears: number[]
+  bandYears: number[],
+  intro: string = GENDER_HOUSEHOLD_INTRO
 ): string {
-  let response = `${GENDER_HOUSEHOLD_INTRO}\n\n`;
+  let response = `${intro}\n\n`;
   response += `For ${year}, here are the households below the ALICE threshold (ALICE + poverty combined) by household type:\n\n`;
   rows.forEach((row) => {
     response += `${row.name}: ${row.below_alice_threshold.toLocaleString()} households below the ALICE threshold\n`;
@@ -636,6 +642,7 @@ function formatHouseholdThresholdYear(
 // available, names the year, and only serves an earlier year when the user
 // explicitly asks for one.
 function buildGenderHouseholdResponse(csvService: CsvDataService, text: string): string {
+  const intro = isGenderRelatedQuery(text) ? GENDER_HOUSEHOLD_INTRO : FAMILY_HOUSEHOLD_INTRO;
   const demographicData = csvService.getAllDemographics();
   const hasHouseholdTypes =
     typeof csvService.getAllHouseholdTypes === 'function' &&
@@ -650,7 +657,7 @@ function buildGenderHouseholdResponse(csvService: CsvDataService, text: string):
   // "How has this changed over time" → historical below-threshold series.
   if (hasTrends && isTrendQuery(text) && csvService.getAllHouseholdTypeTrends().length > 0) {
     const named = detectHouseholdType(text);
-    return formatHouseholdTrend(csvService, named ? [named] : []);
+    return formatHouseholdTrend(csvService, named ? [named] : [], intro);
   }
 
   const householdTypeRows = hasHouseholdTypes ? csvService.getAllHouseholdTypes() : [];
@@ -670,7 +677,7 @@ function buildGenderHouseholdResponse(csvService: CsvDataService, text: string):
   const allYears = [...new Set([...bandYears, ...trendYears])].sort((a, b) => a - b);
 
   if (allYears.length === 0) {
-    return `${GENDER_HOUSEHOLD_INTRO}\n\nI don't have that breakdown available right now.`;
+    return `${intro}\n\nI don't have that breakdown available right now.`;
   }
 
   const latestOverall = allYears[allYears.length - 1];
@@ -690,32 +697,33 @@ function buildGenderHouseholdResponse(csvService: CsvDataService, text: string):
   if (hasHouseholdTypes) {
     const bandRows = csvService.getHouseholdTypes(targetYear);
     if (bandRows.length > 0) {
-      return formatHouseholdTypeYear(bandRows, targetYear, isLatest, bandYears);
+      return formatHouseholdTypeYear(bandRows, targetYear, isLatest, bandYears, intro);
     }
   }
   if (demoYear === targetYear && demoRows.length > 0) {
-    return formatHouseholdDemographicYear(demoRows, targetYear, isLatest, bandYears);
+    return formatHouseholdDemographicYear(demoRows, targetYear, isLatest, bandYears, intro);
   }
 
   // No full split for that year, but we may have the below-threshold total.
   if (trendYears.includes(targetYear)) {
     const rows = csvService.getAllHouseholdTypeTrends().filter((r) => r.year === targetYear);
-    return formatHouseholdThresholdYear(rows, targetYear, bandYears);
+    return formatHouseholdThresholdYear(rows, targetYear, bandYears, intro);
   }
 
   // A year we simply don't have — default back to the latest and say so.
   let response = `I don't have the gender/household breakdown for ${targetYear}. `;
   response += `I have data for ${allYears.join(', ')}. Here is my latest (${latestOverall}):\n\n`;
   if (hasHouseholdTypes && csvService.getHouseholdTypes(latestOverall).length > 0) {
-    response += formatHouseholdTypeYear(csvService.getHouseholdTypes(latestOverall), latestOverall, true, bandYears);
+    response += formatHouseholdTypeYear(csvService.getHouseholdTypes(latestOverall), latestOverall, true, bandYears, intro);
   } else if (trendYears.includes(latestOverall)) {
     response += formatHouseholdThresholdYear(
       csvService.getAllHouseholdTypeTrends().filter((r) => r.year === latestOverall),
       latestOverall,
-      bandYears
+      bandYears,
+      intro
     );
   } else if (demoYear !== undefined) {
-    response += formatHouseholdDemographicYear(demoRows, demoYear, demoYear === latestOverall, bandYears);
+    response += formatHouseholdDemographicYear(demoRows, demoYear, demoYear === latestOverall, bandYears, intro);
   }
   return response;
 }
@@ -904,28 +912,21 @@ export const searchDemographicsAction: Action = {
 
       if (isGroupRankingQuery(text)) {
         response = buildGroupRanking(csvService, demographicData);
-      } else if (isGenderQuery || wantsHouseholdYearAware) {
+      } else if (
+        isGenderQuery ||
+        wantsHouseholdYearAware ||
+        // Household/parent/family questions go to the year-aware path backed
+        // by household-types.csv — never the stale demographics.csv table.
+        // Age-flavored questions ("households by age") still belong to the
+        // age breakdown below.
+        (isHouseholdTopic && !isRaceQuery && !/\bage\b/.test(lowerText))
+      ) {
         response = buildGenderHouseholdResponse(csvService, text);
       } else if (isRaceQuery) {
         response = buildRaceResponse(csvService, text);
       } else if (text.includes('age')) {
         response = buildAgeResponse(csvService, text);
 
-      } else if (text.includes('household') || text.includes('parent')) {
-        const householdData = demographicData.filter(d => 
-          d.category.includes('Parent') || d.category.includes('Adult') || d.category.includes('Couples') || d.category.includes('Single')
-        );
-        
-        response = "According to my data set, here are ALICE rates by household type in Arkansas:\n\n";
-        householdData.forEach(demo => {
-          const combinedThreshold = demo.alice_percentage + demo.poverty_percent;
-          response += `${demo.category}:\n`;
-          response += `  ALICE households: ${demo.alice_percentage}% (${demo.alice_households.toLocaleString()})\n`;
-          response += `  Households in poverty: ${demo.poverty_percent}%\n`;
-          response += `  Total below ALICE threshold: ${combinedThreshold}%\n\n`;
-        });
-        response += "Note: ALICE households are above poverty but below the cost of basic needs.";
-        
       } else {
         // General demographic overview
         const totalData = demographicData.find(d => d.category === 'Total Arkansas');
