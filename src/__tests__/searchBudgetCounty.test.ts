@@ -18,10 +18,58 @@ describe('searchBudget — county-level budgets', () => {
 
   it('answers a full county budget for a named county + household', async () => {
     const r: any = await ask('survival budget for a family of four in Benton County');
-    expect(r.text).toContain('for a Two Adults Two Children in Benton County, Arkansas (2024)');
+    expect(r.text).toContain('for a Two Adults Two Children household (two school-age children) in Benton County, Arkansas (2024)');
     expect(r.text).toContain('Monthly total: $5,770');
     expect(r.text).toContain('Annual total: $69,240');
     expect(r.text).toContain('county-specific');
+  });
+
+  it('collapses Rent + Utilities into Housing and deducts tax credits from Taxes', async () => {
+    const r: any = await ask('survival budget for a family of four in Benton County');
+    // Rent 885 + Utilities 348, shown as one Housing line (dashboard style)
+    expect(r.text).toContain('Housing: $1,233');
+    // Taxes 910 - 453 in credits
+    expect(r.text).toContain('Taxes (after tax credits): $457');
+    expect(r.text).not.toContain('Rent:');
+    expect(r.text).not.toContain('Utilities:');
+    expect(r.text).not.toContain('Tax Credits:');
+  });
+
+  it('notes the infant/preschooler alternative on generic family-of-four answers', async () => {
+    const r: any = await ask('survival budget for a family of four in Benton County');
+    expect(r.text).toContain('this assumes two school-age children');
+    expect(r.text).toContain('$7,028/month ($84,336/year)');
+  });
+
+  it('routes family-of-four questions mentioning young kids to the childcare variant', async () => {
+    const r: any = await ask('survival budget for two adults with an infant and a preschooler in Benton County');
+    expect(r.text).toContain('Two Adults Two Childcare household (an infant and a preschooler in child care)');
+    expect(r.text).toContain('Monthly total: $7,028');
+    expect(r.text).not.toContain('this assumes two school-age children');
+  });
+
+  it('gives the full budget (not the child-care line) for "young children in child care" phrasing', async () => {
+    const r: any = await ask('survival budget for a family of four with young children in child care in Washington County');
+    expect(r.text).toContain('Two Adults Two Childcare household (an infant and a preschooler in child care)');
+    expect(r.text).toContain('Monthly total: $6,658');
+    // Explicit child-care line-item asks still work
+    const item: any = await ask('what is the child care cost for a family of four with an infant and a preschooler in Washington County?');
+    expect(item.text).toContain('child care cost for a Two Adults Two Childcare household');
+    expect(item.text).toContain('is $1,396');
+  });
+
+  it('answers housing as the combined rent + utilities figure', async () => {
+    const r: any = await ask('what is the housing cost for a family of four in Washington County?');
+    // Rent 885 + Utilities 348
+    expect(r.text).toContain('housing (rent + utilities) cost');
+    expect(r.text).toContain('is $1,233');
+  });
+
+  it('explains tax credits as already deducted when asked directly', async () => {
+    const r: any = await ask('what are the tax credits for a family of four in Washington County?');
+    expect(r.text).toContain('receives $446/month in tax credits');
+    expect(r.text).toContain('already deducted from the Taxes line');
+    expect(r.text).toContain('$439/month after credits');
   });
 
   it('answers a single-adult county budget (matches source total)', async () => {
@@ -32,7 +80,7 @@ describe('searchBudget — county-level budgets', () => {
 
   it('answers a single line item for a county', async () => {
     const r: any = await ask('what is the child care cost for a family of four in Washington County?');
-    expect(r.text).toContain('child care cost for a Two Adults Two Children in Washington County, Arkansas is $469');
+    expect(r.text).toContain('child care cost for a Two Adults Two Children household (two school-age children) in Washington County, Arkansas is $469');
   });
 
   it('shows a county budget overview when a county is named without a household type', async () => {

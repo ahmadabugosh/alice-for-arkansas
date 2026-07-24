@@ -32,21 +32,48 @@ function includesPhrase(text: string, phrase: string): boolean {
   return normalizedPhrase.length > 0 && normalizedText.includes(` ${normalizedPhrase} `);
 }
 
+// "child care" inside a household description ("kids in child care") is part
+// of the composition, not a request for the child-care line item — drop those
+// phrases before line-item detection.
+function stripHouseholdPhrases(text: string): string {
+  return normalizeText(text).replace(/\b(?:in|with) (?:child ?care|day ?care)\b/g, ' ');
+}
+
 const money = (n: number): string => `$${n.toLocaleString('en-US')}`;
+
+// United For ALICE budget conventions: "Children" household types assume
+// school-age kids; "Childcare" types assume younger kids in full-time child
+// care (the two-child version is an infant + a preschooler, per the 2026
+// Arkansas report).
+const HOUSEHOLD_COMPOSITIONS: Record<string, string> = {
+  'One Adult One Child': 'one school-age child',
+  'One Adult One Childcare': 'one young child in child care',
+  'Two Adults Two Children': 'two school-age children',
+  'Two Adults Two Childcare': 'an infant and a preschooler in child care'
+};
+
+function describeHousehold(type: string): string {
+  const note = HOUSEHOLD_COMPOSITIONS[type];
+  return note ? `${type} household (${note})` : type;
+}
 
 // Map a free-text question to one of the canonical budget household types.
 // Order matters: the more specific compositions are checked first.
 function detectHousehold(text: string): string | undefined {
   const t = normalizeText(text);
+  // Age words that imply full-time child care rather than school-age children.
+  const youngKids = /(infants?|bab(?:y|ies)|toddlers?|preschool(?:ers?)?|pre k\b|young (?:child|children|kids))/.test(t);
   if (/(two seniors|senior couple|elderly couple|two retirees|two retired)/.test(t)) return 'Two Seniors';
   if (/(single senior|one senior|a senior|elderly|retiree|retired)/.test(t)) return 'Single Senior';
   if (/(one adult one childcare|single parent one childcare|one parent one childcare|single adult one childcare)/.test(t)) return 'One Adult One Childcare';
-  if (/(one adult one child|single parent|one parent|single mother|single father|single mom|single dad|one child)/.test(t)) return 'One Adult One Child';
-  if (/(two adults two childcare|two in childcare|both in childcare|children in childcare|kids in childcare|two childcare|with childcare)/.test(t)) {
+  if (/(one adult one child|single parent|one parent|single mother|single father|single mom|single dad|one child)/.test(t)) {
+    return youngKids ? 'One Adult One Childcare' : 'One Adult One Child';
+  }
+  if (/(two adults two childcare|two in childcare|both in childcare|children in childcare|kids in childcare|children in daycare|kids in daycare|two in daycare|both in daycare|two childcare|with childcare|infant and a preschooler|infant and preschooler)/.test(t)) {
     return 'Two Adults Two Childcare';
   }
   if (/(two adults two children|family of four|household of four|four person|two adults and two children|two parents two children|two kids|two children|with children|with kids|family)/.test(t)) {
-    return 'Two Adults Two Children';
+    return youngKids ? 'Two Adults Two Childcare' : 'Two Adults Two Children';
   }
   if (/(two adults|two adult|two people|two person|a couple|couple)/.test(t)) {
     return 'Two Adults';
@@ -92,7 +119,7 @@ function budgetLabel(b: BudgetData): string {
 }
 
 function formatFullBudget(b: BudgetData): string {
-  let response = `${budgetLabel(b)} for a ${b.household_type} in Arkansas (${b.year}):\n\n`;
+  let response = `${budgetLabel(b)} for a ${describeHousehold(b.household_type)} in Arkansas (${b.year}):\n\n`;
   response += 'Monthly costs:\n';
   LINE_ITEMS.forEach((item) => {
     // The Survival budget has no savings line; skip it when it's zero.
@@ -105,34 +132,46 @@ function formatFullBudget(b: BudgetData): string {
   return response;
 }
 
-interface CountyLineItem { label: string; field: keyof CountyBudgetData; aliases: string[]; }
+// Line items match the United Way dashboard presentation: Rent + Utilities are
+// shown as one "Housing" figure, and tax credits are deducted from Taxes
+// rather than listed separately.
+interface CountyLineItem {
+  label: string;
+  value: (b: CountyBudgetData) => number;
+  aliases: string[];
+  hidden?: boolean; // answerable when asked, but not a display line
+}
 const COUNTY_LINE_ITEMS: CountyLineItem[] = [
-  { label: 'Rent', field: 'rent', aliases: ['rent', 'housing', 'mortgage', 'shelter'] },
-  { label: 'Child Care', field: 'childcare', aliases: ['child care', 'childcare', 'daycare', 'day care'] },
-  { label: 'Food', field: 'food', aliases: ['food', 'groceries', 'grocery'] },
-  { label: 'Transportation', field: 'transportation', aliases: ['transportation', 'transport', 'commute', 'transit', 'car', 'gas'] },
-  { label: 'Utilities', field: 'utilities', aliases: ['utilities', 'utility', 'electric', 'water', 'power'] },
-  { label: 'Health Care', field: 'healthcare', aliases: ['health care', 'healthcare', 'medical', 'health insurance'] },
-  { label: 'Technology', field: 'tech', aliases: ['technology', 'tech', 'phone', 'internet'] },
-  { label: 'Miscellaneous', field: 'misc', aliases: ['miscellaneous', 'misc'] },
-  { label: 'Taxes', field: 'taxes', aliases: ['taxes', 'tax'] },
-  { label: 'Tax Credits', field: 'tax_credits', aliases: ['tax credit', 'tax credits', 'credits'] }
+  { label: 'Housing', value: (b) => b.rent + b.utilities, aliases: ['housing', 'rent', 'mortgage', 'shelter', 'utilities', 'utility', 'electric', 'water', 'power'] },
+  { label: 'Child Care', value: (b) => b.childcare, aliases: ['child care', 'childcare', 'daycare', 'day care'] },
+  { label: 'Food', value: (b) => b.food, aliases: ['food', 'groceries', 'grocery'] },
+  { label: 'Transportation', value: (b) => b.transportation, aliases: ['transportation', 'transport', 'commute', 'transit', 'car', 'gas'] },
+  { label: 'Health Care', value: (b) => b.healthcare, aliases: ['health care', 'healthcare', 'medical', 'health insurance'] },
+  { label: 'Technology', value: (b) => b.tech, aliases: ['technology', 'tech', 'phone', 'internet'] },
+  { label: 'Miscellaneous', value: (b) => b.misc, aliases: ['miscellaneous', 'misc'] },
+  { label: 'Tax Credits', value: (b) => b.tax_credits, aliases: ['tax credit', 'tax credits', 'credits'], hidden: true },
+  { label: 'Taxes', value: (b) => b.taxes + b.tax_credits, aliases: ['taxes', 'tax'] }
 ];
 
 function detectCountyLineItem(text: string): CountyLineItem | undefined {
   return COUNTY_LINE_ITEMS.find((item) => item.aliases.some((alias) => includesPhrase(text, alias)));
 }
 
+function countyItemLabel(item: CountyLineItem, b: CountyBudgetData): string {
+  if (item.label === 'Housing') return 'Housing (rent + utilities)';
+  if (item.label === 'Taxes' && b.tax_credits !== 0) return 'Taxes (after tax credits)';
+  return item.label;
+}
+
 const prettyCounty = (c: string) => c.replace(/\b\w/g, (ch) => ch.toUpperCase()) + ' County';
 
 function formatCountyBudget(b: CountyBudgetData): string {
-  let response = `ALICE Household Survival Budget for a ${b.household_type} in ${prettyCounty(b.county)}, Arkansas (${b.year}):\n\n`;
+  let response = `ALICE Household Survival Budget for a ${describeHousehold(b.household_type)} in ${prettyCounty(b.county)}, Arkansas (${b.year}):\n\n`;
   response += 'Monthly costs:\n';
   COUNTY_LINE_ITEMS.forEach((item) => {
-    const v = b[item.field] as number;
-    if (item.field === 'tax_credits' && v === 0) return; // omit when no credit applies
-    const amount = v < 0 ? `-$${Math.abs(v).toLocaleString('en-US')}` : money(v);
-    response += `  ${item.label}: ${amount}\n`;
+    if (item.hidden) return;
+    const label = item.label === 'Taxes' && b.tax_credits !== 0 ? 'Taxes (after tax credits)' : item.label;
+    response += `  ${label}: ${money(item.value(b))}\n`;
   });
   response += `\nMonthly total: ${money(b.monthly)}\n`;
   response += `Annual total: ${money(b.annual)}`;
@@ -210,7 +249,7 @@ export const searchBudgetAction: Action = {
         : '';
 
       const household = detectHousehold(text);
-      const lineItem = detectLineItem(text);
+      const lineItem = detectLineItem(stripHouseholdPhrases(text));
       const lower = text.toLowerCase();
 
       // County-specific budget: when the user names a county and a household
@@ -219,16 +258,28 @@ export const searchBudgetAction: Action = {
       if (county && household && typeof csvService.hasCountyBudgets === 'function' && csvService.hasCountyBudgets()) {
         const cb = csvService.findCountyBudget(county, household);
         if (cb) {
-          const cItem = detectCountyLineItem(text);
+          const cItem = detectCountyLineItem(stripHouseholdPhrases(text));
           let cResponse: string;
-          if (cItem) {
-            const v = cb[cItem.field] as number;
-            const amount = v < 0 ? `-$${Math.abs(v).toLocaleString('en-US')}` : money(v);
-            cResponse = `According to the ALICE Household Survival Budget (${cb.year}), the monthly ${cItem.label.toLowerCase()} cost for a ${cb.household_type} in ${prettyCounty(cb.county)}, Arkansas is ${amount}.`;
+          if (cItem && cItem.label === 'Tax Credits') {
+            const credit = cb.tax_credits;
+            cResponse = credit === 0
+              ? `According to the ALICE Household Survival Budget (${cb.year}), no tax credits apply for a ${describeHousehold(cb.household_type)} in ${prettyCounty(cb.county)}, Arkansas.`
+              : `According to the ALICE Household Survival Budget (${cb.year}), a ${describeHousehold(cb.household_type)} in ${prettyCounty(cb.county)}, Arkansas receives ${money(Math.abs(credit))}/month in tax credits — already deducted from the Taxes line, which is ${money(cb.taxes + credit)}/month after credits.`;
+          } else if (cItem) {
+            cResponse = `According to the ALICE Household Survival Budget (${cb.year}), the monthly ${countyItemLabel(cItem, cb).toLowerCase()} cost for a ${describeHousehold(cb.household_type)} in ${prettyCounty(cb.county)}, Arkansas is ${money(cItem.value(cb))}.`;
           } else if (/\b(annual|annually|yearly|per year|a year|salary)\b/.test(lower)) {
-            cResponse = `The ALICE Household Survival Budget (${cb.year}) for a ${cb.household_type} in ${prettyCounty(cb.county)}, Arkansas is ${money(cb.annual)} per year (${money(cb.monthly)} per month).`;
+            cResponse = `The ALICE Household Survival Budget (${cb.year}) for a ${describeHousehold(cb.household_type)} in ${prettyCounty(cb.county)}, Arkansas is ${money(cb.annual)} per year (${money(cb.monthly)} per month).`;
           } else {
             cResponse = formatCountyBudget(cb);
+          }
+          // A generic "family of four" resolves to the school-age variant;
+          // point out the (pricier) young-children alternative on whole-budget
+          // answers (not single line items).
+          if (!cItem && cb.household_type === 'Two Adults Two Children' && !/school age/.test(normalizeText(text))) {
+            const alt = csvService.findCountyBudget(county, 'Two Adults Two Childcare');
+            if (alt) {
+              cResponse += `\n\nNote: this assumes two school-age children. With an infant and a preschooler in child care instead, the Survival Budget is ${money(alt.monthly)}/month (${money(alt.annual)}/year) — ask about a "family of four with an infant and a preschooler".`;
+            }
           }
           cResponse += '\n\nThese are county-specific Survival Budget figures. Ask about a different county or the statewide budget if you\'d like.';
           const cResult = { text: cResponse, success: true, action: 'BUDGET_DATA_RETRIEVED' };
@@ -264,13 +315,22 @@ export const searchBudgetAction: Action = {
         if (!b) {
           response = `I don't have a budget for a ${household} in my data set.`;
         } else if (lineItem) {
-          response = `According to the ${labelPrefix} (${b.year}), the monthly ${lineItem.label.toLowerCase()} cost for a ${b.household_type} in Arkansas is ${money(b[lineItem.field] as number)}.`;
+          response = `According to the ${labelPrefix} (${b.year}), the monthly ${lineItem.label.toLowerCase()} cost for a ${describeHousehold(b.household_type)} in Arkansas is ${money(b[lineItem.field] as number)}.`;
         } else if (wantsWage) {
-          response = `The ${labelPrefix} (${b.year}) for a ${b.household_type} in Arkansas requires an hourly wage of $${b.hourly_wage.toFixed(2)} (full-time), which is ${money(b.annual_total)} per year.`;
+          response = `The ${labelPrefix} (${b.year}) for a ${describeHousehold(b.household_type)} in Arkansas requires an hourly wage of $${b.hourly_wage.toFixed(2)} (full-time), which is ${money(b.annual_total)} per year.`;
         } else if (wantsAnnual) {
-          response = `The ${labelPrefix} (${b.year}) for a ${b.household_type} in Arkansas is ${money(b.annual_total)} per year (${money(b.monthly_total)} per month).`;
+          response = `The ${labelPrefix} (${b.year}) for a ${describeHousehold(b.household_type)} in Arkansas is ${money(b.annual_total)} per year (${money(b.monthly_total)} per month).`;
         } else {
-          response = formatFullBudget(b) + otherNote;
+          response = formatFullBudget(b);
+        }
+        if (b && !lineItem && b.household_type === 'Two Adults Two Children' && !/school age/.test(normalizeText(text))) {
+          const alt = csvService.findBudget('Two Adults Two Childcare', budgetType, latestYear);
+          if (alt) {
+            response += `\n\nNote: this assumes two school-age children. With an infant and a preschooler in child care instead, the ${budgetType} Budget is ${money(alt.monthly_total)}/month (${money(alt.annual_total)}/year) — ask about a "family of four with an infant and a preschooler".`;
+          }
+        }
+        if (b && !lineItem && !wantsWage && !wantsAnnual) {
+          response += otherNote;
         }
       } else if (lineItem) {
         response = `According to the ${labelPrefix} (${latestYear}), here is the monthly ${lineItem.label.toLowerCase()} cost in Arkansas by household type:\n\n`;
