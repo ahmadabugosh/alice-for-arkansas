@@ -522,7 +522,7 @@ const GENDER_HOUSEHOLD_INTRO =
 const FAMILY_HOUSEHOLD_INTRO =
   'My ALICE data for Arkansas families with children covers three household types: Married, Single-Female-Headed, and Single-Male-Headed.';
 const GENDER_HOUSEHOLD_FOOTER =
-  'Note: These figures describe household structure among families with children. They are not a full statewide gender breakdown for all ALICE households.';
+  'Note: These figures describe household structure among families with children. Our dataset does not include a full statewide gender breakdown for all ALICE households.';
 
 function formatOtherYearsNote(shownYear: number, availableYears: number[]): string {
   const others = availableYears.filter((y) => y !== shownYear).sort((a, b) => b - a);

@@ -64,7 +64,7 @@ describe('searchDemographicsAction gender-related queries', () => {
     expect(result.text).toContain('Single-Female-Headed With Children');
     expect(result.text).toContain('ALICE households: 29% (64,120 households)');
     expect(result.text).toContain('Total below ALICE threshold: 77%');
-    expect(result.text).toContain('not a full statewide gender breakdown');
+    expect(result.text).toContain('Our dataset does not include a full statewide gender breakdown');
     expect(result.text).not.toContain("here's Arkansas demographic data");
   });
 
