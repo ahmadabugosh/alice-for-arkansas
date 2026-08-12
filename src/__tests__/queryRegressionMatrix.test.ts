@@ -146,6 +146,44 @@ describe('reviewed ALICE query regression matrix', () => {
     expect(employment.text).toContain('1. Accommodation and Food Services: 27% (25,055 of 91,477 workers)');
   });
 
+  it('compares cities, towns, zip codes, and mixed place-vs-county', async () => {
+    const cities = await ask('Compare Springdale and Rogers');
+    expect(cities.action).toBe('Comparing counties...');
+    expect(cities.text).toContain('Location Comparison (2024, latest available)');
+    expect(cities.text).toContain('Springdale city:');
+    expect(cities.text).toContain('ALICE households: 29% (8,728 households)');
+    expect(cities.text).toContain('Rogers city:');
+    expect(cities.text).toContain('ALICE households: 21% (5,615 households)');
+    expect(cities.text).toContain('Rogers city has the lower rate at 21%');
+
+    const yesNo = await ask('Is the ALICE rate higher in Waldron than in Greenwood?');
+    expect(yesNo.action).toBe('Comparing counties...');
+    expect(yesNo.text).toContain('Yes.');
+    expect(yesNo.text).toContain('Waldron city: 31%');
+    expect(yesNo.text).toContain('Greenwood city: 26%');
+    expect(yesNo.text).toContain('Difference: 5 percentage points');
+
+    const mixed = await ask('Compare Springdale to Washington County');
+    expect(mixed.action).toBe('Comparing counties...');
+    expect(mixed.text).toContain('Springdale city:');
+    expect(mixed.text).toContain('Washington County:');
+    expect(mixed.text).toContain('Below ALICE threshold: 38% (ALICE + poverty combined)');
+
+    const zips = await ask('Compare zip code 72201 and 72773');
+    expect(zips.action).toBe('Comparing counties...');
+    expect(zips.text).toContain('72201:');
+    expect(zips.text).toContain('ALICE households: 7% (37 households)');
+    expect(zips.text).toContain('72773:');
+    expect(zips.text).toContain('ALICE households: 70% (367 households)');
+
+    // Overlapping names resolve to the right places
+    const overlap = await ask('Compare North Little Rock and Little Rock');
+    expect(overlap.text).toContain('North Little Rock city:');
+    expect(overlap.text).toContain('ALICE households: 28% (8,916 households)');
+    expect(overlap.text).toContain('Little Rock city:');
+    expect(overlap.text).toContain('ALICE households: 23% (20,201 households)');
+  });
+
   it('serves household-type questions from the 2024 families-with-children data', async () => {
     for (const question of [
       'What can you tell me about single parents in Arkansas?',

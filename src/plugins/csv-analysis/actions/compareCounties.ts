@@ -1,11 +1,63 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { CsvDataService } from '../services/csvDataService';
+import { CsvDataService, LocationEntry, SubCountyData } from '../services/csvDataService';
 import { AR_COUNTY_NAMES, countyNameRegex } from '../constants/arkansasCounties';
+
+interface LocationMention {
+  index: number;
+  entry: LocationEntry;
+}
+
+// Scan free text for known location names (cities, towns, counties as
+// "x county", plus 5-digit zip codes). Longest names are matched first and
+// matched spans are claimed, so "North Little Rock" doesn't also yield
+// "Little Rock". Bare "arkansas" is the state, never a location.
+function findLocationMentions(lowerText: string, csvService: CsvDataService): LocationMention[] {
+  if (typeof csvService.getLocationNames !== 'function') return [];
+
+  const claimed: Array<[number, number]> = [];
+  const overlaps = (s: number, e: number) => claimed.some(([cs, ce]) => s < ce && e > cs);
+  const mentions: LocationMention[] = [];
+
+  const names = csvService.getLocationNames()
+    .filter((n) => n !== 'arkansas')
+    .sort((a, b) => b.length - a.length);
+  for (const name of names) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`\\b${escaped}\\b`, 'g');
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(lowerText))) {
+      const start = m.index;
+      const end = m.index + m[0].length;
+      if (overlaps(start, end)) continue;
+      const entries = csvService.lookupLocation(name);
+      if (!entries.length) break;
+      claimed.push([start, end]);
+      mentions.push({ index: start, entry: entries[0] });
+      break;
+    }
+  }
+
+  // Zip codes aren't in the name index; resolve them directly.
+  const zipRe = /\b\d{5}\b/g;
+  let zm: RegExpExecArray | null;
+  while ((zm = zipRe.exec(lowerText))) {
+    if (overlaps(zm.index, zm.index + 5)) continue;
+    const zip = csvService.findSubCounty(zm[0]);
+    if (!zip) continue;
+    claimed.push([zm.index, zm.index + 5]);
+    mentions.push({
+      index: zm.index,
+      entry: { name: zm[0], type: 'Subcounty', priority: 4, dataRef: zip }
+    });
+  }
+
+  return mentions.sort((a, b) => a.index - b.index);
+}
 
 export const compareCountiesAction: Action = {
   name: 'Comparing counties...',
-  similes: ['compare counties', 'county comparison', 'versus', 'vs', 'difference between'],
-  description: 'Compare ALICE data between multiple Arkansas counties',
+  similes: ['compare counties', 'compare cities', 'compare towns', 'county comparison', 'versus', 'vs', 'difference between'],
+  description: 'Compare ALICE data between Arkansas counties, cities, towns, or zip codes',
   validate: async (runtime: IAgentRuntime, message: Memory) => {
     const text = (message.content.text?.toLowerCase() || '').replace(/[-–—]/g, ' ');
 
@@ -35,7 +87,19 @@ export const compareCountiesAction: Action = {
 
     // Implicit comparison: two county names plus a comparative word,
     // e.g. "Is the ALICE threshold higher in Benton County than Washington County?"
-    return namesFound.length >= 2 && hasComparative;
+    if (namesFound.length >= 2 && hasComparative) {
+      return true;
+    }
+
+    // City/town/zip comparison: two known locations plus comparison wording,
+    // e.g. "Compare Springdale and Rogers".
+    if (hasCompareVerb || hasComparative) {
+      const csvService = (runtime as any).csvDataService as CsvDataService | undefined;
+      if (csvService) {
+        return findLocationMentions(text, csvService).length >= 2;
+      }
+    }
+    return false;
   },
   handler: async (runtime: IAgentRuntime, message: Memory, state: State, options: any, callback?: Function) => {
     const csvService = (runtime as any).csvDataService as CsvDataService;
@@ -70,26 +134,11 @@ export const compareCountiesAction: Action = {
       }
     }
     
-    if (countyNames.length < 2) {
-      const result = {
-        text: "I need at least two county names to compare. Please use format like: 'Compare Benton County and Pulaski County'",
-        success: false
-      };
-      if (callback) callback(result);
-      return result;
-    }
-    
-    // Fetch county data
-    const counties = countyNames.map(name => csvService.findCounty(name)).filter(Boolean);
-    
-    if (counties.length < 2) {
-      const result = {
-        text: `I couldn't find data for some of the counties you mentioned (${countyNames.join(', ')}). Please check the spelling.`,
-        success: false
-      };
-      if (callback) callback(result);
-      return result;
-    }
+    // County-vs-county comparison needs two resolved counties; otherwise we
+    // fall through to the location (city/town/zip) comparison below.
+    const counties = countyNames.length >= 2
+      ? countyNames.map(name => csvService.findCounty(name)).filter(Boolean)
+      : [];
 
     // Full latest-year stats per county from the county time series (which
     // carries the complete ALICE/poverty split), falling back to the legacy
@@ -124,6 +173,109 @@ export const compareCountiesAction: Action = {
         priority: Boolean(c.priority),
       };
     };
+    // City/town/zip (or mixed place-and-county) comparison.
+    if (counties.length < 2) {
+      const mentions = findLocationMentions(lowerText, csvService);
+
+      if (mentions.length < 2) {
+        const result = {
+          text: countyNames.length >= 2
+            ? `I couldn't find data for some of the counties you mentioned (${countyNames.join(', ')}). Please check the spelling.`
+            : "I need two locations to compare — counties, cities, towns, or zip codes. For example: 'Compare Benton County and Pulaski County' or 'Compare Springdale and Rogers'.",
+          success: false
+        };
+        if (callback) callback(result);
+        return result;
+      }
+
+      const rows = mentions.slice(0, 4).map(({ entry }) => {
+        if (entry.type === 'County') {
+          const s = statsOf(entry.dataRef);
+          return {
+            label: s.county,
+            households: s.households,
+            aliceCount: s.aliceCount,
+            alicePct: s.alicePct,
+            povertyCount: s.povertyCount,
+            povertyPct: s.povertyPct,
+            belowThreshold: s.belowThreshold,
+            year: s.year
+          };
+        }
+        const s = entry.dataRef as SubCountyData;
+        const pct = (part: number) => (s.households > 0 ? Math.round((part / s.households) * 100) : 0);
+        return {
+          label: entry.name,
+          households: s.households,
+          aliceCount: s.alice_households,
+          alicePct: pct(s.alice_households),
+          povertyCount: s.poverty_households,
+          povertyPct: pct(s.poverty_households),
+          belowThreshold: pct(s.alice_households + s.poverty_households),
+          year: s.year
+        };
+      });
+
+      const sameYear = rows.every(r => r.year === rows[0].year);
+      const isYesNo = /^\s*(?:is|are|does|do|did)\b/i.test(text);
+      const wantsThresholdMetric = lowerText.includes('threshold') || lowerText.includes('below alice');
+
+      let response: string;
+      if (isYesNo && rows.length >= 2 && (wantsThresholdMetric || lowerText.includes('rate'))) {
+        const [first, second] = rows;
+        const metric = wantsThresholdMetric
+          ? { name: 'below-ALICE-threshold rate', a: first.belowThreshold, b: second.belowThreshold }
+          : { name: 'ALICE rate', a: first.alicePct, b: second.alicePct };
+        const answer = metric.a > metric.b ? 'Yes' : 'No';
+        const relationship = metric.a > metric.b ? 'higher' : metric.a < metric.b ? 'lower' : 'the same';
+        const diff = Math.abs(metric.a - metric.b);
+        const yearNote = sameYear ? ` (${first.year})` : '';
+        response = `${answer}. Using the ${metric.name} in my dataset${yearNote}, ${first.label} is ${relationship} than ${second.label}.\n\n`;
+        response += `${first.label}: ${metric.a}%${sameYear ? '' : ` (${first.year})`}\n`;
+        response += `${second.label}: ${metric.b}%${sameYear ? '' : ` (${second.year})`}`;
+        if (diff > 0) {
+          response += `\nDifference: ${diff} percentage points`;
+        }
+      } else {
+        response = sameYear
+          ? `Location Comparison (${rows[0].year}, latest available)\n\n`
+          : `Location Comparison (each location's latest available year)\n\n`;
+        rows.forEach(row => {
+          response += `${row.label}:\n`;
+          response += `Total households: ${row.households.toLocaleString()}\n`;
+          response += `ALICE households: ${row.alicePct}% (${row.aliceCount.toLocaleString()} households)\n`;
+          response += `Households in poverty: ${row.povertyPct}% (${row.povertyCount.toLocaleString()} households)\n`;
+          response += `Below ALICE threshold: ${row.belowThreshold}% (ALICE + poverty combined)\n`;
+          if (!sameYear) {
+            response += `Year: ${row.year}\n`;
+          }
+          response += `\n`;
+        });
+
+        response += `Analysis:\n`;
+        const hiAlice = rows.reduce((max, r) => (r.alicePct > max.alicePct ? r : max));
+        const loAlice = rows.reduce((min, r) => (r.alicePct < min.alicePct ? r : min));
+        if (hiAlice !== loAlice) {
+          response += `ALICE Rate: ${loAlice.label} has the lower rate at ${loAlice.alicePct}%, compared to ${hiAlice.label} at ${hiAlice.alicePct}% (${hiAlice.alicePct - loAlice.alicePct} percentage point difference).\n`;
+        }
+        const hiBelow = rows.reduce((max, r) => (r.belowThreshold > max.belowThreshold ? r : max));
+        const loBelow = rows.reduce((min, r) => (r.belowThreshold < min.belowThreshold ? r : min));
+        if (hiBelow !== loBelow) {
+          response += `Total Below Threshold: ${loBelow.label} has ${loBelow.belowThreshold}% below the ALICE threshold, while ${hiBelow.label} has ${hiBelow.belowThreshold}%.\n`;
+        }
+        const biggest = rows.reduce((max, r) => (r.households > max.households ? r : max));
+        const smallest = rows.reduce((min, r) => (r.households < min.households ? r : min));
+        if (biggest !== smallest && smallest.households > 0) {
+          const ratio = (biggest.households / smallest.households).toFixed(1);
+          response += `Size: ${biggest.label} is ${ratio}x larger with ${biggest.households.toLocaleString()} households vs ${smallest.households.toLocaleString()}.\n`;
+        }
+      }
+
+      const result = { text: response, success: true };
+      if (callback) callback(result);
+      return result;
+    }
+
     const latestRows = counties.map(c => statsOf(c));
     const comparisonYear = latestRows[0].year;
     const latestOf = (c: any) => statsOf(c);

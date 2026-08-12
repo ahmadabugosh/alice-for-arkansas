@@ -1382,6 +1382,12 @@ export class CsvDataService {
     const normalizedName = name.toLowerCase().trim();
     return this.locationNameIndex.get(normalizedName) || [];
   }
+
+  // All indexed location names (counties as "x county", places by base name).
+  // Used to scan free text for location mentions, e.g. in comparisons.
+  getLocationNames(): string[] {
+    return [...this.locationNameIndex.keys()];
+  }
   
   hasAmbiguousName(name: string): boolean {
     const entries = this.lookupLocation(name);
