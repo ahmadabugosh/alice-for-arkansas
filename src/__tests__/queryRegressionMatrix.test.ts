@@ -184,6 +184,34 @@ describe('reviewed ALICE query regression matrix', () => {
     expect(overlap.text).toContain('ALICE households: 23% (20,201 households)');
   });
 
+  it('compares townships, disambiguating repeated names by county', async () => {
+    // County-qualified townships resolve to those exact townships — the
+    // qualifier counties must not become comparison subjects themselves.
+    const qualified = await ask('Compare Union township in Saline County and Prairie township in Washington County');
+    expect(qualified.action).toBe('Comparing counties...');
+    expect(qualified.text).toContain('Union township (Saline County):');
+    expect(qualified.text).toContain('Total households: 259');
+    expect(qualified.text).toContain('Prairie township (Washington County):');
+    expect(qualified.text).toContain('Total households: 1,777');
+    expect(qualified.text).not.toContain('Saline County:');
+    expect(qualified.text).not.toContain('several counties have a township named');
+
+    // Without a county, repeated township names get a transparent note
+    const ambiguous = await ask('Compare Union township and Prairie township');
+    expect(ambiguous.text).toContain('Union township (');
+    expect(ambiguous.text).toContain('several counties have a township named');
+
+    // "X township" must never be read as X County
+    expect(ambiguous.text).not.toContain('Union County');
+    expect(ambiguous.text).not.toContain('Priority Status');
+
+    // Plain county comparison is untouched by the township logic
+    const counties = await ask('Compare Union County and Prairie County');
+    expect(counties.text).toContain('County Comparison Analysis (2024, latest available)');
+    expect(counties.text).toContain('Union County:');
+    expect(counties.text).toContain('Prairie County:');
+  });
+
   it('serves household-type questions from the 2024 families-with-children data', async () => {
     for (const question of [
       'What can you tell me about single parents in Arkansas?',

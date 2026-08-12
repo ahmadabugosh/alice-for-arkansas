@@ -5,6 +5,15 @@ import { AR_COUNTY_NAMES, countyNameRegex } from '../constants/arkansasCounties'
 interface LocationMention {
   index: number;
   entry: LocationEntry;
+  // Other counties that have a township with this same name (when the user
+  // didn't name a county to disambiguate).
+  ambiguousCounties?: string[];
+}
+
+// A county name right after "township/city/town in" is a qualifier
+// ("Union township in Saline County"), not a comparison subject of its own.
+function isCountyQualifierPosition(lowerText: string, start: number): boolean {
+  return /\b(?:township|city|town)\s+(?:in|of)\s+$/.test(lowerText.slice(0, start));
 }
 
 // Scan free text for known location names (cities, towns, counties as
@@ -31,8 +40,29 @@ function findLocationMentions(lowerText: string, csvService: CsvDataService): Lo
       if (overlaps(start, end)) continue;
       const entries = csvService.lookupLocation(name);
       if (!entries.length) break;
+      let entry = entries[0];
+      if (entry.type === 'County' && isCountyQualifierPosition(lowerText, start)) {
+        // Claim the span (so the bare name can't rematch as a place) but
+        // don't treat the qualifier county as a comparison subject.
+        claimed.push([start, end]);
+        break;
+      }
+      let ambiguousCounties: string[] | undefined;
+      // Township names repeat across counties; prefer the one whose county is
+      // named in the message, otherwise flag the ambiguity.
+      if (entry.type === 'Subcounty') {
+        const subs = entries.filter((e) => e.type === 'Subcounty');
+        const preferred = subs.find((e) =>
+          lowerText.includes(String((e.dataRef as SubCountyData).county || '').toLowerCase())
+        );
+        if (preferred) {
+          entry = preferred;
+        } else if (subs.length > 1) {
+          ambiguousCounties = subs.map((e) => String((e.dataRef as SubCountyData).county));
+        }
+      }
       claimed.push([start, end]);
-      mentions.push({ index: start, entry: entries[0] });
+      mentions.push({ index: start, entry, ambiguousCounties });
       break;
     }
   }
@@ -118,6 +148,13 @@ export const compareCountiesAction: Action = {
     for (const county of [...arkansasCounties].sort((a, b) => b.length - a.length)) {
       const match = countyNameRegex(county).exec(lowerText);
       if (match && !foundCounties.some(f => f.name === county)) {
+        // "Union township" names a township, not Union County — leave it for
+        // the location comparison (unless "Union County" also appears).
+        const escaped = county.replace(/\./g, '\\.');
+        const asTownship = new RegExp(`\\b${escaped}\\s+township\\b`).test(lowerText);
+        const asCounty = new RegExp(`\\b${escaped}\\s+count(?:y|ies)\\b`).test(lowerText);
+        if (asTownship && !asCounty) continue;
+        if (isCountyQualifierPosition(lowerText, match.index)) continue;
         foundCounties.push({ name: county, index: match.index });
       }
     }
@@ -126,11 +163,18 @@ export const compareCountiesAction: Action = {
       .sort((a, b) => a.index - b.index)
       .map(f => f.name);
 
-    // Fallback: original "X county / Y counties" suffix pattern
+    // Fallback: original "X county / Y counties" suffix pattern. Skip matches
+    // where the county is only qualifying a township/city ("...township in
+    // Saline County").
     if (countyNames.length < 2) {
       const suffixMatches = text.match(/([a-z\s]+?)\s+count(?:y|ies)/gi);
-      if (suffixMatches && suffixMatches.length >= 2) {
-        countyNames = suffixMatches.map(m => m.replace(/\s+count(?:y|ies)/i, '').trim());
+      if (suffixMatches) {
+        const cleaned = suffixMatches
+          .map(m => m.replace(/\s+count(?:y|ies)/i, '').trim())
+          .filter(n => !/\b(?:township|city|town)\s+(?:in|of)\b/i.test(n));
+        if (cleaned.length >= 2) {
+          countyNames = cleaned;
+        }
       }
     }
     
@@ -205,7 +249,8 @@ export const compareCountiesAction: Action = {
         const s = entry.dataRef as SubCountyData;
         const pct = (part: number) => (s.households > 0 ? Math.round((part / s.households) * 100) : 0);
         return {
-          label: entry.name,
+          // Township names repeat across counties, so say which county this is
+          label: s.type === 'Sub_County' && s.county ? `${entry.name} (${s.county})` : entry.name,
           households: s.households,
           aliceCount: s.alice_households,
           alicePct: pct(s.alice_households),
@@ -269,6 +314,15 @@ export const compareCountiesAction: Action = {
           const ratio = (biggest.households / smallest.households).toFixed(1);
           response += `Size: ${biggest.label} is ${ratio}x larger with ${biggest.households.toLocaleString()} households vs ${smallest.households.toLocaleString()}.\n`;
         }
+      }
+
+      const ambiguityNotes = mentions.slice(0, 4)
+        .filter((m) => m.ambiguousCounties && m.ambiguousCounties.length > 1)
+        .map((m) =>
+          `Note: several counties have a township named ${m.entry.name} (${m.ambiguousCounties!.join(', ')}); I used the one in ${(m.entry.dataRef as SubCountyData).county}. Include a county name to pick a different one.`
+        );
+      if (ambiguityNotes.length) {
+        response += `\n${ambiguityNotes.join('\n')}`;
       }
 
       const result = { text: response, success: true };
