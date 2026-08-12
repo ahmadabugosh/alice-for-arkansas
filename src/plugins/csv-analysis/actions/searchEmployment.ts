@@ -24,7 +24,7 @@ const SECTOR_ALIASES: Record<string, string[]> = {
   'Administrative and Support and Waste Management and Remediation Services': ['administrative and support', 'waste management', 'remediation'],
   'Agriculture Forestry Fishing and Hunting': ['agriculture', 'agricultural', 'farming', 'farm', 'farms', 'forestry', 'fishing', 'hunting'],
   'Arts Entertainment and Recreation': ['arts', 'entertainment', 'recreation'],
-  'Construction': ['construction', 'construction workers', 'building trades'],
+  'Construction': ['construction', 'construction workers', 'building trades', 'construction trades', 'skilled trades'],
   'Educational Services': ['education', 'educational services', 'schools'],
   'Finance and Insurance': ['finance', 'financial', 'insurance', 'banking'],
   'Health Care and Social Assistance': ['health care', 'healthcare', 'social assistance', 'hospitals', 'medical'],
@@ -65,6 +65,20 @@ const OCCUPATION_ALIASES: Record<string, string[]> = {
   'Personal Care Aides': ['personal care', 'personal care aides', 'care aides'],
   'First-Line Supervisors Of Production And Operating Workers': ['production supervisors'],
   'First-Line Supervisors Of Office And Administrative Support Workers': ['office supervisors', 'administrative support supervisors'],
+};
+
+// Occupations (from the top-20 Jobs data) that clearly belong to a sector, so
+// sector answers can blend in the occupation-level detail (employment, wages).
+// Only unambiguous pairings — cross-sector occupations (janitors, secretaries,
+// customer service) are left out.
+const SECTOR_RELATED_OCCUPATIONS: Record<string, string[]> = {
+  'Construction': ['Construction Laborers'],
+  'Health Care and Social Assistance': ['Registered Nurses', 'Nursing Assistants', 'Personal Care Aides'],
+  'Retail Trade': ['Retail Salespersons', 'Cashiers', 'First-Line Supervisors Of Retail Sales Workers', 'Stockers And Order Fillers'],
+  'Accommodation and Food Services': ['Cooks', 'Waiters And Waitresses'],
+  'Educational Services': ['Elementary And Middle School Teachers', 'Secondary School Teachers'],
+  'Transportation and Warehousing': ['Driver/Sales Workers And Truck Drivers', 'Laborers And Freight, Stock, And Material Movers, Hand'],
+  'Manufacturing': ['Miscellaneous Production Workers, Including Equipment Operators and Tenders', 'First-Line Supervisors Of Production And Operating Workers'],
 };
 
 function normalizeText(text: string): string {
@@ -227,13 +241,26 @@ export const searchEmploymentAction: Action = {
         response = buildJobResponse(matchedJob);
       } else if (matchedSector) {
         response = buildSectorResponse(matchedSector);
+        // Blend in the occupation-level view for occupations that clearly
+        // belong to this sector (from the top-20 occupations data).
+        const relatedJobs = (SECTOR_RELATED_OCCUPATIONS[matchedSector.sector] ?? [])
+          .map((name) => jobs.find((j) => j.occupation === name))
+          .filter((j): j is LaborJobData => Boolean(j));
+        if (relatedJobs.length) {
+          response += `\n\nRelated occupations among Arkansas's 20 most common (${relatedJobs[0].year}):\n`;
+          relatedJobs.forEach((job) => {
+            const belowCount = Math.round(job.total_employment * job.percent_below_alice / 100);
+            response += `- ${job.occupation}: ${job.total_employment.toLocaleString()} workers, ${job.percent_below_alice}% below the ALICE threshold (about ${belowCount.toLocaleString()} workers), median wage $${job.median_hourly_wage.toFixed(2)}/hour\n`;
+          });
+          response += `\nAsk "what are Arkansas's 20 most common occupations" for the full occupation list.`;
+        }
       } else if (matchedJob) {
         response = buildJobResponse(matchedJob);
       } else if (unavailableCategory) {
         response = `I don't currently have occupation-level ALICE data for ${unavailableCategory}. `;
         response += `I do have labor force data for these industry sectors:\n\n`;
         response += formatSectorList(sectors);
-        response += `\n\n...plus detailed data for Arkansas's 20 largest occupations. Would you like stats on any of them?`;
+        response += `\n\n...plus detailed data for Arkansas's 20 largest occupations — ask "what are Arkansas's 20 most common occupations" for that list.`;
       } else if (isRankingQuery && wantsOccupationRanking && jobs.length) {
         const isLowest = lowerText.includes('lowest');
         const sorted = [...jobs].sort((a, b) =>
@@ -262,6 +289,35 @@ export const searchEmploymentAction: Action = {
         top5.forEach((sector, index) => {
           response += `${index + 1}. ${sector.sector}: ${pct(sector.alice, sector.total)}% (${sector.alice.toLocaleString()} of ${sector.total.toLocaleString()} workers)\n`;
         });
+      } else if (
+        /\b(top\s*20|most common|list|which|what|all|available)\b/.test(lowerText) &&
+        (/\b(occupations?|jobs?)\b/.test(lowerText) || /\b(sectors?|industr(?:y|ies))\b/.test(lowerText))
+      ) {
+        // Full reference lists, so users know what they can ask about.
+        const wantsOccupationsList = /\b(occupations?|jobs?)\b/.test(lowerText);
+        const wantsSectorsList = /\b(sectors?|industr(?:y|ies))\b/.test(lowerText);
+        const parts: string[] = [];
+
+        if (wantsOccupationsList && jobs.length) {
+          const sorted = [...jobs].sort((a, b) => b.total_employment - a.total_employment);
+          let part = `According to my data set, here are Arkansas's ${sorted.length} most common occupations in ${sorted[0].year} (latest available), by total employment:\n\n`;
+          sorted.forEach((job, index) => {
+            part += `${index + 1}. ${job.occupation}: ${job.total_employment.toLocaleString()} workers — ${job.percent_below_alice}% below the ALICE threshold, median wage $${job.median_hourly_wage.toFixed(2)}/hour\n`;
+          });
+          parts.push(part.trimEnd());
+        }
+        if (wantsSectorsList && sectors.length) {
+          const sorted = [...sectors].sort((a, b) => b.total - a.total);
+          let part = `According to my data set, here are the ${sorted.length} industry sectors in my Arkansas labor force data for ${sorted[0].year} (latest available), by total workers:\n\n`;
+          sorted.forEach((sector, index) => {
+            const below = sector.alice + sector.poverty;
+            part += `${index + 1}. ${sector.sector}: ${sector.total.toLocaleString()} workers — ${pct(below, sector.total)}% below the ALICE threshold\n`;
+          });
+          parts.push(part.trimEnd());
+        }
+
+        response = parts.join('\n\n');
+        response += `\n\nAsk about any of these by name for the full breakdown.`;
       } else {
         // General labor force overview, computed from the sector data (which
         // covers the entire labor force).
@@ -280,7 +336,7 @@ export const searchEmploymentAction: Action = {
         response += `${totalBelow.toLocaleString()} workers (${pct(totalBelow, totalWorkers)}%) below the ALICE threshold overall.\n\n`;
         response += `Highest ALICE share: ${highest.sector} at ${pct(highest.alice, highest.total)}%\n`;
         response += `Lowest ALICE share: ${lowest.sector} at ${pct(lowest.alice, lowest.total)}%\n\n`;
-        response += `Ask me about any sector (like construction, manufacturing, or health care) or any of Arkansas's 20 largest occupations for details.`;
+        response += `Ask "what are the 20 industry sectors" or "what are Arkansas's 20 most common occupations" for the full lists, or name any sector or occupation for details.`;
       }
 
       const result = {
