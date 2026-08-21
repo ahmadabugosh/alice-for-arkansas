@@ -1,5 +1,5 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
-import { CsvDataService, DemographicData, HouseholdTypeData, HouseholdTypeTrendData, RaceTrendData, RaceBreakdownData, AgeTrendData, AgeBreakdownData } from '../services/csvDataService';
+import { CsvDataService, CountyDemographicData, DemographicData, HouseholdTypeData, HouseholdTypeTrendData, RaceTrendData, RaceBreakdownData, AgeTrendData, AgeBreakdownData } from '../services/csvDataService';
 import { AR_COUNTY_NAMES } from '../constants/arkansasCounties';
 
 function normalizeText(text: string): string {
@@ -61,7 +61,7 @@ const RACE_TREND_NOTE =
 
 // Identify which race/ethnicity, if any, the user named. Names match the
 // canonical labels stored in race-trends.csv.
-function detectRace(text: string): string | undefined {
+export function detectRace(text: string): string | undefined {
   const lower = text.toLowerCase();
   if (/\b(hispanic|latino|latina|latinx)\b/.test(lower)) return 'Hispanic/Latino';
   if (/\b(black|african[\s-]*american)\b/.test(lower)) return 'Black';
@@ -728,6 +728,303 @@ function buildGenderHouseholdResponse(csvService: CsvDataService, text: string):
   return response;
 }
 
+// ---- County-level demographic breakdowns (county-demographics.csv) ----
+
+// Counties that can be named in a demographic question. Bare "arkansas" is the
+// state, and this matcher requires a location cue anyway.
+const DEMO_COUNTY_LIST = AR_COUNTY_NAMES.filter((c) => c !== 'arkansas');
+
+// Matches a county *mention*: "in/for/within <county>" or "<county> County".
+// The negative lookahead keeps "for White households" (the race) from reading
+// as White County, while "White County" itself still matches.
+function countyMentionRegex(county: string): RegExp {
+  const escaped = county.replace(/\./g, '\\.');
+  const demoNoun = '(?:households?|individuals?|people|persons?|families|family|residents?)';
+  return new RegExp(
+    `\\b(?:in|for|within)\\s+${escaped}\\b(?!\\s+${demoNoun})|\\b${escaped}\\s+count(?:y|ies)\\b`,
+    'gi'
+  );
+}
+
+// Remove county mentions so a county name can't be mistaken for a demographic
+// term. "The ALICE rate in White County" carries no demographic intent once
+// the place name is gone, and belongs to the county action instead.
+function stripCountyMentions(text: string): string {
+  return DEMO_COUNTY_LIST.reduce(
+    (stripped, county) => stripped.replace(countyMentionRegex(county), ' '),
+    text
+  );
+}
+
+// Statewide race labels → county-data category labels (identical otherwise).
+const COUNTY_RACE_LABEL: Record<string, string> = {
+  'Hispanic/Latino': 'Hispanic',
+};
+
+// detectHouseholdType() names → county-data category labels.
+const COUNTY_HOUSEHOLD_LABEL: Record<string, string> = {
+  'Married': 'Married With Children',
+  'Single-Female-Headed': 'Single-Female-Headed With Children',
+  'Single-Male-Headed': 'Single-Male-Headed With Children',
+};
+
+const COUNTY_HH_WITH_CHILDREN = [
+  'Married With Children',
+  'Single-Female-Headed With Children',
+  'Single-Male-Headed With Children',
+];
+const COUNTY_HH_NO_CHILDREN = 'Single or Cohabiting, Under 65, no Children';
+
+const cPct = (part: number, total: number) => (total > 0 ? Math.round((part / total) * 100) : 0);
+
+// Some county cells rest on a handful of households — a 1-household group would
+// otherwise render as a confident "100% ALICE". Flag those rather than dressing
+// them up as reliable rates.
+const SMALL_BASE = 100;
+const isSmallBase = (row: CountyDemographicData) => row.households > 0 && row.households < SMALL_BASE;
+const smallTag = (row: CountyDemographicData) => (isSmallBase(row) ? ' (small sample)' : '');
+const SMALL_BASE_NOTE =
+  'Note: Groups marked "(small sample)" cover fewer than 100 households in this county, so those percentages rest on a very small base — read them as rough indicators, not reliable rates.';
+
+function smallBaseCaveat(row: CountyDemographicData, county: string): string {
+  if (!isSmallBase(row)) return '';
+  const plural = row.households === 1 ? 'household' : 'households';
+  return `\nNote: This covers just ${row.households.toLocaleString()} ${plural} in ${county}, so the percentages rest on a very small base — treat them as a rough indicator rather than a reliable rate.\n`;
+}
+
+// A group with no households recorded in this county has no rate to report.
+function noHouseholdsResponse(label: string, county: string, year: number): string {
+  return (
+    `My data set records no ${label} households in ${county} for ${year}, so there's no ALICE breakdown for that group there.\n\n` +
+    `I can give you the statewide ${label} figures instead — just ask about Arkansas as a whole.`
+  );
+}
+
+// Small county cells make counts of 1 common, so pluralize.
+const hh = (n: number) => `${n.toLocaleString()} household${n === 1 ? '' : 's'}`;
+
+function formatCountyBandRow(row: CountyDemographicData, indent = ''): string {
+  const alicePct = cPct(row.alice, row.households);
+  const povertyPct = cPct(row.poverty, row.households);
+  let out = '';
+  out += `${indent}Total households: ${row.households.toLocaleString()}\n`;
+  out += `${indent}Above ALICE threshold: ${cPct(row.above, row.households)}% (${hh(row.above)})\n`;
+  out += `${indent}ALICE households: ${alicePct}% (${hh(row.alice)})\n`;
+  out += `${indent}Households in poverty: ${povertyPct}% (${hh(row.poverty)})\n`;
+  out += `${indent}Total below ALICE threshold: ${alicePct + povertyPct}%\n`;
+  return out;
+}
+
+function countyGenderFooter(county: string): string {
+  return `Note: These figures describe household structure among families with children in ${county}. Our dataset does not include a full gender breakdown for all ALICE households.`;
+}
+
+// Household-type breakdown for one county. Gender questions get the same
+// treatment as the statewide gender queries: the with-children types plus the
+// standard intro/footer, adapted to the county.
+function formatCountyHousehold(
+  rows: CountyDemographicData[],
+  county: string,
+  year: number,
+  isGenderQuery: boolean,
+  namedType: string | undefined
+): string {
+  const hh = rows.filter((r) => r.group === 'HouseholdType');
+  const byCategory = (cat: string) => hh.find((r) => r.category === cat);
+
+  if (namedType) {
+    const row = byCategory(COUNTY_HOUSEHOLD_LABEL[namedType] ?? namedType);
+    if (row) {
+      if (row.households === 0) return noHouseholdsResponse(row.category, county, year);
+      let response = '';
+      if (isGenderQuery) {
+        response += `The only gender-related ALICE data I have for ${county} is the household breakdown for families with children.\n\n`;
+      }
+      response += `${row.category} households in ${county} (latest available data, ${year}):\n\n`;
+      response += formatCountyBandRow(row);
+      response += smallBaseCaveat(row, county);
+      response += `\n${countyGenderFooter(county)}`;
+      return response;
+    }
+  }
+
+  const selected = (isGenderQuery
+    ? COUNTY_HH_WITH_CHILDREN
+    : [...COUNTY_HH_WITH_CHILDREN, COUNTY_HH_NO_CHILDREN]
+  )
+    .map(byCategory)
+    .filter((r): r is CountyDemographicData => Boolean(r));
+
+  const intro = isGenderQuery
+    ? `The only gender-related ALICE data I have for ${county} is the Married, Single-Female-Headed, and Single-Male-Headed household breakdown for families with children.`
+    : `My ALICE household-type data for ${county} covers families with children (Married, Single-Female-Headed, and Single-Male-Headed) plus single or cohabiting households under 65 without children.`;
+
+  let response = `${intro}\n\n`;
+  response += `Here is that breakdown using my latest available data (${year}):\n\n`;
+  selected.forEach((row) => {
+    response += `${row.category}${smallTag(row)}:\n${formatCountyBandRow(row, '  ')}\n`;
+  });
+  if (selected.some(isSmallBase)) {
+    response += `${SMALL_BASE_NOTE}\n\n`;
+  }
+  response += isGenderQuery
+    ? countyGenderFooter(county)
+    : `Note: Households headed by someone 65 or over aren't broken out by household type in this dataset — ask about "households age 65 and over in ${county}" for that age band.`;
+  return response;
+}
+
+// Shared list body for the race and age county breakdowns: skips groups with no
+// households recorded (a 0-household group has no rate to report) and flags the
+// ones resting on a tiny base.
+function formatCountyGroupList(rows: CountyDemographicData[], noun: string): string {
+  const listed = rows.filter((row) => row.households > 0);
+  const empty = rows.filter((row) => row.households === 0);
+
+  let response = '';
+  listed.forEach((row) => {
+    const alicePct = cPct(row.alice, row.households);
+    const povertyPct = cPct(row.poverty, row.households);
+    response += `${row.category}${smallTag(row)}:\n`;
+    response += `  Total households: ${row.households.toLocaleString()}\n`;
+    response += `  ALICE households: ${alicePct}% (${row.alice.toLocaleString()})\n`;
+    response += `  Households in poverty: ${povertyPct}% (${row.poverty.toLocaleString()})\n`;
+    response += `  Total below ALICE threshold: ${alicePct + povertyPct}%\n\n`;
+  });
+  if (empty.length) {
+    response += `Not listed: my data set records no households in this county for ${empty.map((r) => r.category).join(', ')}.\n\n`;
+  }
+  if (listed.some(isSmallBase)) {
+    response += `${SMALL_BASE_NOTE}\n\n`;
+  }
+  response += `Note: ALICE ${noun} are above poverty but below the cost of basic needs; the ALICE threshold includes both ALICE and poverty households.`;
+  return response;
+}
+
+// Race/ethnicity breakdown for one county (single race or all).
+function formatCountyRace(
+  rows: CountyDemographicData[],
+  county: string,
+  year: number,
+  namedRace: string | undefined
+): string {
+  const races = rows.filter((r) => r.group === 'Race');
+  if (namedRace) {
+    const row = races.find((r) => r.category === (COUNTY_RACE_LABEL[namedRace] ?? namedRace));
+    if (row) {
+      if (row.households === 0) return noHouseholdsResponse(row.category, county, year);
+      let response = `${row.category} households in ${county} (latest available data, ${year}):\n\n`;
+      response += formatCountyBandRow(row);
+      response += smallBaseCaveat(row, county);
+      response += `\nI also have statewide race/ethnicity breakdowns and trends — ask about Arkansas as a whole for those.`;
+      return response;
+    }
+  }
+  let response = `Here are ALICE figures by race/ethnicity in ${county} (latest available data, ${year}):\n\n`;
+  response += formatCountyGroupList(races, 'households');
+  return response;
+}
+
+// Age breakdown for one county (single band or all).
+function formatCountyAge(
+  rows: CountyDemographicData[],
+  county: string,
+  year: number,
+  namedAge: string | undefined
+): string {
+  const ages = rows.filter((r) => r.group === 'Age');
+  if (namedAge) {
+    const row = ages.find((r) => r.category === (GROUP_RANK_AGE_LABEL[namedAge] ?? namedAge));
+    if (row) {
+      if (row.households === 0) return noHouseholdsResponse(`${row.category.toLowerCase()}`, county, year);
+      let response = `Households headed by someone ${row.category.toLowerCase()} in ${county} (latest available data, ${year}):\n\n`;
+      response += formatCountyBandRow(row);
+      response += smallBaseCaveat(row, county);
+      return response;
+    }
+  }
+  let response = `Here are ALICE figures by age of head of household in ${county} (latest available data, ${year}):\n\n`;
+  response += formatCountyGroupList(ages, 'households');
+  return response;
+}
+
+// Compact all-dimension overview for "demographics in X County" questions.
+function formatCountyDemographicOverview(rows: CountyDemographicData[], county: string, year: number): string {
+  let response = `Demographic breakdown for ${county} (latest available data, ${year}):\n\n`;
+  const total = rows.find((r) => r.group === 'Total');
+  if (total) {
+    const alicePct = cPct(total.alice, total.households);
+    const povertyPct = cPct(total.poverty, total.households);
+    response += `All households: ${total.households.toLocaleString()} total — ${alicePct}% ALICE (${total.alice.toLocaleString()}), ${povertyPct}% in poverty (${total.poverty.toLocaleString()}), ${alicePct + povertyPct}% below the ALICE threshold.\n\n`;
+  }
+
+  let anySmall = false;
+  const section = (title: string, group: CountyDemographicData['group']) => {
+    const groupRows = rows.filter((r) => r.group === group && r.households > 0);
+    if (!groupRows.length) return;
+    response += `${title} (share below the ALICE threshold):\n`;
+    groupRows.forEach((row) => {
+      const belowPct = cPct(row.alice, row.households) + cPct(row.poverty, row.households);
+      anySmall = anySmall || isSmallBase(row);
+      response += `- ${row.category}${smallTag(row)}: ${belowPct}% (${(row.alice + row.poverty).toLocaleString()} of ${hh(row.households)})\n`;
+    });
+    response += '\n';
+  };
+  section('By age of head of household', 'Age');
+  section('By household type', 'HouseholdType');
+  section('By race/ethnicity', 'Race');
+
+  if (anySmall) {
+    response += `${SMALL_BASE_NOTE}\n\n`;
+  }
+  response += `Ask about any group by name (e.g. "Hispanic households in ${county}" or "single mothers in ${county}") for the full breakdown.`;
+  return response;
+}
+
+// County-aware demographic router. `text` arrives with the county mention
+// already stripped so a county name (e.g. White County) can't be misread as a
+// demographic term (the White race band).
+function buildCountyDemographicResponse(
+  csvService: CsvDataService,
+  prettyCounty: string,
+  text: string
+): string {
+  const rows = csvService.getCountyDemographics(prettyCounty);
+  const year = rows[0].year;
+  const lower = text.toLowerCase();
+
+  // County demographics exist for a single year; trends and other years stay
+  // statewide-only.
+  let prefix = '';
+  const requested = detectRequestedYear(text);
+  if (isTrendQuery(text)) {
+    prefix = `My county-level demographic breakdowns cover ${year} only, so I can't show a trend for ${prettyCounty} — statewide demographic trends are available if you ask about Arkansas as a whole. Here is the ${year} picture:\n\n`;
+  } else if (typeof requested === 'number' && requested !== year) {
+    prefix = `I only have county-level demographic breakdowns for ${year}, not ${requested}. Here is ${year}:\n\n`;
+  } else if (requested === 'previous') {
+    prefix = `I only have county-level demographic breakdowns for ${year}. Here it is:\n\n`;
+  }
+
+  const isGenderQuery = isGenderRelatedQuery(text);
+  const namedHousehold = detectHouseholdType(text);
+  const isHouseholdTopic =
+    isGenderQuery || namedHousehold !== undefined || /\b(household|parents?|family|families)\b/.test(lower);
+  const namedRace = detectRace(text);
+  const isRaceQuery = namedRace !== undefined || /\b(race|racial|ethnicity|ethnic)\b/.test(lower);
+  const namedAge = detectAgeGroup(text);
+  const isAgeQuery = namedAge !== undefined || /\bage\b/.test(lower);
+
+  if (isGenderQuery || (isHouseholdTopic && !isRaceQuery && !isAgeQuery)) {
+    return prefix + formatCountyHousehold(rows, prettyCounty, year, isGenderQuery, namedHousehold);
+  }
+  if (isRaceQuery && !isAgeQuery) {
+    return prefix + formatCountyRace(rows, prettyCounty, year, namedRace);
+  }
+  if (isAgeQuery && !isRaceQuery) {
+    return prefix + formatCountyAge(rows, prettyCounty, year, namedAge);
+  }
+  return prefix + formatCountyDemographicOverview(rows, prettyCounty, year);
+}
+
 export const searchDemographicsAction: Action = {
   name: 'Searching demographic data...',
   similes: [
@@ -772,37 +1069,45 @@ export const searchDemographicsAction: Action = {
       return false;
     }
     
+    // Judge demographic intent on the text with county mentions removed: the
+    // "White" in "White County" is a place, and "the ALICE rate in White
+    // County" is a plain county question that belongs to the county action.
+    const demoText = stripCountyMentions(text);
+
     // Check for demographic keywords
     // Word-boundary matching: plain substring checks misfire badly here
     // ("wAGE"/"averAGE" contain "age", "gRACE" contains "race").
     const demographicKeywords = [
-      'demographic', 'race', 'ethnicity', 'ethnic', 'age', 'household type'
+      'demographics?', 'race', 'ethnicity', 'ethnic', 'age', 'household types?'
     ];
 
     const hasDemographicKeyword = demographicKeywords.some(keyword =>
-      new RegExp(`\\b${keyword}\\b`).test(text)
-    );
-    
-    // Check for specific demographic categories
-    const categoryKeywords = [
-      'white', 'black', 'hispanic', 'latino', 'asian', 'native american',
-      'biracial', 'multiracial', 'two or more races', 'mixed race',
-      'single parent', 'two parent', 'single adult', 'age 18', 'age 25',
-      'age 35', 'age 45', 'age 55', 'age 65'
-    ];
-    
-    const hasCategoryKeyword = categoryKeywords.some(keyword => 
-      text.includes(keyword)
+      new RegExp(`\\b${keyword}\\b`).test(demoText)
     );
 
-    const hasGenderKeyword = isGenderRelatedQuery(text);
-    
+    // Check for specific demographic categories. detectRace covers the full
+    // canonical list (Pacific Islander, American Indian, ...) so the two can't
+    // drift apart.
+    const categoryKeywords = [
+      'biracial', 'multiracial', 'two or more races', 'mixed race',
+      'single parent', 'two parent', 'single adult', 'age 18', 'age 25',
+      'age 35', 'age 45', 'age 55', 'age 65',
+      'single mother', 'single mom', 'single father', 'single dad',
+      'senior', 'elderly'
+    ];
+
+    const hasCategoryKeyword =
+      categoryKeywords.some(keyword => demoText.includes(keyword)) ||
+      detectRace(demoText) !== undefined;
+
+    const hasGenderKeyword = isGenderRelatedQuery(demoText);
+
     // Check for ALICE rate queries about demographics
-    const hasAliceDemographicQuery = text.includes('alice') && 
-      (text.includes('rate') || text.includes('percentage') || text.includes('breakdown')) &&
+    const hasAliceDemographicQuery = demoText.includes('alice') &&
+      (demoText.includes('rate') || demoText.includes('percentage') || demoText.includes('breakdown')) &&
       (hasDemographicKeyword || hasCategoryKeyword || hasGenderKeyword);
-    
-    const result = hasDemographicKeyword || hasCategoryKeyword || hasGenderKeyword || hasAliceDemographicQuery || isGroupRankingQuery(text);
+
+    const result = hasDemographicKeyword || hasCategoryKeyword || hasGenderKeyword || hasAliceDemographicQuery || isGroupRankingQuery(demoText);
     console.error('*** Demographic keyword:', hasDemographicKeyword);
     console.error('*** Category keyword:', hasCategoryKeyword);
     console.error('*** Gender keyword:', hasGenderKeyword);
@@ -853,32 +1158,33 @@ export const searchDemographicsAction: Action = {
         return errorResult;
       }
 
-      // Demographic breakdowns exist at the STATEWIDE level only. If the user
-      // named a specific county, say so rather than passing off statewide
-      // numbers as county-level figures. Require a location cue ("in X",
-      // "X County") so a race named "White" isn't mistaken for White County.
-      // Bare "arkansas" is the state, and this matcher requires a location cue
-      // anyway, so the shared list minus the ambiguous state name is used.
-      const demoCountyList = AR_COUNTY_NAMES.filter(c => c !== 'arkansas');
+      // If the user named a specific county, serve the county-level
+      // demographic breakdown (county-demographics.csv).
       const lowerForCounty = text.toLowerCase().replace(/[-–—]/g, ' ');
-      const namedCounty = demoCountyList.find(c => {
-        const escaped = c.replace(/\./g, '\\.');
-        // "in/for/within <county>" - but not "for White households" (race, not
-        // White County), so block a demographic noun right after the name.
-        const demoNoun = '(?:households?|individuals?|people|persons?|families|family|residents?)';
-        return new RegExp(
-          `\\b(?:in|for|within)\\s+${escaped}\\b(?!\\s+${demoNoun})|\\b${escaped}\\s+count(?:y|ies)\\b`,
-          'i'
-        ).test(lowerForCounty);
-      });
+      const prettify = (c: string) => c.replace(/\b\w/g, ch => ch.toUpperCase()) + ' County';
+      const namedCounties = DEMO_COUNTY_LIST.filter(c => countyMentionRegex(c).test(lowerForCounty));
+      const namedCounty = namedCounties[0];
       if (namedCounty) {
-        const prettyCounty = namedCounty.replace(/\b\w/g, ch => ch.toUpperCase()) + ' County';
-        const note =
-          `My data set tracks demographic breakdowns - race, ethnicity, age, and household type - ` +
-          `at the statewide level only, not by county. I don't have demographic figures specific to ${prettyCounty}.\n\n` +
-          `I can help two ways:\n` +
-          `- The statewide demographic breakdown (e.g. "ALICE rates by race in Arkansas")\n` +
-          `- Overall ALICE figures for ${prettyCounty} (e.g. "ALICE data for ${prettyCounty}")`;
+        const prettyCounty = prettify(namedCounty);
+        const countyRows = typeof csvService.getCountyDemographics === 'function'
+          ? csvService.getCountyDemographics(prettyCounty)
+          : [];
+        let note: string;
+        if (countyRows.length > 0) {
+          // Strip the county mention so the county name can't be misread as a
+          // demographic term (e.g. White County vs the White race band).
+          const strippedText = lowerForCounty.replace(countyMentionRegex(namedCounty), ' ');
+          note = buildCountyDemographicResponse(csvService, prettyCounty, strippedText);
+          if (namedCounties.length > 1) {
+            note += `\n\nI can only show one county's demographics at a time — ask again with ${namedCounties.slice(1).map(prettify).join(', ')} for the same breakdown there.`;
+          }
+        } else {
+          note =
+            `I don't have demographic figures specific to ${prettyCounty}.\n\n` +
+            `I can help two ways:\n` +
+            `- The statewide demographic breakdown (e.g. "ALICE rates by race in Arkansas")\n` +
+            `- Overall ALICE figures for ${prettyCounty} (e.g. "ALICE data for ${prettyCounty}")`;
+        }
         const noteResult = { text: note, success: true, action: 'DEMOGRAPHICS_DATA_RETRIEVED' };
         if (callback) { callback(noteResult); return true; }
         return noteResult;
@@ -890,9 +1196,12 @@ export const searchDemographicsAction: Action = {
       const lowerText = text.toLowerCase();
       const isGenderQuery = isGenderRelatedQuery(text);
       
-      // Check if asking about specific race/ethnicity
-      const raceKeywords = ['white', 'black', 'hispanic', 'latino', 'asian', 'native american', 'race', 'ethnic'];
-      const isRaceQuery = raceKeywords.some(keyword => lowerText.includes(keyword));
+      // Check if asking about specific race/ethnicity. detectRace carries the
+      // full canonical list, so "Pacific Islander households" reads as a race
+      // question rather than a household-type one.
+      const raceKeywords = ['race', 'ethnic'];
+      const isRaceQuery =
+        raceKeywords.some(keyword => lowerText.includes(keyword)) || detectRace(text) !== undefined;
 
       // Household-type topic (married / single-headed families). The year- and
       // trend-aware path handles these; a household-type *trend* question routes
@@ -924,15 +1233,63 @@ export const searchDemographicsAction: Action = {
         response = buildGenderHouseholdResponse(csvService, text);
       } else if (isRaceQuery) {
         response = buildRaceResponse(csvService, text);
-      } else if (text.includes('age')) {
+      } else if (text.includes('age') || detectAgeGroup(text) !== undefined) {
         response = buildAgeResponse(csvService, text);
 
+      } else if (
+        typeof csvService.getLatestAgeBreakdownYear === 'function' &&
+        typeof csvService.getLatestHouseholdTypeYear === 'function' &&
+        typeof csvService.getLatestRaceBreakdownYear === 'function' &&
+        (csvService.getLatestAgeBreakdownYear() !== undefined ||
+          csvService.getLatestHouseholdTypeYear() !== undefined ||
+          csvService.getLatestRaceBreakdownYear() !== undefined)
+      ) {
+        // General demographic overview — built from the latest-year datasets
+        // (age, household type, race), never the stale demographics.csv table.
+        const snapshot = typeof csvService.getLatestStatewideSnapshot === 'function'
+          ? csvService.getLatestStatewideSnapshot()
+          : undefined;
+        const ageYear = csvService.getLatestAgeBreakdownYear();
+        const hhYear = csvService.getLatestHouseholdTypeYear();
+        const raceYear = csvService.getLatestRaceBreakdownYear();
+        const yearLabel = [...new Set(
+          [snapshot?.year, ageYear, hhYear, raceYear].filter((y): y is number => y !== undefined)
+        )].sort((a, b) => a - b).join('/');
+        const belowPct = (r: { alice: number; poverty: number; households: number }) =>
+          cPct(r.alice, r.households) + cPct(r.poverty, r.households);
+
+        response = `Here is the statewide demographic picture for Arkansas (latest available data, ${yearLabel}):\n\n`;
+        if (snapshot) {
+          response += `All households: ${snapshot.households.toLocaleString()} total — ${snapshot.alicePct}% ALICE (${snapshot.alice.toLocaleString()}), ${snapshot.povertyPct}% in poverty (${snapshot.poverty.toLocaleString()}), ${snapshot.belowPct}% below the ALICE threshold.\n\n`;
+        }
+        if (ageYear !== undefined) {
+          response += 'By age of head of household (share below the ALICE threshold):\n';
+          csvService.getAgeBreakdown(ageYear).forEach((r) => {
+            response += `- ${r.age_group}: ${belowPct(r)}% (${(r.alice + r.poverty).toLocaleString()} of ${r.households.toLocaleString()} households)\n`;
+          });
+          response += '\n';
+        }
+        if (hhYear !== undefined) {
+          response += 'By household type (families with children, share below the ALICE threshold):\n';
+          csvService.getHouseholdTypes(hhYear).forEach((r) => {
+            response += `- ${r.name}: ${belowPct(r)}% (${(r.alice + r.poverty).toLocaleString()} of ${r.households.toLocaleString()} households)\n`;
+          });
+          response += '\n';
+        }
+        if (raceYear !== undefined) {
+          response += 'By race/ethnicity (share below the ALICE threshold):\n';
+          csvService.getRaceBreakdown(raceYear).forEach((r) => {
+            response += `- ${r.race}: ${belowPct(r)}% (${(r.alice + r.poverty).toLocaleString()} of ${r.households.toLocaleString()} households)\n`;
+          });
+          response += '\n';
+        }
+        response += 'Ask about any group by name (e.g. "Hispanic households in Arkansas" or "single mothers in Arkansas") for the full breakdown — I have county-level versions too (e.g. "demographics of Pulaski County").';
       } else {
         // General demographic overview
         const totalData = demographicData.find(d => d.category === 'Total Arkansas');
-        
+
         response = `According to my data set, here's Arkansas demographic data:\n\n`;
-        
+
         if (totalData) {
           const combinedThreshold = totalData.alice_percentage + totalData.poverty_percent;
           response += `Overall Arkansas households:\n`;

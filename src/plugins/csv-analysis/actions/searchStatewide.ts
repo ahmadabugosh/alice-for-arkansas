@@ -1,6 +1,7 @@
 import { Action, IAgentRuntime, Memory, State } from '@elizaos/core';
 import { CsvDataService } from '../services/csvDataService';
 import { isEmploymentTopic } from './searchEmployment';
+import { detectRace } from './searchDemographics';
 
 export const searchStatewideAction: Action = {
   name: 'Searching Arkansas statewide data...',
@@ -45,11 +46,15 @@ export const searchStatewideAction: Action = {
     // Exclude demographic queries (race, ethnicity, age, household type) - let the demographics action handle them
     // Word-boundary matching: plain substring checks misfire badly here
     // ("how MANy" contains "man", "wAGE"/"averAGE" contain "age").
-    const isDemographicQuery = [
-      'black', 'white', 'hispanic', 'latino', 'asian', 'native american',
-      'biracial', 'multiracial', 'race', 'ethnicity', 'ethnic', 'age',
+    // detectRace covers the full canonical race list (Pacific Islander,
+    // American Indian, ...), so this exclusion can't drift out of sync with
+    // what the demographics action can actually answer.
+    const isDemographicQuery = detectRace(text) !== undefined || [
+      'race', 'ethnicity', 'ethnic', 'age',
       'household type', 'single parent', 'two parent', 'single adult', 'parent',
-      'gender', 'female', 'male', 'woman', 'women', 'man', 'men'
+      'gender', 'female', 'male', 'woman', 'women', 'man', 'men',
+      'single mothers?', 'single moms?', 'single fathers?', 'single dads?',
+      'seniors?', 'elderly', 'demographics?'
     ].some(keyword => new RegExp(`\\b${keyword}\\b`).test(text));
 
     // Exclude trend / change-over-time queries - let the trends action handle them

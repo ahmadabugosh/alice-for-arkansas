@@ -136,10 +136,13 @@ describe('reviewed ALICE query regression matrix', () => {
     expect(hispanicStatewide.text).toContain('latest available data, 2024');
     expect(hispanicStatewide.text).toContain('ALICE households: 38% (27,851 households)');
 
+    // County-level demographics come from the county breakdown data, not the
+    // statewide figures.
     const hispanicCounty = await ask('How many Hispanic individuals are ALICE in Benton County?');
     expect(hispanicCounty.action).toBe('Searching demographic data...');
-    expect(hispanicCounty.text).toContain("I don't have demographic figures specific to Benton County");
-    expect(hispanicCounty.text).not.toContain('27,735');
+    expect(hispanicCounty.text).toContain('Hispanic households in Benton County (latest available data, 2024)');
+    expect(hispanicCounty.text).toContain('ALICE households: 32% (4,708 households)');
+    expect(hispanicCounty.text).not.toContain('27,851');
 
     const employment = await ask('What employment sector has the highest ALICE rate in the state?');
     expect(employment.action).toBe('Searching employment data...');
@@ -234,6 +237,40 @@ describe('reviewed ALICE query regression matrix', () => {
     expect(byAge.text).toContain('by age of head of household in Arkansas (latest available data, 2024)');
     expect(byAge.text).toContain('Age 65 and Over');
     expect(byAge.text).toContain('ALICE households: 37% (128,862)');
+  });
+
+  it('routes county-named demographic questions without mistaking county names for races', async () => {
+    // A plain county question stays with the county action even though the
+    // county is named "White".
+    for (const question of [
+      'What is the ALICE rate in White County?',
+      'ALICE data for White County',
+      'How many households are in White County?'
+    ]) {
+      const plain = await ask(question);
+      expect(plain.action).toBe('SEARCH_COUNTY_DATA');
+      expect(plain.text).toContain('White County');
+      expect(plain.text).toContain('ALICE households: 27% (8,703 households)');
+      expect(plain.text).not.toContain('Demographic breakdown');
+    }
+
+    // But an actual race question about that same county reaches the race band.
+    const race = await ask('How many White households are ALICE in White County?');
+    expect(race.action).toBe('Searching demographic data...');
+    expect(race.text).toContain('White households in White County (latest available data, 2024)');
+    expect(race.text).toContain('Total households: 28,226');
+
+    // Races outside the short keyword list still route correctly, county-level
+    // and statewide.
+    const county = await ask('How many Pacific Islander households are ALICE in Izard County?');
+    expect(county.action).toBe('Searching demographic data...');
+    expect(county.text).toContain('Native Hawaiian/Pacific Islander households in Izard County');
+    expect(county.text).toContain('Note: This covers just 1 household in Izard County');
+
+    const statewide = await ask('How many Pacific Islander households are ALICE in Arkansas?');
+    expect(statewide.action).toBe('Searching demographic data...');
+    expect(statewide.text).toContain('Native Hawaiian/Pacific Islander households in Arkansas');
+    expect(statewide.text).toContain('Total households: 2,528');
   });
 
   it('declines pure town-size questions and redirects to ALICE questions', async () => {

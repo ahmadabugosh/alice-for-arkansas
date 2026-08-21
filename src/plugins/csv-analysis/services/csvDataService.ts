@@ -154,6 +154,20 @@ export interface RaceBreakdownData {
   households: number; // total households of this race/ethnicity
 }
 
+// County-level demographic breakdown as absolute counts per ALICE band.
+// One row per county/category; groups: Age, HouseholdType, Race, and a
+// county-wide Total row (category "All").
+export interface CountyDemographicData {
+  year: number;
+  county: string;    // full name with suffix, e.g. "Benton County"
+  group: 'Age' | 'HouseholdType' | 'Race' | 'Total';
+  category: string;  // e.g. "25 to 44 Years", "Hispanic", "Married With Children", "All"
+  above: number;
+  alice: number;
+  poverty: number;
+  households: number;
+}
+
 // County-level ALICE Household Survival Budget by household type (monthly
 // dollar line items + totals). Complements the statewide BudgetData.
 export interface CountyBudgetData {
@@ -214,6 +228,7 @@ export class CsvDataService {
   private householdTypeTrends: HouseholdTypeTrendData[] = [];
   private raceTrends: RaceTrendData[] = [];
   private raceBreakdown: RaceBreakdownData[] = [];
+  private countyDemographics: CountyDemographicData[] = [];
   private countyTrends: CountyTrendData[] = [];
   private ageTrends: AgeTrendData[] = [];
   private ageBreakdown: AgeBreakdownData[] = [];
@@ -670,6 +685,33 @@ export class CsvDataService {
         households: row.Households,
       }));
       console.log(`*** Loaded ${this.raceBreakdown.length} race breakdown records from CSV ***`);
+    }
+
+    // Load county-level demographic breakdowns (age / household type /
+    // race-ethnicity bands per county)
+    const countyDemographicsPath = path.join(process.cwd(), 'data', 'county-demographics.csv');
+    if (fs.existsSync(countyDemographicsPath)) {
+      const countyDemographicsContent = fs.readFileSync(countyDemographicsPath, 'utf-8');
+      this.countyDemographics = parse(countyDemographicsContent, {
+        columns: true,
+        skip_empty_lines: true,
+        cast: (value, { column }) => {
+          if (column === 'Year' || column === 'Above' || column === 'ALICE' || column === 'Poverty' || column === 'Households') {
+            return parseInt(value);
+          }
+          return value;
+        }
+      }).map((row: any) => ({
+        year: row.Year,
+        county: row.County,
+        group: row.Group,
+        category: row.Category,
+        above: row.Above,
+        alice: row.ALICE,
+        poverty: row.Poverty,
+        households: row.Households,
+      }));
+      console.log(`*** Loaded ${this.countyDemographics.length} county demographic records from CSV ***`);
     }
 
     // Load county-level trend data (households + % below ALICE threshold by year)
@@ -1164,6 +1206,19 @@ export class CsvDataService {
   getLatestRaceBreakdownYear(): number | undefined {
     const years = this.getRaceBreakdownYears();
     return years.length ? years[years.length - 1] : undefined;
+  }
+
+  // County-level demographic breakdown methods (age / household type / race).
+  // Accepts the county name with or without the "County" suffix.
+  getCountyDemographics(county: string): CountyDemographicData[] {
+    const target = county.toLowerCase().replace(/\s+county$/, '').trim();
+    return this.countyDemographics.filter(
+      r => r.county.toLowerCase().replace(/\s+county$/, '').trim() === target
+    );
+  }
+
+  getCountyDemographicYears(): number[] {
+    return [...new Set(this.countyDemographics.map(r => r.year))].sort((a, b) => a - b);
   }
 
   // Age-group trend methods (below-ALICE-threshold counts over time)

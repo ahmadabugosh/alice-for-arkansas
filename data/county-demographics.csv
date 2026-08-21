@@ -1,0 +1,1201 @@
+Year,County,Group,Category,Above,ALICE,Poverty,Households
+2024,Arkansas County,Age,25 to 44 Years,1057,532,389,1978
+2024,Arkansas County,Age,45 to 64 Years,1482,486,435,2403
+2024,Arkansas County,Age,65 Years and Over,965,787,363,2115
+2024,Arkansas County,Age,Under 25 Years,66,119,24,209
+2024,Arkansas County,HouseholdType,Married With Children,688,102,39,829
+2024,Arkansas County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1707,886,483,3076
+2024,Arkansas County,HouseholdType,Single-Female-Headed With Children,116,122,280,518
+2024,Arkansas County,HouseholdType,Single-Male-Headed With Children,94,27,46,167
+2024,Arkansas County,Race,American Indian/Alaska Native,4,33,0,37
+2024,Arkansas County,Race,Asian,7,0,0,7
+2024,Arkansas County,Race,Black,534,690,532,1756
+2024,Arkansas County,Race,Hispanic,74,127,28,229
+2024,Arkansas County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Arkansas County,Race,Two or More Races,73,27,74,174
+2024,Arkansas County,Race,White,2877,1358,299,4534
+2024,Arkansas County,Total,All,3570,1924,1211,6705
+2024,Ashley County,Age,25 to 44 Years,850,369,432,1651
+2024,Ashley County,Age,45 to 64 Years,1371,951,561,2883
+2024,Ashley County,Age,65 Years and Over,876,1203,493,2572
+2024,Ashley County,Age,Under 25 Years,34,75,141,250
+2024,Ashley County,HouseholdType,Married With Children,680,90,293,1063
+2024,Ashley County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1554,1232,556,3342
+2024,Ashley County,HouseholdType,Single-Female-Headed With Children,5,48,279,332
+2024,Ashley County,HouseholdType,Single-Male-Headed With Children,16,25,6,47
+2024,Ashley County,Race,American Indian/Alaska Native,0,11,0,11
+2024,Ashley County,Race,Asian,0,0,0,0
+2024,Ashley County,Race,Black,517,957,374,1848
+2024,Ashley County,Race,Hispanic,95,158,47,300
+2024,Ashley County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Ashley County,Race,Two or More Races,129,118,50,297
+2024,Ashley County,Race,White,2462,1879,762,5103
+2024,Ashley County,Total,All,3131,2598,1627,7356
+2024,Baxter County,Age,25 to 44 Years,2223,961,846,4030
+2024,Baxter County,Age,45 to 64 Years,3222,1905,998,6125
+2024,Baxter County,Age,65 Years and Over,3948,3550,938,8436
+2024,Baxter County,Age,Under 25 Years,276,288,193,757
+2024,Baxter County,HouseholdType,Married With Children,1763,280,336,2379
+2024,Baxter County,HouseholdType,"Single or Cohabiting, Under 65, no Children",3803,2084,1252,7139
+2024,Baxter County,HouseholdType,Single-Female-Headed With Children,118,622,333,1073
+2024,Baxter County,HouseholdType,Single-Male-Headed With Children,37,168,116,321
+2024,Baxter County,Race,American Indian/Alaska Native,9,81,1,91
+2024,Baxter County,Race,Asian,50,61,0,111
+2024,Baxter County,Race,Black,41,3,14,58
+2024,Baxter County,Race,Hispanic,187,157,52,396
+2024,Baxter County,Race,Native Hawaiian/Pacific Islander,2,0,0,2
+2024,Baxter County,Race,Two or More Races,390,399,133,922
+2024,Baxter County,Race,White,9066,7103,1816,17985
+2024,Baxter County,Total,All,9669,6704,2975,19348
+2024,Benton County,Age,25 to 44 Years,36481,8270,3332,48083
+2024,Benton County,Age,45 to 64 Years,32193,6139,2485,40817
+2024,Benton County,Age,65 Years and Over,15785,8312,2984,27081
+2024,Benton County,Age,Under 25 Years,2173,2540,1575,6288
+2024,Benton County,HouseholdType,Married With Children,25829,2611,1159,29599
+2024,Benton County,HouseholdType,"Single or Cohabiting, Under 65, no Children",40704,11247,4439,56390
+2024,Benton County,HouseholdType,Single-Female-Headed With Children,2751,1927,1348,6026
+2024,Benton County,HouseholdType,Single-Male-Headed With Children,1563,1164,446,3173
+2024,Benton County,Race,American Indian/Alaska Native,861,310,72,1243
+2024,Benton County,Race,Asian,4474,573,81,5128
+2024,Benton County,Race,Black,1325,457,97,1879
+2024,Benton County,Race,Hispanic,9317,4708,614,14639
+2024,Benton County,Race,Native Hawaiian/Pacific Islander,247,175,12,434
+2024,Benton County,Race,Two or More Races,16972,6837,1216,25025
+2024,Benton County,Race,White,57078,16014,3837,76929
+2024,Benton County,Total,All,86632,25261,10376,122269
+2024,Boone County,Age,25 to 44 Years,2353,1010,732,4095
+2024,Boone County,Age,45 to 64 Years,3547,1442,547,5536
+2024,Boone County,Age,65 Years and Over,2357,2020,652,5029
+2024,Boone County,Age,Under 25 Years,346,198,159,703
+2024,Boone County,HouseholdType,Married With Children,2519,371,159,3049
+2024,Boone County,HouseholdType,"Single or Cohabiting, Under 65, no Children",3425,2057,1037,6519
+2024,Boone County,HouseholdType,Single-Female-Headed With Children,141,222,166,529
+2024,Boone County,HouseholdType,Single-Male-Headed With Children,161,0,76,237
+2024,Boone County,Race,American Indian/Alaska Native,14,10,9,33
+2024,Boone County,Race,Asian,16,2,19,37
+2024,Boone County,Race,Black,6,1,0,7
+2024,Boone County,Race,Hispanic,196,159,49,404
+2024,Boone County,Race,Native Hawaiian/Pacific Islander,1,0,12,13
+2024,Boone County,Race,Two or More Races,205,314,32,551
+2024,Boone County,Race,White,8213,4784,1463,14460
+2024,Boone County,Total,All,8603,4670,2090,15363
+2024,Bradley County,Age,25 to 44 Years,498,366,248,1112
+2024,Bradley County,Age,45 to 64 Years,590,320,360,1270
+2024,Bradley County,Age,65 Years and Over,426,498,348,1272
+2024,Bradley County,Age,Under 25 Years,47,27,24,98
+2024,Bradley County,HouseholdType,Married With Children,363,79,60,502
+2024,Bradley County,HouseholdType,"Single or Cohabiting, Under 65, no Children",729,509,399,1637
+2024,Bradley County,HouseholdType,Single-Female-Headed With Children,9,115,160,284
+2024,Bradley County,HouseholdType,Single-Male-Headed With Children,34,10,13,57
+2024,Bradley County,Race,American Indian/Alaska Native,22,18,0,40
+2024,Bradley County,Race,Asian,0,0,0,0
+2024,Bradley County,Race,Black,225,609,446,1280
+2024,Bradley County,Race,Hispanic,184,71,5,260
+2024,Bradley County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Bradley County,Race,Two or More Races,87,71,5,163
+2024,Bradley County,Race,White,1139,679,323,2141
+2024,Bradley County,Total,All,1561,1211,980,3752
+2024,Calhoun County,Age,25 to 44 Years,225,76,28,329
+2024,Calhoun County,Age,45 to 64 Years,348,162,81,591
+2024,Calhoun County,Age,65 Years and Over,424,233,95,752
+2024,Calhoun County,Age,Under 25 Years,0,14,4,18
+2024,Calhoun County,HouseholdType,Married With Children,276,28,5,309
+2024,Calhoun County,HouseholdType,"Single or Cohabiting, Under 65, no Children",285,184,80,549
+2024,Calhoun County,HouseholdType,Single-Female-Headed With Children,12,28,28,68
+2024,Calhoun County,HouseholdType,Single-Male-Headed With Children,0,12,0,12
+2024,Calhoun County,Race,American Indian/Alaska Native,0,12,0,12
+2024,Calhoun County,Race,Asian,0,0,0,0
+2024,Calhoun County,Race,Black,88,171,74,333
+2024,Calhoun County,Race,Hispanic,11,11,0,22
+2024,Calhoun County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Calhoun County,Race,Two or More Races,111,19,0,130
+2024,Calhoun County,Race,White,797,316,98,1211
+2024,Calhoun County,Total,All,997,485,208,1690
+2024,Carroll County,Age,25 to 44 Years,1287,683,591,2561
+2024,Carroll County,Age,45 to 64 Years,2283,935,802,4020
+2024,Carroll County,Age,65 Years and Over,2315,1578,621,4514
+2024,Carroll County,Age,Under 25 Years,82,149,21,252
+2024,Carroll County,HouseholdType,Married With Children,1082,281,387,1750
+2024,Carroll County,HouseholdType,"Single or Cohabiting, Under 65, no Children",2470,1411,702,4583
+2024,Carroll County,HouseholdType,Single-Female-Headed With Children,63,20,260,343
+2024,Carroll County,HouseholdType,Single-Male-Headed With Children,37,55,65,157
+2024,Carroll County,Race,American Indian/Alaska Native,41,39,107,187
+2024,Carroll County,Race,Asian,19,10,26,55
+2024,Carroll County,Race,Black,0,0,0,0
+2024,Carroll County,Race,Hispanic,448,486,36,970
+2024,Carroll County,Race,Native Hawaiian/Pacific Islander,11,84,0,95
+2024,Carroll County,Race,Two or More Races,839,613,72,1524
+2024,Carroll County,Race,White,4913,3174,1032,9119
+2024,Carroll County,Total,All,5967,3345,2035,11347
+2024,Chicot County,Age,25 to 44 Years,468,282,145,895
+2024,Chicot County,Age,45 to 64 Years,520,593,388,1501
+2024,Chicot County,Age,65 Years and Over,580,480,430,1490
+2024,Chicot County,Age,Under 25 Years,15,6,58,79
+2024,Chicot County,HouseholdType,Married With Children,343,14,24,381
+2024,Chicot County,HouseholdType,"Single or Cohabiting, Under 65, no Children",580,696,409,1685
+2024,Chicot County,HouseholdType,Single-Female-Headed With Children,80,171,128,379
+2024,Chicot County,HouseholdType,Single-Male-Headed With Children,0,0,30,30
+2024,Chicot County,Race,American Indian/Alaska Native,0,0,0,0
+2024,Chicot County,Race,Asian,5,5,0,10
+2024,Chicot County,Race,Black,567,898,702,2167
+2024,Chicot County,Race,Hispanic,161,26,0,187
+2024,Chicot County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Chicot County,Race,Two or More Races,156,27,9,192
+2024,Chicot County,Race,White,826,574,162,1562
+2024,Chicot County,Total,All,1583,1361,1021,3965
+2024,Clark County,Age,25 to 44 Years,1175,399,646,2220
+2024,Clark County,Age,45 to 64 Years,1640,805,385,2830
+2024,Clark County,Age,65 Years and Over,1061,799,354,2214
+2024,Clark County,Age,Under 25 Years,231,165,461,857
+2024,Clark County,HouseholdType,Married With Children,920,110,155,1185
+2024,Clark County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1930,1064,1072,4066
+2024,Clark County,HouseholdType,Single-Female-Headed With Children,123,106,194,423
+2024,Clark County,HouseholdType,Single-Male-Headed With Children,73,89,71,233
+2024,Clark County,Race,American Indian/Alaska Native,0,0,5,5
+2024,Clark County,Race,Asian,15,0,0,15
+2024,Clark County,Race,Black,872,834,469,2175
+2024,Clark County,Race,Hispanic,100,152,54,306
+2024,Clark County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Clark County,Race,Two or More Races,110,138,27,275
+2024,Clark County,Race,White,3032,1783,606,5421
+2024,Clark County,Total,All,4107,2168,1846,8121
+2024,Clay County,Age,25 to 44 Years,1095,284,376,1755
+2024,Clay County,Age,45 to 64 Years,1199,523,262,1984
+2024,Clay County,Age,65 Years and Over,843,858,380,2081
+2024,Clay County,Age,Under 25 Years,83,104,14,201
+2024,Clay County,HouseholdType,Married With Children,782,68,57,907
+2024,Clay County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1494,563,264,2321
+2024,Clay County,HouseholdType,Single-Female-Headed With Children,25,99,234,358
+2024,Clay County,HouseholdType,Single-Male-Headed With Children,76,181,97,354
+2024,Clay County,Race,American Indian/Alaska Native,0,1,21,22
+2024,Clay County,Race,Asian,0,0,0,0
+2024,Clay County,Race,Black,0,0,0,0
+2024,Clay County,Race,Hispanic,13,6,0,19
+2024,Clay County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Clay County,Race,Two or More Races,31,132,55,218
+2024,Clay County,Race,White,3176,2005,586,5767
+2024,Clay County,Total,All,3220,1769,1032,6021
+2024,Cleburne County,Age,25 to 44 Years,1293,554,436,2283
+2024,Cleburne County,Age,45 to 64 Years,2095,1143,612,3850
+2024,Cleburne County,Age,65 Years and Over,2292,1369,520,4181
+2024,Cleburne County,Age,Under 25 Years,74,131,3,208
+2024,Cleburne County,HouseholdType,Married With Children,1213,211,52,1476
+2024,Cleburne County,HouseholdType,"Single or Cohabiting, Under 65, no Children",2103,1526,633,4262
+2024,Cleburne County,HouseholdType,Single-Female-Headed With Children,93,60,274,427
+2024,Cleburne County,HouseholdType,Single-Male-Headed With Children,53,31,92,176
+2024,Cleburne County,Race,American Indian/Alaska Native,42,23,9,74
+2024,Cleburne County,Race,Asian,3,2,16,21
+2024,Cleburne County,Race,Black,13,0,0,13
+2024,Cleburne County,Race,Hispanic,114,98,11,223
+2024,Cleburne County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Cleburne County,Race,Two or More Races,130,317,51,498
+2024,Cleburne County,Race,White,5472,3293,941,9706
+2024,Cleburne County,Total,All,5754,3197,1571,10522
+2024,Cleveland County,Age,25 to 44 Years,486,100,155,741
+2024,Cleveland County,Age,45 to 64 Years,646,354,179,1179
+2024,Cleveland County,Age,65 Years and Over,338,483,129,950
+2024,Cleveland County,Age,Under 25 Years,31,26,4,61
+2024,Cleveland County,HouseholdType,Married With Children,416,34,20,470
+2024,Cleveland County,HouseholdType,"Single or Cohabiting, Under 65, no Children",666,398,225,1289
+2024,Cleveland County,HouseholdType,Single-Female-Headed With Children,33,48,93,174
+2024,Cleveland County,HouseholdType,Single-Male-Headed With Children,48,0,0,48
+2024,Cleveland County,Race,American Indian/Alaska Native,0,0,0,0
+2024,Cleveland County,Race,Asian,0,0,0,0
+2024,Cleveland County,Race,Black,20,286,87,393
+2024,Cleveland County,Race,Hispanic,11,0,0,11
+2024,Cleveland County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Cleveland County,Race,Two or More Races,16,38,0,54
+2024,Cleveland County,Race,White,1463,765,256,2484
+2024,Cleveland County,Total,All,1501,963,467,2931
+2024,Columbia County,Age,25 to 44 Years,1448,466,484,2398
+2024,Columbia County,Age,45 to 64 Years,1583,727,629,2939
+2024,Columbia County,Age,65 Years and Over,1003,1037,473,2513
+2024,Columbia County,Age,Under 25 Years,146,192,221,559
+2024,Columbia County,HouseholdType,Married With Children,933,77,38,1048
+2024,Columbia County,HouseholdType,"Single or Cohabiting, Under 65, no Children",2112,1290,702,4104
+2024,Columbia County,HouseholdType,Single-Female-Headed With Children,65,18,521,604
+2024,Columbia County,HouseholdType,Single-Male-Headed With Children,67,0,73,140
+2024,Columbia County,Race,American Indian/Alaska Native,0,0,0,0
+2024,Columbia County,Race,Asian,3,0,0,3
+2024,Columbia County,Race,Black,1041,1181,660,2882
+2024,Columbia County,Race,Hispanic,71,95,15,181
+2024,Columbia County,Race,Native Hawaiian/Pacific Islander,8,0,0,8
+2024,Columbia County,Race,Two or More Races,158,61,21,240
+2024,Columbia County,Race,White,2903,1565,638,5106
+2024,Columbia County,Total,All,4180,2422,1807,8409
+2024,Conway County,Age,25 to 44 Years,1159,394,519,2072
+2024,Conway County,Age,45 to 64 Years,1966,586,752,3304
+2024,Conway County,Age,65 Years and Over,1220,985,369,2574
+2024,Conway County,Age,Under 25 Years,75,144,110,329
+2024,Conway County,HouseholdType,Married With Children,1146,110,145,1401
+2024,Conway County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1919,729,700,3348
+2024,Conway County,HouseholdType,Single-Female-Headed With Children,100,226,440,766
+2024,Conway County,HouseholdType,Single-Male-Headed With Children,35,59,96,190
+2024,Conway County,Race,American Indian/Alaska Native,17,11,0,28
+2024,Conway County,Race,Asian,0,0,29,29
+2024,Conway County,Race,Black,357,500,384,1241
+2024,Conway County,Race,Hispanic,129,65,0,194
+2024,Conway County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Conway County,Race,Two or More Races,65,32,28,125
+2024,Conway County,Race,White,3839,2080,730,6649
+2024,Conway County,Total,All,4420,2109,1750,8279
+2024,Craighead County,Age,25 to 44 Years,11664,4236,3250,19150
+2024,Craighead County,Age,45 to 64 Years,7683,1995,3811,13489
+2024,Craighead County,Age,65 Years and Over,5921,3446,1341,10708
+2024,Craighead County,Age,Under 25 Years,761,1324,1031,3116
+2024,Craighead County,HouseholdType,Married With Children,7174,532,946,8652
+2024,Craighead County,HouseholdType,"Single or Cohabiting, Under 65, no Children",11793,5549,4716,22058
+2024,Craighead County,HouseholdType,Single-Female-Headed With Children,732,1342,2034,4108
+2024,Craighead County,HouseholdType,Single-Male-Headed With Children,409,132,396,937
+2024,Craighead County,Race,American Indian/Alaska Native,68,17,0,85
+2024,Craighead County,Race,Asian,277,168,26,471
+2024,Craighead County,Race,Black,1893,2918,1958,6769
+2024,Craighead County,Race,Hispanic,1084,677,195,1956
+2024,Craighead County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Craighead County,Race,Two or More Races,1378,908,206,2492
+2024,Craighead County,Race,White,21440,9335,3504,34279
+2024,Craighead County,Total,All,26029,11001,9433,46463
+2024,Crawford County,Age,25 to 44 Years,4886,1442,819,7147
+2024,Crawford County,Age,45 to 64 Years,5146,1872,1413,8431
+2024,Crawford County,Age,65 Years and Over,3407,2903,655,6965
+2024,Crawford County,Age,Under 25 Years,315,286,213,814
+2024,Crawford County,HouseholdType,Married With Children,3877,434,307,4618
+2024,Crawford County,HouseholdType,"Single or Cohabiting, Under 65, no Children",5722,2623,1276,9621
+2024,Crawford County,HouseholdType,Single-Female-Headed With Children,258,446,685,1389
+2024,Crawford County,HouseholdType,Single-Male-Headed With Children,490,97,177,764
+2024,Crawford County,Race,American Indian/Alaska Native,123,65,80,268
+2024,Crawford County,Race,Asian,193,108,10,311
+2024,Crawford County,Race,Black,124,133,0,257
+2024,Crawford County,Race,Hispanic,846,461,87,1394
+2024,Crawford County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Crawford County,Race,Two or More Races,1166,728,178,2072
+2024,Crawford County,Race,White,11441,6284,1736,19461
+2024,Crawford County,Total,All,13754,6503,3100,23357
+2024,Crittenden County,Age,25 to 44 Years,2607,1959,1307,5873
+2024,Crittenden County,Age,45 to 64 Years,3482,2000,1209,6691
+2024,Crittenden County,Age,65 Years and Over,2020,1979,853,4852
+2024,Crittenden County,Age,Under 25 Years,233,336,218,787
+2024,Crittenden County,HouseholdType,Married With Children,1605,412,101,2118
+2024,Crittenden County,HouseholdType,"Single or Cohabiting, Under 65, no Children",4284,2649,1343,8276
+2024,Crittenden County,HouseholdType,Single-Female-Headed With Children,295,951,1131,2377
+2024,Crittenden County,HouseholdType,Single-Male-Headed With Children,138,283,159,580
+2024,Crittenden County,Race,American Indian/Alaska Native,0,9,0,9
+2024,Crittenden County,Race,Asian,73,64,2,139
+2024,Crittenden County,Race,Black,2870,4148,1960,8978
+2024,Crittenden County,Race,Hispanic,243,203,4,450
+2024,Crittenden County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Crittenden County,Race,Two or More Races,620,548,129,1297
+2024,Crittenden County,Race,White,4736,2570,417,7723
+2024,Crittenden County,Total,All,8342,6274,3587,18203
+2024,Cross County,Age,25 to 44 Years,1055,375,472,1902
+2024,Cross County,Age,45 to 64 Years,1307,580,434,2321
+2024,Cross County,Age,65 Years and Over,806,783,457,2046
+2024,Cross County,Age,Under 25 Years,94,80,40,214
+2024,Cross County,HouseholdType,Married With Children,977,49,148,1174
+2024,Cross County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1315,655,348,2318
+2024,Cross County,HouseholdType,Single-Female-Headed With Children,60,308,383,751
+2024,Cross County,HouseholdType,Single-Male-Headed With Children,104,23,67,194
+2024,Cross County,Race,American Indian/Alaska Native,0,31,0,31
+2024,Cross County,Race,Asian,32,1,0,33
+2024,Cross County,Race,Black,327,535,191,1053
+2024,Cross County,Race,Hispanic,67,23,17,107
+2024,Cross County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Cross County,Race,Two or More Races,244,212,96,552
+2024,Cross County,Race,White,2629,1611,499,4739
+2024,Cross County,Total,All,3262,1818,1403,6483
+2024,Dallas County,Age,25 to 44 Years,310,158,137,605
+2024,Dallas County,Age,45 to 64 Years,461,272,168,901
+2024,Dallas County,Age,65 Years and Over,318,517,177,1012
+2024,Dallas County,Age,Under 25 Years,8,5,27,40
+2024,Dallas County,HouseholdType,Married With Children,239,50,4,293
+2024,Dallas County,HouseholdType,"Single or Cohabiting, Under 65, no Children",518,307,198,1023
+2024,Dallas County,HouseholdType,Single-Female-Headed With Children,22,76,123,221
+2024,Dallas County,HouseholdType,Single-Male-Headed With Children,0,2,7,9
+2024,Dallas County,Race,American Indian/Alaska Native,0,0,0,0
+2024,Dallas County,Race,Asian,0,0,0,0
+2024,Dallas County,Race,Black,335,500,277,1112
+2024,Dallas County,Race,Hispanic,0,2,0,2
+2024,Dallas County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Dallas County,Race,Two or More Races,11,4,25,40
+2024,Dallas County,Race,White,751,545,108,1404
+2024,Dallas County,Total,All,1097,952,509,2558
+2024,Desha County,Age,25 to 44 Years,519,348,481,1348
+2024,Desha County,Age,45 to 64 Years,801,426,451,1678
+2024,Desha County,Age,65 Years and Over,405,763,306,1474
+2024,Desha County,Age,Under 25 Years,64,13,33,110
+2024,Desha County,HouseholdType,Married With Children,347,43,73,463
+2024,Desha County,HouseholdType,"Single or Cohabiting, Under 65, no Children",862,554,510,1926
+2024,Desha County,HouseholdType,Single-Female-Headed With Children,82,190,332,604
+2024,Desha County,HouseholdType,Single-Male-Headed With Children,93,0,50,143
+2024,Desha County,Race,American Indian/Alaska Native,9,0,0,9
+2024,Desha County,Race,Asian,0,0,0,0
+2024,Desha County,Race,Black,684,1142,626,2452
+2024,Desha County,Race,Hispanic,95,50,25,170
+2024,Desha County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Desha County,Race,Two or More Races,77,29,41,147
+2024,Desha County,Race,White,997,642,312,1951
+2024,Desha County,Total,All,1789,1550,1271,4610
+2024,Drew County,Age,25 to 44 Years,1161,516,400,2077
+2024,Drew County,Age,45 to 64 Years,1216,677,615,2508
+2024,Drew County,Age,65 Years and Over,839,959,288,2086
+2024,Drew County,Age,Under 25 Years,32,299,194,525
+2024,Drew County,HouseholdType,Married With Children,986,20,113,1119
+2024,Drew County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1266,1277,748,3291
+2024,Drew County,HouseholdType,Single-Female-Headed With Children,157,36,280,473
+2024,Drew County,HouseholdType,Single-Male-Headed With Children,0,159,68,227
+2024,Drew County,Race,American Indian/Alaska Native,0,0,0,0
+2024,Drew County,Race,Asian,38,0,0,38
+2024,Drew County,Race,Black,509,1059,543,2111
+2024,Drew County,Race,Hispanic,99,79,3,181
+2024,Drew County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Drew County,Race,Two or More Races,197,102,36,335
+2024,Drew County,Race,White,2483,1580,592,4655
+2024,Drew County,Total,All,3248,2451,1497,7196
+2024,Faulkner County,Age,25 to 44 Years,11977,4007,2001,17985
+2024,Faulkner County,Age,45 to 64 Years,10959,4029,1944,16932
+2024,Faulkner County,Age,65 Years and Over,5954,3347,1616,10917
+2024,Faulkner County,Age,Under 25 Years,1594,1574,1274,4442
+2024,Faulkner County,HouseholdType,Married With Children,8156,1462,677,10295
+2024,Faulkner County,HouseholdType,"Single or Cohabiting, Under 65, no Children",15043,7099,3211,25353
+2024,Faulkner County,HouseholdType,Single-Female-Headed With Children,826,807,1043,2676
+2024,Faulkner County,HouseholdType,Single-Male-Headed With Children,505,242,288,1035
+2024,Faulkner County,Race,American Indian/Alaska Native,40,36,2,78
+2024,Faulkner County,Race,Asian,363,36,55,454
+2024,Faulkner County,Race,Black,2588,2206,988,5782
+2024,Faulkner County,Race,Hispanic,1051,1131,193,2375
+2024,Faulkner County,Race,Native Hawaiian/Pacific Islander,12,0,0,12
+2024,Faulkner County,Race,Two or More Races,996,762,227,1985
+2024,Faulkner County,Race,White,25442,11367,2900,39709
+2024,Faulkner County,Total,All,30484,12957,6835,50276
+2024,Franklin County,Age,25 to 44 Years,1218,397,263,1878
+2024,Franklin County,Age,45 to 64 Years,1297,729,465,2491
+2024,Franklin County,Age,65 Years and Over,1069,819,521,2409
+2024,Franklin County,Age,Under 25 Years,83,93,94,270
+2024,Franklin County,HouseholdType,Married With Children,937,158,198,1293
+2024,Franklin County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1478,983,490,2951
+2024,Franklin County,HouseholdType,Single-Female-Headed With Children,133,78,95,306
+2024,Franklin County,HouseholdType,Single-Male-Headed With Children,50,0,39,89
+2024,Franklin County,Race,American Indian/Alaska Native,12,25,33,70
+2024,Franklin County,Race,Asian,40,5,8,53
+2024,Franklin County,Race,Black,1,1,0,2
+2024,Franklin County,Race,Hispanic,65,47,8,120
+2024,Franklin County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Franklin County,Race,Two or More Races,267,187,21,475
+2024,Franklin County,Race,White,3312,2189,859,6360
+2024,Franklin County,Total,All,3667,2038,1343,7048
+2024,Fulton County,Age,25 to 44 Years,392,309,308,1009
+2024,Fulton County,Age,45 to 64 Years,987,511,330,1828
+2024,Fulton County,Age,65 Years and Over,620,903,295,1818
+2024,Fulton County,Age,Under 25 Years,15,75,12,102
+2024,Fulton County,HouseholdType,Married With Children,412,116,93,621
+2024,Fulton County,HouseholdType,"Single or Cohabiting, Under 65, no Children",951,664,432,2047
+2024,Fulton County,HouseholdType,Single-Female-Headed With Children,15,105,108,228
+2024,Fulton County,HouseholdType,Single-Male-Headed With Children,16,10,17,43
+2024,Fulton County,Race,American Indian/Alaska Native,87,2,0,89
+2024,Fulton County,Race,Asian,0,4,0,4
+2024,Fulton County,Race,Black,0,0,0,0
+2024,Fulton County,Race,Hispanic,118,35,0,153
+2024,Fulton County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Fulton County,Race,Two or More Races,66,149,30,245
+2024,Fulton County,Race,White,1823,1946,539,4308
+2024,Fulton County,Total,All,2014,1798,945,4757
+2024,Garland County,Age,25 to 44 Years,7705,2427,1922,12054
+2024,Garland County,Age,45 to 64 Years,9020,3088,2033,14141
+2024,Garland County,Age,65 Years and Over,8589,6991,1746,17326
+2024,Garland County,Age,Under 25 Years,310,892,0,1202
+2024,Garland County,HouseholdType,Married With Children,4328,718,495,5541
+2024,Garland County,HouseholdType,"Single or Cohabiting, Under 65, no Children",11098,4406,1696,17200
+2024,Garland County,HouseholdType,Single-Female-Headed With Children,1024,945,1417,3386
+2024,Garland County,HouseholdType,Single-Male-Headed With Children,585,338,347,1270
+2024,Garland County,Race,American Indian/Alaska Native,134,31,28,193
+2024,Garland County,Race,Asian,159,40,0,199
+2024,Garland County,Race,Black,1035,1384,830,3249
+2024,Garland County,Race,Hispanic,1109,936,291,2336
+2024,Garland County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Garland County,Race,Two or More Races,841,849,313,2003
+2024,Garland County,Race,White,21947,11791,2949,36687
+2024,Garland County,Total,All,25624,13398,5701,44723
+2024,Grant County,Age,25 to 44 Years,1431,447,222,2100
+2024,Grant County,Age,45 to 64 Years,1546,548,497,2591
+2024,Grant County,Age,65 Years and Over,1149,817,141,2107
+2024,Grant County,Age,Under 25 Years,131,40,9,180
+2024,Grant County,HouseholdType,Married With Children,1001,84,114,1199
+2024,Grant County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1874,769,488,3131
+2024,Grant County,HouseholdType,Single-Female-Headed With Children,171,96,94,361
+2024,Grant County,HouseholdType,Single-Male-Headed With Children,62,86,32,180
+2024,Grant County,Race,American Indian/Alaska Native,14,0,0,14
+2024,Grant County,Race,Asian,35,0,0,35
+2024,Grant County,Race,Black,38,64,70,172
+2024,Grant County,Race,Hispanic,19,9,0,28
+2024,Grant County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Grant County,Race,Two or More Races,130,80,1,211
+2024,Grant County,Race,White,4008,2040,456,6504
+2024,Grant County,Total,All,4257,1852,869,6978
+2024,Greene County,Age,25 to 44 Years,3694,1099,1149,5942
+2024,Greene County,Age,45 to 64 Years,4373,1311,887,6571
+2024,Greene County,Age,65 Years and Over,1909,2032,797,4738
+2024,Greene County,Age,Under 25 Years,280,215,248,743
+2024,Greene County,HouseholdType,Married With Children,2430,521,325,3276
+2024,Greene County,HouseholdType,"Single or Cohabiting, Under 65, no Children",5334,1671,1137,8142
+2024,Greene County,HouseholdType,Single-Female-Headed With Children,257,156,613,1026
+2024,Greene County,HouseholdType,Single-Male-Headed With Children,326,277,209,812
+2024,Greene County,Race,American Indian/Alaska Native,5,0,0,5
+2024,Greene County,Race,Asian,52,0,0,52
+2024,Greene County,Race,Black,118,99,176,393
+2024,Greene County,Race,Hispanic,207,185,16,408
+2024,Greene County,Race,Native Hawaiian/Pacific Islander,36,3,0,39
+2024,Greene County,Race,Two or More Races,379,366,79,824
+2024,Greene County,Race,White,9556,5119,1767,16442
+2024,Greene County,Total,All,10256,4657,3081,17994
+2024,Hempstead County,Age,25 to 44 Years,1002,330,507,1839
+2024,Hempstead County,Age,45 to 64 Years,1444,965,513,2922
+2024,Hempstead County,Age,65 Years and Over,880,1095,436,2411
+2024,Hempstead County,Age,Under 25 Years,47,168,92,307
+2024,Hempstead County,HouseholdType,Married With Children,830,162,147,1139
+2024,Hempstead County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1557,1155,607,3319
+2024,Hempstead County,HouseholdType,Single-Female-Headed With Children,79,137,324,540
+2024,Hempstead County,HouseholdType,Single-Male-Headed With Children,27,9,34,70
+2024,Hempstead County,Race,American Indian/Alaska Native,5,2,0,7
+2024,Hempstead County,Race,Asian,20,0,18,38
+2024,Hempstead County,Race,Black,554,1244,500,2298
+2024,Hempstead County,Race,Hispanic,402,155,54,611
+2024,Hempstead County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Hempstead County,Race,Two or More Races,293,133,116,542
+2024,Hempstead County,Race,White,2319,1458,534,4311
+2024,Hempstead County,Total,All,3373,2558,1548,7479
+2024,Hot Spring County,Age,25 to 44 Years,1737,891,660,3288
+2024,Hot Spring County,Age,45 to 64 Years,2667,1328,645,4640
+2024,Hot Spring County,Age,65 Years and Over,1893,1454,645,3992
+2024,Hot Spring County,Age,Under 25 Years,113,118,159,390
+2024,Hot Spring County,HouseholdType,Married With Children,1605,344,369,2318
+2024,Hot Spring County,HouseholdType,"Single or Cohabiting, Under 65, no Children",2733,1674,905,5312
+2024,Hot Spring County,HouseholdType,Single-Female-Headed With Children,98,251,93,442
+2024,Hot Spring County,HouseholdType,Single-Male-Headed With Children,81,68,97,246
+2024,Hot Spring County,Race,American Indian/Alaska Native,10,14,12,36
+2024,Hot Spring County,Race,Asian,0,0,0,0
+2024,Hot Spring County,Race,Black,410,406,232,1048
+2024,Hot Spring County,Race,Hispanic,41,49,150,240
+2024,Hot Spring County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Hot Spring County,Race,Two or More Races,166,109,122,397
+2024,Hot Spring County,Race,White,5812,3632,1218,10662
+2024,Hot Spring County,Total,All,6410,3791,2109,12310
+2024,Howard County,Age,25 to 44 Years,859,465,420,1744
+2024,Howard County,Age,45 to 64 Years,760,515,352,1627
+2024,Howard County,Age,65 Years and Over,716,546,344,1606
+2024,Howard County,Age,Under 25 Years,48,50,23,121
+2024,Howard County,HouseholdType,Married With Children,763,111,95,969
+2024,Howard County,HouseholdType,"Single or Cohabiting, Under 65, no Children",804,721,358,1883
+2024,Howard County,HouseholdType,Single-Female-Headed With Children,22,198,322,542
+2024,Howard County,HouseholdType,Single-Male-Headed With Children,78,0,20,98
+2024,Howard County,Race,American Indian/Alaska Native,0,0,0,0
+2024,Howard County,Race,Asian,0,24,3,27
+2024,Howard County,Race,Black,404,399,249,1052
+2024,Howard County,Race,Hispanic,155,207,92,454
+2024,Howard County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Howard County,Race,Two or More Races,103,103,21,227
+2024,Howard County,Race,White,1757,1369,326,3452
+2024,Howard County,Total,All,2383,1576,1139,5098
+2024,Independence County,Age,25 to 44 Years,2565,858,942,4365
+2024,Independence County,Age,45 to 64 Years,3024,1112,1261,5397
+2024,Independence County,Age,65 Years and Over,2094,1514,595,4203
+2024,Independence County,Age,Under 25 Years,285,263,125,673
+2024,Independence County,HouseholdType,Married With Children,2204,376,528,3108
+2024,Independence County,HouseholdType,"Single or Cohabiting, Under 65, no Children",3397,1511,1331,6239
+2024,Independence County,HouseholdType,Single-Female-Headed With Children,117,173,432,722
+2024,Independence County,HouseholdType,Single-Male-Headed With Children,156,173,37,366
+2024,Independence County,Race,American Indian/Alaska Native,68,13,0,81
+2024,Independence County,Race,Asian,75,68,0,143
+2024,Independence County,Race,Black,59,142,122,323
+2024,Independence County,Race,Hispanic,329,303,102,734
+2024,Independence County,Race,Native Hawaiian/Pacific Islander,0,35,0,35
+2024,Independence County,Race,Two or More Races,468,199,83,750
+2024,Independence County,Race,White,7085,4082,1493,12660
+2024,Independence County,Total,All,7968,3747,2923,14638
+2024,Izard County,Age,25 to 44 Years,473,384,197,1054
+2024,Izard County,Age,45 to 64 Years,766,831,352,1949
+2024,Izard County,Age,65 Years and Over,888,718,454,2060
+2024,Izard County,Age,Under 25 Years,17,107,45,169
+2024,Izard County,HouseholdType,Married With Children,467,147,134,748
+2024,Izard County,HouseholdType,"Single or Cohabiting, Under 65, no Children",635,999,288,1922
+2024,Izard County,HouseholdType,Single-Female-Headed With Children,67,89,144,300
+2024,Izard County,HouseholdType,Single-Male-Headed With Children,87,87,28,202
+2024,Izard County,Race,American Indian/Alaska Native,5,19,9,33
+2024,Izard County,Race,Asian,8,0,0,8
+2024,Izard County,Race,Black,0,0,0,0
+2024,Izard County,Race,Hispanic,16,68,0,84
+2024,Izard County,Race,Native Hawaiian/Pacific Islander,0,1,0,1
+2024,Izard County,Race,Two or More Races,70,103,7,180
+2024,Izard County,Race,White,2048,2166,720,4934
+2024,Izard County,Total,All,2144,2040,1048,5232
+2024,Jackson County,Age,25 to 44 Years,763,455,387,1605
+2024,Jackson County,Age,45 to 64 Years,846,836,497,2179
+2024,Jackson County,Age,65 Years and Over,787,768,218,1773
+2024,Jackson County,Age,Under 25 Years,226,47,246,519
+2024,Jackson County,HouseholdType,Married With Children,752,116,89,957
+2024,Jackson County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1025,1090,624,2739
+2024,Jackson County,HouseholdType,Single-Female-Headed With Children,13,46,396,455
+2024,Jackson County,HouseholdType,Single-Male-Headed With Children,45,86,21,152
+2024,Jackson County,Race,American Indian/Alaska Native,7,0,0,7
+2024,Jackson County,Race,Asian,19,10,0,29
+2024,Jackson County,Race,Black,170,448,235,853
+2024,Jackson County,Race,Hispanic,20,63,0,83
+2024,Jackson County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Jackson County,Race,Two or More Races,73,172,53,298
+2024,Jackson County,Race,White,2331,1887,620,4838
+2024,Jackson County,Total,All,2622,2106,1348,6076
+2024,Jefferson County,Age,25 to 44 Years,2815,2462,1398,6675
+2024,Jefferson County,Age,45 to 64 Years,4327,2894,1609,8830
+2024,Jefferson County,Age,65 Years and Over,3531,3052,1153,7736
+2024,Jefferson County,Age,Under 25 Years,269,78,429,776
+2024,Jefferson County,HouseholdType,Married With Children,1931,394,242,2567
+2024,Jefferson County,HouseholdType,"Single or Cohabiting, Under 65, no Children",5196,3905,2164,11265
+2024,Jefferson County,HouseholdType,Single-Female-Headed With Children,219,908,918,2045
+2024,Jefferson County,HouseholdType,Single-Male-Headed With Children,65,227,112,404
+2024,Jefferson County,Race,American Indian/Alaska Native,36,2,0,38
+2024,Jefferson County,Race,Asian,40,54,0,94
+2024,Jefferson County,Race,Black,5308,5747,2144,13199
+2024,Jefferson County,Race,Hispanic,188,131,34,353
+2024,Jefferson County,Race,Native Hawaiian/Pacific Islander,15,0,0,15
+2024,Jefferson County,Race,Two or More Races,275,319,104,698
+2024,Jefferson County,Race,White,5136,3636,944,9716
+2024,Jefferson County,Total,All,10942,8486,4589,24017
+2024,Johnson County,Age,25 to 44 Years,1790,700,712,3202
+2024,Johnson County,Age,45 to 64 Years,1853,1181,664,3698
+2024,Johnson County,Age,65 Years and Over,1008,1233,640,2881
+2024,Johnson County,Age,Under 25 Years,134,188,213,535
+2024,Johnson County,HouseholdType,Married With Children,1379,231,233,1843
+2024,Johnson County,HouseholdType,"Single or Cohabiting, Under 65, no Children",2215,1767,907,4889
+2024,Johnson County,HouseholdType,Single-Female-Headed With Children,27,0,361,388
+2024,Johnson County,HouseholdType,Single-Male-Headed With Children,156,71,88,315
+2024,Johnson County,Race,American Indian/Alaska Native,17,0,7,24
+2024,Johnson County,Race,Asian,81,88,7,176
+2024,Johnson County,Race,Black,51,51,30,132
+2024,Johnson County,Race,Hispanic,507,346,117,970
+2024,Johnson County,Race,Native Hawaiian/Pacific Islander,19,0,0,19
+2024,Johnson County,Race,Two or More Races,493,291,37,821
+2024,Johnson County,Race,White,3906,3267,1448,8621
+2024,Johnson County,Total,All,4785,3302,2229,10316
+2024,Lafayette County,Age,25 to 44 Years,326,120,72,518
+2024,Lafayette County,Age,45 to 64 Years,454,246,317,1017
+2024,Lafayette County,Age,65 Years and Over,341,415,261,1017
+2024,Lafayette County,Age,Under 25 Years,66,3,1,70
+2024,Lafayette County,HouseholdType,Married With Children,284,23,70,377
+2024,Lafayette County,HouseholdType,"Single or Cohabiting, Under 65, no Children",536,346,239,1121
+2024,Lafayette County,HouseholdType,Single-Female-Headed With Children,8,0,61,69
+2024,Lafayette County,HouseholdType,Single-Male-Headed With Children,18,0,20,38
+2024,Lafayette County,Race,American Indian/Alaska Native,2,1,0,3
+2024,Lafayette County,Race,Asian,14,0,0,14
+2024,Lafayette County,Race,Black,366,375,225,966
+2024,Lafayette County,Race,Hispanic,0,11,0,11
+2024,Lafayette County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Lafayette County,Race,Two or More Races,12,25,25,62
+2024,Lafayette County,Race,White,793,579,185,1557
+2024,Lafayette County,Total,All,1187,784,651,2622
+2024,Lawrence County,Age,25 to 44 Years,1116,437,422,1975
+2024,Lawrence County,Age,45 to 64 Years,1249,685,479,2413
+2024,Lawrence County,Age,65 Years and Over,585,969,426,1980
+2024,Lawrence County,Age,Under 25 Years,111,55,79,245
+2024,Lawrence County,HouseholdType,Married With Children,904,121,141,1166
+2024,Lawrence County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1461,913,459,2833
+2024,Lawrence County,HouseholdType,Single-Female-Headed With Children,44,137,334,515
+2024,Lawrence County,HouseholdType,Single-Male-Headed With Children,67,6,46,119
+2024,Lawrence County,Race,American Indian/Alaska Native,1,1,2,4
+2024,Lawrence County,Race,Asian,1,0,0,1
+2024,Lawrence County,Race,Black,13,7,0,20
+2024,Lawrence County,Race,Hispanic,46,29,1,76
+2024,Lawrence County,Race,Native Hawaiian/Pacific Islander,5,0,0,5
+2024,Lawrence County,Race,Two or More Races,90,141,82,313
+2024,Lawrence County,Race,White,2913,2389,900,6202
+2024,Lawrence County,Total,All,3061,2146,1406,6613
+2024,Lee County,Age,25 to 44 Years,180,118,280,578
+2024,Lee County,Age,45 to 64 Years,267,350,318,935
+2024,Lee County,Age,65 Years and Over,382,449,282,1113
+2024,Lee County,Age,Under 25 Years,13,5,46,64
+2024,Lee County,HouseholdType,Married With Children,148,0,78,226
+2024,Lee County,HouseholdType,"Single or Cohabiting, Under 65, no Children",278,431,180,889
+2024,Lee County,HouseholdType,Single-Female-Headed With Children,32,1,365,398
+2024,Lee County,HouseholdType,Single-Male-Headed With Children,2,41,21,64
+2024,Lee County,Race,American Indian/Alaska Native,0,0,0,0
+2024,Lee County,Race,Asian,0,0,0,0
+2024,Lee County,Race,Black,282,544,632,1458
+2024,Lee County,Race,Hispanic,20,13,2,35
+2024,Lee County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Lee County,Race,Two or More Races,50,5,14,69
+2024,Lee County,Race,White,505,551,87,1143
+2024,Lee County,Total,All,842,922,926,2690
+2024,Lincoln County,Age,25 to 44 Years,652,267,254,1173
+2024,Lincoln County,Age,45 to 64 Years,712,254,174,1140
+2024,Lincoln County,Age,65 Years and Over,400,559,193,1152
+2024,Lincoln County,Age,Under 25 Years,68,0,59,127
+2024,Lincoln County,HouseholdType,Married With Children,587,81,57,725
+2024,Lincoln County,HouseholdType,"Single or Cohabiting, Under 65, no Children",755,369,190,1314
+2024,Lincoln County,HouseholdType,Single-Female-Headed With Children,86,71,196,353
+2024,Lincoln County,HouseholdType,Single-Male-Headed With Children,4,0,44,48
+2024,Lincoln County,Race,American Indian/Alaska Native,0,0,0,0
+2024,Lincoln County,Race,Asian,12,0,0,12
+2024,Lincoln County,Race,Black,147,314,102,563
+2024,Lincoln County,Race,Hispanic,88,29,16,133
+2024,Lincoln County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Lincoln County,Race,Two or More Races,111,84,0,195
+2024,Lincoln County,Race,White,1503,843,372,2718
+2024,Lincoln County,Total,All,1832,1080,680,3592
+2024,Little River County,Age,25 to 44 Years,707,224,300,1231
+2024,Little River County,Age,45 to 64 Years,1201,501,247,1949
+2024,Little River County,Age,65 Years and Over,663,621,295,1579
+2024,Little River County,Age,Under 25 Years,6,46,9,61
+2024,Little River County,HouseholdType,Married With Children,540,87,44,671
+2024,Little River County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1203,613,317,2133
+2024,Little River County,HouseholdType,Single-Female-Headed With Children,76,71,154,301
+2024,Little River County,HouseholdType,Single-Male-Headed With Children,95,0,41,136
+2024,Little River County,Race,American Indian/Alaska Native,6,16,7,29
+2024,Little River County,Race,Asian,0,1,0,1
+2024,Little River County,Race,Black,440,305,185,930
+2024,Little River County,Race,Hispanic,87,9,29,125
+2024,Little River County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Little River County,Race,Two or More Races,178,95,27,300
+2024,Little River County,Race,White,1923,1212,366,3501
+2024,Little River County,Total,All,2577,1392,851,4820
+2024,Logan County,Age,25 to 44 Years,1464,596,298,2358
+2024,Logan County,Age,45 to 64 Years,2231,655,299,3185
+2024,Logan County,Age,65 Years and Over,1299,920,536,2755
+2024,Logan County,Age,Under 25 Years,129,67,27,223
+2024,Logan County,HouseholdType,Married With Children,1384,154,131,1669
+2024,Logan County,HouseholdType,"Single or Cohabiting, Under 65, no Children",2292,927,249,3468
+2024,Logan County,HouseholdType,Single-Female-Headed With Children,54,164,178,396
+2024,Logan County,HouseholdType,Single-Male-Headed With Children,94,73,66,233
+2024,Logan County,Race,American Indian/Alaska Native,5,1,0,6
+2024,Logan County,Race,Asian,108,25,1,134
+2024,Logan County,Race,Black,0,42,17,59
+2024,Logan County,Race,Hispanic,65,115,5,185
+2024,Logan County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Logan County,Race,Two or More Races,199,133,79,411
+2024,Logan County,Race,White,4784,2176,819,7779
+2024,Logan County,Total,All,5123,2238,1160,8521
+2024,Lonoke County,Age,25 to 44 Years,7003,2257,1156,10416
+2024,Lonoke County,Age,45 to 64 Years,6899,2682,895,10476
+2024,Lonoke County,Age,65 Years and Over,3364,2866,719,6949
+2024,Lonoke County,Age,Under 25 Years,171,415,127,713
+2024,Lonoke County,HouseholdType,Married With Children,5503,723,392,6618
+2024,Lonoke County,HouseholdType,"Single or Cohabiting, Under 65, no Children",7702,3561,951,12214
+2024,Lonoke County,HouseholdType,Single-Female-Headed With Children,555,896,739,2190
+2024,Lonoke County,HouseholdType,Single-Male-Headed With Children,313,174,96,583
+2024,Lonoke County,Race,American Indian/Alaska Native,65,16,0,81
+2024,Lonoke County,Race,Asian,88,14,51,153
+2024,Lonoke County,Race,Black,520,968,289,1777
+2024,Lonoke County,Race,Hispanic,726,457,42,1225
+2024,Lonoke County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Lonoke County,Race,Two or More Races,620,655,79,1354
+2024,Lonoke County,Race,White,15881,7401,1692,24974
+2024,Lonoke County,Total,All,17437,8220,2897,28554
+2024,Madison County,Age,25 to 44 Years,1014,528,220,1762
+2024,Madison County,Age,45 to 64 Years,1320,851,298,2469
+2024,Madison County,Age,65 Years and Over,777,1095,142,2014
+2024,Madison County,Age,Under 25 Years,63,19,136,218
+2024,Madison County,HouseholdType,Married With Children,748,257,232,1237
+2024,Madison County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1535,999,243,2777
+2024,Madison County,HouseholdType,Single-Female-Headed With Children,49,88,150,287
+2024,Madison County,HouseholdType,Single-Male-Headed With Children,65,54,29,148
+2024,Madison County,Race,American Indian/Alaska Native,5,69,6,80
+2024,Madison County,Race,Asian,30,36,0,66
+2024,Madison County,Race,Black,0,0,0,0
+2024,Madison County,Race,Hispanic,180,131,0,311
+2024,Madison County,Race,Native Hawaiian/Pacific Islander,17,29,0,46
+2024,Madison County,Race,Two or More Races,588,716,116,1420
+2024,Madison County,Race,White,2473,1914,316,4703
+2024,Madison County,Total,All,3174,2493,796,6463
+2024,Marion County,Age,25 to 44 Years,909,354,357,1620
+2024,Marion County,Age,45 to 64 Years,1360,858,490,2708
+2024,Marion County,Age,65 Years and Over,1464,1314,321,3099
+2024,Marion County,Age,Under 25 Years,105,43,89,237
+2024,Marion County,HouseholdType,Married With Children,741,134,131,1006
+2024,Marion County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1574,1071,585,3230
+2024,Marion County,HouseholdType,Single-Female-Headed With Children,43,42,111,196
+2024,Marion County,HouseholdType,Single-Male-Headed With Children,16,8,109,133
+2024,Marion County,Race,American Indian/Alaska Native,5,85,5,95
+2024,Marion County,Race,Asian,12,42,7,61
+2024,Marion County,Race,Black,0,0,0,0
+2024,Marion County,Race,Hispanic,144,83,15,242
+2024,Marion County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Marion County,Race,Two or More Races,185,84,45,314
+2024,Marion County,Race,White,3554,2775,730,7059
+2024,Marion County,Total,All,3838,2569,1257,7664
+2024,Miller County,Age,25 to 44 Years,2431,1457,1109,4997
+2024,Miller County,Age,45 to 64 Years,3027,1590,1552,6169
+2024,Miller County,Age,65 Years and Over,1724,1998,844,4566
+2024,Miller County,Age,Under 25 Years,125,151,351,627
+2024,Miller County,HouseholdType,Married With Children,1533,402,133,2068
+2024,Miller County,HouseholdType,"Single or Cohabiting, Under 65, no Children",3676,2108,1790,7574
+2024,Miller County,HouseholdType,Single-Female-Headed With Children,288,494,928,1710
+2024,Miller County,HouseholdType,Single-Male-Headed With Children,86,194,161,441
+2024,Miller County,Race,American Indian/Alaska Native,41,30,13,84
+2024,Miller County,Race,Asian,27,0,22,49
+2024,Miller County,Race,Black,1050,1992,1270,4312
+2024,Miller County,Race,Hispanic,226,108,47,381
+2024,Miller County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Miller County,Race,Two or More Races,321,163,63,547
+2024,Miller County,Race,White,5701,4252,1153,11106
+2024,Miller County,Total,All,7307,5196,3856,16359
+2024,Mississippi County,Age,25 to 44 Years,2679,1043,1464,5186
+2024,Mississippi County,Age,45 to 64 Years,3223,1147,1137,5507
+2024,Mississippi County,Age,65 Years and Over,1850,1451,669,3970
+2024,Mississippi County,Age,Under 25 Years,323,240,226,789
+2024,Mississippi County,HouseholdType,Married With Children,1795,198,31,2024
+2024,Mississippi County,HouseholdType,"Single or Cohabiting, Under 65, no Children",3977,1761,1635,7373
+2024,Mississippi County,HouseholdType,Single-Female-Headed With Children,230,296,1109,1635
+2024,Mississippi County,HouseholdType,Single-Male-Headed With Children,223,175,52,450
+2024,Mississippi County,Race,American Indian/Alaska Native,19,3,0,22
+2024,Mississippi County,Race,Asian,7,56,0,63
+2024,Mississippi County,Race,Black,2163,1961,1485,5609
+2024,Mississippi County,Race,Hispanic,279,149,48,476
+2024,Mississippi County,Race,Native Hawaiian/Pacific Islander,0,3,0,3
+2024,Mississippi County,Race,Two or More Races,407,290,197,894
+2024,Mississippi County,Race,White,5417,2270,996,8683
+2024,Mississippi County,Total,All,8075,3881,3496,15452
+2024,Monroe County,Age,25 to 44 Years,357,192,125,674
+2024,Monroe County,Age,45 to 64 Years,478,216,240,934
+2024,Monroe County,Age,65 Years and Over,470,391,240,1101
+2024,Monroe County,Age,Under 25 Years,7,57,17,81
+2024,Monroe County,HouseholdType,Married With Children,195,26,7,228
+2024,Monroe County,HouseholdType,"Single or Cohabiting, Under 65, no Children",579,439,230,1248
+2024,Monroe County,HouseholdType,Single-Female-Headed With Children,53,0,145,198
+2024,Monroe County,HouseholdType,Single-Male-Headed With Children,15,0,0,15
+2024,Monroe County,Race,American Indian/Alaska Native,0,0,0,0
+2024,Monroe County,Race,Asian,11,0,0,11
+2024,Monroe County,Race,Black,378,435,317,1130
+2024,Monroe County,Race,Hispanic,21,0,0,21
+2024,Monroe County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Monroe County,Race,Two or More Races,29,33,5,67
+2024,Monroe County,Race,White,888,515,172,1575
+2024,Monroe County,Total,All,1312,856,622,2790
+2024,Montgomery County,Age,25 to 44 Years,378,162,235,775
+2024,Montgomery County,Age,45 to 64 Years,764,284,291,1339
+2024,Montgomery County,Age,65 Years and Over,679,425,356,1460
+2024,Montgomery County,Age,Under 25 Years,34,97,10,141
+2024,Montgomery County,HouseholdType,Married With Children,314,70,80,464
+2024,Montgomery County,HouseholdType,"Single or Cohabiting, Under 65, no Children",816,403,268,1487
+2024,Montgomery County,HouseholdType,Single-Female-Headed With Children,24,0,146,170
+2024,Montgomery County,HouseholdType,Single-Male-Headed With Children,22,70,42,134
+2024,Montgomery County,Race,American Indian/Alaska Native,21,36,0,57
+2024,Montgomery County,Race,Asian,0,14,7,21
+2024,Montgomery County,Race,Black,0,0,10,10
+2024,Montgomery County,Race,Hispanic,53,23,38,114
+2024,Montgomery County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Montgomery County,Race,Two or More Races,82,33,18,133
+2024,Montgomery County,Race,White,1725,1143,542,3410
+2024,Montgomery County,Total,All,1855,968,892,3715
+2024,Nevada County,Age,25 to 44 Years,437,142,208,787
+2024,Nevada County,Age,45 to 64 Years,742,371,179,1292
+2024,Nevada County,Age,65 Years and Over,575,389,101,1065
+2024,Nevada County,Age,Under 25 Years,24,35,48,107
+2024,Nevada County,HouseholdType,Married With Children,192,53,43,288
+2024,Nevada County,HouseholdType,"Single or Cohabiting, Under 65, no Children",960,434,158,1552
+2024,Nevada County,HouseholdType,Single-Female-Headed With Children,51,47,195,293
+2024,Nevada County,HouseholdType,Single-Male-Headed With Children,0,14,39,53
+2024,Nevada County,Race,American Indian/Alaska Native,0,0,0,0
+2024,Nevada County,Race,Asian,0,0,0,0
+2024,Nevada County,Race,Black,657,273,263,1193
+2024,Nevada County,Race,Hispanic,12,75,11,98
+2024,Nevada County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Nevada County,Race,Two or More Races,29,11,12,52
+2024,Nevada County,Race,White,1082,725,114,1921
+2024,Nevada County,Total,All,1778,937,536,3251
+2024,Newton County,Age,25 to 44 Years,482,64,93,639
+2024,Newton County,Age,45 to 64 Years,673,294,167,1134
+2024,Newton County,Age,65 Years and Over,510,485,148,1143
+2024,Newton County,Age,Under 25 Years,77,95,91,263
+2024,Newton County,HouseholdType,Married With Children,455,65,11,531
+2024,Newton County,HouseholdType,"Single or Cohabiting, Under 65, no Children",738,377,181,1296
+2024,Newton County,HouseholdType,Single-Female-Headed With Children,19,11,98,128
+2024,Newton County,HouseholdType,Single-Male-Headed With Children,20,0,61,81
+2024,Newton County,Race,American Indian/Alaska Native,0,0,3,3
+2024,Newton County,Race,Asian,0,0,0,0
+2024,Newton County,Race,Black,0,0,0,0
+2024,Newton County,Race,Hispanic,15,59,14,88
+2024,Newton County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Newton County,Race,Two or More Races,120,57,21,198
+2024,Newton County,Race,White,1607,1032,269,2908
+2024,Newton County,Total,All,1742,938,499,3179
+2024,Ouachita County,Age,25 to 44 Years,1296,771,352,2419
+2024,Ouachita County,Age,45 to 64 Years,1611,1004,615,3230
+2024,Ouachita County,Age,65 Years and Over,1172,1102,616,2890
+2024,Ouachita County,Age,Under 25 Years,44,8,33,85
+2024,Ouachita County,HouseholdType,Married With Children,694,92,72,858
+2024,Ouachita County,HouseholdType,"Single or Cohabiting, Under 65, no Children",2060,1391,519,3970
+2024,Ouachita County,HouseholdType,Single-Female-Headed With Children,143,288,372,803
+2024,Ouachita County,HouseholdType,Single-Male-Headed With Children,54,12,37,103
+2024,Ouachita County,Race,American Indian/Alaska Native,7,15,0,22
+2024,Ouachita County,Race,Asian,28,0,0,28
+2024,Ouachita County,Race,Black,1339,1355,840,3534
+2024,Ouachita County,Race,Hispanic,111,31,0,142
+2024,Ouachita County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Ouachita County,Race,Two or More Races,110,80,41,231
+2024,Ouachita County,Race,White,2577,1747,400,4724
+2024,Ouachita County,Total,All,4123,2885,1616,8624
+2024,Perry County,Age,25 to 44 Years,640,279,117,1036
+2024,Perry County,Age,45 to 64 Years,838,456,265,1559
+2024,Perry County,Age,65 Years and Over,590,524,262,1376
+2024,Perry County,Age,Under 25 Years,35,71,17,123
+2024,Perry County,HouseholdType,Married With Children,481,87,58,626
+2024,Perry County,HouseholdType,"Single or Cohabiting, Under 65, no Children",871,610,276,1757
+2024,Perry County,HouseholdType,Single-Female-Headed With Children,25,85,56,166
+2024,Perry County,HouseholdType,Single-Male-Headed With Children,136,24,9,169
+2024,Perry County,Race,American Indian/Alaska Native,0,1,1,2
+2024,Perry County,Race,Asian,0,0,0,0
+2024,Perry County,Race,Black,25,10,0,35
+2024,Perry County,Race,Hispanic,61,10,9,80
+2024,Perry County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Perry County,Race,Two or More Races,59,64,47,170
+2024,Perry County,Race,White,1970,1428,439,3837
+2024,Perry County,Total,All,2103,1330,661,4094
+2024,Phillips County,Age,25 to 44 Years,703,347,559,1609
+2024,Phillips County,Age,45 to 64 Years,939,593,687,2219
+2024,Phillips County,Age,65 Years and Over,742,852,509,2103
+2024,Phillips County,Age,Under 25 Years,31,5,56,92
+2024,Phillips County,HouseholdType,Married With Children,351,24,55,430
+2024,Phillips County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1135,734,713,2582
+2024,Phillips County,HouseholdType,Single-Female-Headed With Children,187,187,527,901
+2024,Phillips County,HouseholdType,Single-Male-Headed With Children,0,0,7,7
+2024,Phillips County,Race,American Indian/Alaska Native,0,2,0,2
+2024,Phillips County,Race,Asian,59,0,0,59
+2024,Phillips County,Race,Black,1086,1564,1172,3822
+2024,Phillips County,Race,Hispanic,18,29,17,64
+2024,Phillips County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Phillips County,Race,Two or More Races,124,52,46,222
+2024,Phillips County,Race,White,1146,547,215,1908
+2024,Phillips County,Total,All,2415,1797,1811,6023
+2024,Pike County,Age,25 to 44 Years,645,253,216,1114
+2024,Pike County,Age,45 to 64 Years,718,283,463,1464
+2024,Pike County,Age,65 Years and Over,592,579,233,1404
+2024,Pike County,Age,Under 25 Years,38,4,58,100
+2024,Pike County,HouseholdType,Married With Children,619,136,81,836
+2024,Pike County,HouseholdType,"Single or Cohabiting, Under 65, no Children",749,363,436,1548
+2024,Pike County,HouseholdType,Single-Female-Headed With Children,11,36,214,261
+2024,Pike County,HouseholdType,Single-Male-Headed With Children,22,5,6,33
+2024,Pike County,Race,American Indian/Alaska Native,10,8,8,26
+2024,Pike County,Race,Asian,0,15,0,15
+2024,Pike County,Race,Black,27,91,31,149
+2024,Pike County,Race,Hispanic,134,86,30,250
+2024,Pike County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Pike County,Race,Two or More Races,94,84,33,211
+2024,Pike County,Race,White,1757,1133,602,3492
+2024,Pike County,Total,All,1993,1119,970,4082
+2024,Poinsett County,Age,25 to 44 Years,1562,586,480,2628
+2024,Poinsett County,Age,45 to 64 Years,1518,861,861,3240
+2024,Poinsett County,Age,65 Years and Over,1023,1139,487,2649
+2024,Poinsett County,Age,Under 25 Years,123,53,99,275
+2024,Poinsett County,HouseholdType,Married With Children,1041,220,134,1395
+2024,Poinsett County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1954,1067,934,3955
+2024,Poinsett County,HouseholdType,Single-Female-Headed With Children,97,101,370,568
+2024,Poinsett County,HouseholdType,Single-Male-Headed With Children,111,112,2,225
+2024,Poinsett County,Race,American Indian/Alaska Native,9,33,0,42
+2024,Poinsett County,Race,Asian,4,2,28,34
+2024,Poinsett County,Race,Black,115,180,146,441
+2024,Poinsett County,Race,Hispanic,90,106,41,237
+2024,Poinsett County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Poinsett County,Race,Two or More Races,304,357,88,749
+2024,Poinsett County,Race,White,3782,2617,1075,7474
+2024,Poinsett County,Total,All,4226,2639,1927,8792
+2024,Polk County,Age,25 to 44 Years,900,471,309,1680
+2024,Polk County,Age,45 to 64 Years,1517,783,576,2876
+2024,Polk County,Age,65 Years and Over,1456,1106,397,2959
+2024,Polk County,Age,Under 25 Years,101,233,49,383
+2024,Polk County,HouseholdType,Married With Children,854,204,175,1233
+2024,Polk County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1564,1282,539,3385
+2024,Polk County,HouseholdType,Single-Female-Headed With Children,99,1,195,295
+2024,Polk County,HouseholdType,Single-Male-Headed With Children,1,0,25,26
+2024,Polk County,Race,American Indian/Alaska Native,12,19,18,49
+2024,Polk County,Race,Asian,0,8,0,8
+2024,Polk County,Race,Black,0,0,0,0
+2024,Polk County,Race,Hispanic,133,153,33,319
+2024,Polk County,Race,Native Hawaiian/Pacific Islander,9,0,0,9
+2024,Polk County,Race,Two or More Races,266,176,102,544
+2024,Polk County,Race,White,3600,2659,816,7075
+2024,Polk County,Total,All,3974,2593,1331,7898
+2024,Pope County,Age,25 to 44 Years,4266,1726,1523,7515
+2024,Pope County,Age,45 to 64 Years,5253,2199,1294,8746
+2024,Pope County,Age,65 Years and Over,3286,2599,855,6740
+2024,Pope County,Age,Under 25 Years,477,452,418,1347
+2024,Pope County,HouseholdType,Married With Children,3606,771,506,4883
+2024,Pope County,HouseholdType,"Single or Cohabiting, Under 65, no Children",5963,3121,1779,10863
+2024,Pope County,HouseholdType,Single-Female-Headed With Children,176,257,849,1282
+2024,Pope County,HouseholdType,Single-Male-Headed With Children,251,228,101,580
+2024,Pope County,Race,American Indian/Alaska Native,10,56,1,67
+2024,Pope County,Race,Asian,60,0,3,63
+2024,Pope County,Race,Black,302,117,86,505
+2024,Pope County,Race,Hispanic,1000,619,93,1712
+2024,Pope County,Race,Native Hawaiian/Pacific Islander,0,27,0,27
+2024,Pope County,Race,Two or More Races,728,542,197,1467
+2024,Pope County,Race,White,11565,7222,2294,21081
+2024,Pope County,Total,All,13282,6976,4090,24348
+2024,Prairie County,Age,25 to 44 Years,413,139,69,621
+2024,Prairie County,Age,45 to 64 Years,567,468,136,1171
+2024,Prairie County,Age,65 Years and Over,569,542,214,1325
+2024,Prairie County,Age,Under 25 Years,92,15,32,139
+2024,Prairie County,HouseholdType,Married With Children,468,144,38,650
+2024,Prairie County,HouseholdType,"Single or Cohabiting, Under 65, no Children",595,397,167,1159
+2024,Prairie County,HouseholdType,Single-Female-Headed With Children,9,78,32,119
+2024,Prairie County,HouseholdType,Single-Male-Headed With Children,0,3,0,3
+2024,Prairie County,Race,American Indian/Alaska Native,1,4,0,5
+2024,Prairie County,Race,Asian,0,0,0,0
+2024,Prairie County,Race,Black,44,154,72,270
+2024,Prairie County,Race,Hispanic,19,4,0,23
+2024,Prairie County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Prairie County,Race,Two or More Races,19,43,26,88
+2024,Prairie County,Race,White,1563,1065,239,2867
+2024,Prairie County,Total,All,1641,1164,451,3256
+2024,Pulaski County,Age,25 to 44 Years,38212,12032,10334,60578
+2024,Pulaski County,Age,45 to 64 Years,36675,11347,8349,56371
+2024,Pulaski County,Age,65 Years and Over,26710,14999,5995,47704
+2024,Pulaski County,Age,Under 25 Years,5364,4376,4185,13925
+2024,Pulaski County,HouseholdType,Married With Children,17839,1526,1553,20918
+2024,Pulaski County,HouseholdType,"Single or Cohabiting, Under 65, no Children",55720,21067,14486,91273
+2024,Pulaski County,HouseholdType,Single-Female-Headed With Children,5266,3816,6183,15265
+2024,Pulaski County,HouseholdType,Single-Male-Headed With Children,1426,1346,646,3418
+2024,Pulaski County,Race,American Indian/Alaska Native,269,155,30,454
+2024,Pulaski County,Race,Asian,2378,799,302,3479
+2024,Pulaski County,Race,Black,33045,25458,8593,67096
+2024,Pulaski County,Race,Hispanic,4344,4065,977,9386
+2024,Pulaski County,Race,Native Hawaiian/Pacific Islander,18,7,0,25
+2024,Pulaski County,Race,Two or More Races,4479,3529,1174,9182
+2024,Pulaski County,Race,White,65139,18606,6975,90720
+2024,Pulaski County,Total,All,106961,42754,28863,178578
+2024,Randolph County,Age,25 to 44 Years,1157,294,624,2075
+2024,Randolph County,Age,45 to 64 Years,1494,604,618,2716
+2024,Randolph County,Age,65 Years and Over,944,993,382,2319
+2024,Randolph County,Age,Under 25 Years,99,120,5,224
+2024,Randolph County,HouseholdType,Married With Children,848,237,287,1372
+2024,Randolph County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1834,652,526,3012
+2024,Randolph County,HouseholdType,Single-Female-Headed With Children,34,51,427,512
+2024,Randolph County,HouseholdType,Single-Male-Headed With Children,34,78,7,119
+2024,Randolph County,Race,American Indian/Alaska Native,17,16,0,33
+2024,Randolph County,Race,Asian,0,0,10,10
+2024,Randolph County,Race,Black,79,60,0,139
+2024,Randolph County,Race,Hispanic,15,15,16,46
+2024,Randolph County,Race,Native Hawaiian/Pacific Islander,80,4,38,122
+2024,Randolph County,Race,Two or More Races,125,66,39,230
+2024,Randolph County,Race,White,3381,2682,697,6760
+2024,Randolph County,Total,All,3694,2011,1629,7334
+2024,St. Francis County,Age,25 to 44 Years,822,820,746,2388
+2024,St. Francis County,Age,45 to 64 Years,1140,898,707,2745
+2024,St. Francis County,Age,65 Years and Over,971,807,615,2393
+2024,St. Francis County,Age,Under 25 Years,35,114,108,257
+2024,St. Francis County,HouseholdType,Married With Children,444,197,256,897
+2024,St. Francis County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1477,1219,707,3403
+2024,St. Francis County,HouseholdType,Single-Female-Headed With Children,65,367,586,1018
+2024,St. Francis County,HouseholdType,Single-Male-Headed With Children,11,49,12,72
+2024,St. Francis County,Race,American Indian/Alaska Native,0,0,0,0
+2024,St. Francis County,Race,Asian,0,0,0,0
+2024,St. Francis County,Race,Black,1142,1949,1188,4279
+2024,St. Francis County,Race,Hispanic,6,151,4,161
+2024,St. Francis County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,St. Francis County,Race,Two or More Races,53,193,40,286
+2024,St. Francis County,Race,White,1773,1015,373,3161
+2024,St. Francis County,Total,All,2968,2639,2176,7783
+2024,Saline County,Age,25 to 44 Years,12152,2932,1277,16361
+2024,Saline County,Age,45 to 64 Years,11717,3198,3404,18319
+2024,Saline County,Age,65 Years and Over,8986,4721,1153,14860
+2024,Saline County,Age,Under 25 Years,304,563,289,1156
+2024,Saline County,HouseholdType,Married With Children,10872,968,446,12286
+2024,Saline County,HouseholdType,"Single or Cohabiting, Under 65, no Children",12099,4217,3744,20060
+2024,Saline County,HouseholdType,Single-Female-Headed With Children,767,1291,480,2538
+2024,Saline County,HouseholdType,Single-Male-Headed With Children,435,217,300,952
+2024,Saline County,Race,American Indian/Alaska Native,52,34,0,86
+2024,Saline County,Race,Asian,290,205,0,495
+2024,Saline County,Race,Black,2592,1591,366,4549
+2024,Saline County,Race,Hispanic,1492,1073,115,2680
+2024,Saline County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Saline County,Race,Two or More Races,1360,637,145,2142
+2024,Saline County,Race,White,27522,10220,3236,40978
+2024,Saline County,Total,All,33159,11414,6123,50696
+2024,Scott County,Age,25 to 44 Years,566,262,269,1097
+2024,Scott County,Age,45 to 64 Years,729,455,347,1531
+2024,Scott County,Age,65 Years and Over,511,520,225,1256
+2024,Scott County,Age,Under 25 Years,44,11,46,101
+2024,Scott County,HouseholdType,Married With Children,388,99,57,544
+2024,Scott County,HouseholdType,"Single or Cohabiting, Under 65, no Children",874,565,470,1909
+2024,Scott County,HouseholdType,Single-Female-Headed With Children,61,42,100,203
+2024,Scott County,HouseholdType,Single-Male-Headed With Children,16,22,35,73
+2024,Scott County,Race,American Indian/Alaska Native,1,8,19,28
+2024,Scott County,Race,Asian,63,72,0,135
+2024,Scott County,Race,Black,0,0,0,0
+2024,Scott County,Race,Hispanic,125,36,0,161
+2024,Scott County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Scott County,Race,Two or More Races,149,110,12,271
+2024,Scott County,Race,White,1530,1267,637,3434
+2024,Scott County,Total,All,1850,1248,887,3985
+2024,Searcy County,Age,25 to 44 Years,279,252,178,709
+2024,Searcy County,Age,45 to 64 Years,568,318,188,1074
+2024,Searcy County,Age,65 Years and Over,528,430,361,1319
+2024,Searcy County,Age,Under 25 Years,20,29,46,95
+2024,Searcy County,HouseholdType,Married With Children,253,171,79,503
+2024,Searcy County,HouseholdType,"Single or Cohabiting, Under 65, no Children",613,418,195,1226
+2024,Searcy County,HouseholdType,Single-Female-Headed With Children,1,0,87,88
+2024,Searcy County,HouseholdType,Single-Male-Headed With Children,0,10,51,61
+2024,Searcy County,Race,American Indian/Alaska Native,35,0,5,40
+2024,Searcy County,Race,Asian,0,0,0,0
+2024,Searcy County,Race,Black,0,0,0,0
+2024,Searcy County,Race,Hispanic,23,4,19,46
+2024,Searcy County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Searcy County,Race,Two or More Races,87,60,63,210
+2024,Searcy County,Race,White,1274,1142,508,2924
+2024,Searcy County,Total,All,1395,1029,773,3197
+2024,Sebastian County,Age,25 to 44 Years,10972,3202,1595,15769
+2024,Sebastian County,Age,45 to 64 Years,11696,5103,2438,19237
+2024,Sebastian County,Age,65 Years and Over,7499,5414,1868,14781
+2024,Sebastian County,Age,Under 25 Years,1926,800,472,3198
+2024,Sebastian County,HouseholdType,Married With Children,7876,916,834,9626
+2024,Sebastian County,HouseholdType,"Single or Cohabiting, Under 65, no Children",15450,6872,1710,24032
+2024,Sebastian County,HouseholdType,Single-Female-Headed With Children,890,1019,1761,3670
+2024,Sebastian County,HouseholdType,Single-Male-Headed With Children,378,298,200,876
+2024,Sebastian County,Race,American Indian/Alaska Native,171,232,43,446
+2024,Sebastian County,Race,Asian,1331,516,290,2137
+2024,Sebastian County,Race,Black,1133,1286,625,3044
+2024,Sebastian County,Race,Hispanic,3052,2107,664,5823
+2024,Sebastian County,Race,Native Hawaiian/Pacific Islander,0,9,15,24
+2024,Sebastian County,Race,Two or More Races,2351,986,544,3881
+2024,Sebastian County,Race,White,23645,11181,3244,38070
+2024,Sebastian County,Total,All,32093,14519,6373,52985
+2024,Sevier County,Age,25 to 44 Years,641,497,431,1569
+2024,Sevier County,Age,45 to 64 Years,1137,586,421,2144
+2024,Sevier County,Age,65 Years and Over,737,771,150,1658
+2024,Sevier County,Age,Under 25 Years,166,45,40,251
+2024,Sevier County,HouseholdType,Married With Children,748,201,137,1086
+2024,Sevier County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1091,659,534,2284
+2024,Sevier County,HouseholdType,Single-Female-Headed With Children,79,242,169,490
+2024,Sevier County,HouseholdType,Single-Male-Headed With Children,26,26,52,104
+2024,Sevier County,Race,American Indian/Alaska Native,40,41,0,81
+2024,Sevier County,Race,Asian,0,0,1,1
+2024,Sevier County,Race,Black,80,228,5,313
+2024,Sevier County,Race,Hispanic,825,420,249,1494
+2024,Sevier County,Race,Native Hawaiian/Pacific Islander,2,32,0,34
+2024,Sevier County,Race,Two or More Races,245,289,102,636
+2024,Sevier County,Race,White,1607,1244,612,3463
+2024,Sevier County,Total,All,2681,1899,1042,5622
+2024,Sharp County,Age,25 to 44 Years,952,484,275,1711
+2024,Sharp County,Age,45 to 64 Years,1216,567,542,2325
+2024,Sharp County,Age,65 Years and Over,897,1296,488,2681
+2024,Sharp County,Age,Under 25 Years,30,82,27,139
+2024,Sharp County,HouseholdType,Married With Children,803,179,106,1088
+2024,Sharp County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1320,649,540,2509
+2024,Sharp County,HouseholdType,Single-Female-Headed With Children,72,178,186,436
+2024,Sharp County,HouseholdType,Single-Male-Headed With Children,3,127,12,142
+2024,Sharp County,Race,American Indian/Alaska Native,0,1,0,1
+2024,Sharp County,Race,Asian,25,4,2,31
+2024,Sharp County,Race,Black,0,9,0,9
+2024,Sharp County,Race,Hispanic,20,36,54,110
+2024,Sharp County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Sharp County,Race,Two or More Races,146,103,23,272
+2024,Sharp County,Race,White,2906,2576,955,6437
+2024,Sharp County,Total,All,3095,2429,1332,6856
+2024,Stone County,Age,25 to 44 Years,487,189,313,989
+2024,Stone County,Age,45 to 64 Years,683,807,404,1894
+2024,Stone County,Age,65 Years and Over,1010,884,381,2275
+2024,Stone County,Age,Under 25 Years,28,59,17,104
+2024,Stone County,HouseholdType,Married With Children,493,87,108,688
+2024,Stone County,HouseholdType,"Single or Cohabiting, Under 65, no Children",521,872,398,1791
+2024,Stone County,HouseholdType,Single-Female-Headed With Children,0,0,167,167
+2024,Stone County,HouseholdType,Single-Male-Headed With Children,184,96,61,341
+2024,Stone County,Race,American Indian/Alaska Native,28,47,0,75
+2024,Stone County,Race,Asian,0,0,0,0
+2024,Stone County,Race,Black,0,0,0,0
+2024,Stone County,Race,Hispanic,23,72,12,107
+2024,Stone County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Stone County,Race,Two or More Races,52,290,61,403
+2024,Stone County,Race,White,2127,1879,747,4753
+2024,Stone County,Total,All,2208,1939,1115,5262
+2024,Union County,Age,25 to 44 Years,2379,1259,746,4384
+2024,Union County,Age,45 to 64 Years,3291,1239,979,5509
+2024,Union County,Age,65 Years and Over,2035,1717,934,4686
+2024,Union County,Age,Under 25 Years,157,111,155,423
+2024,Union County,HouseholdType,Married With Children,1446,141,223,1810
+2024,Union County,HouseholdType,"Single or Cohabiting, Under 65, no Children",4018,2129,1160,7307
+2024,Union County,HouseholdType,Single-Female-Headed With Children,232,220,399,851
+2024,Union County,HouseholdType,Single-Male-Headed With Children,131,119,98,348
+2024,Union County,Race,American Indian/Alaska Native,24,9,8,41
+2024,Union County,Race,Asian,65,47,0,112
+2024,Union County,Race,Black,1703,2334,1057,5094
+2024,Union County,Race,Hispanic,241,97,16,354
+2024,Union County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Union County,Race,Two or More Races,288,79,55,422
+2024,Union County,Race,White,5695,2533,921,9149
+2024,Union County,Total,All,7862,4326,2814,15002
+2024,Van Buren County,Age,25 to 44 Years,894,344,331,1569
+2024,Van Buren County,Age,45 to 64 Years,1616,477,576,2669
+2024,Van Buren County,Age,65 Years and Over,1239,1155,484,2878
+2024,Van Buren County,Age,Under 25 Years,128,165,23,316
+2024,Van Buren County,HouseholdType,Married With Children,652,189,134,975
+2024,Van Buren County,HouseholdType,"Single or Cohabiting, Under 65, no Children",1700,707,657,3064
+2024,Van Buren County,HouseholdType,Single-Female-Headed With Children,233,41,99,373
+2024,Van Buren County,HouseholdType,Single-Male-Headed With Children,53,49,40,142
+2024,Van Buren County,Race,American Indian/Alaska Native,59,1,5,65
+2024,Van Buren County,Race,Asian,7,0,5,12
+2024,Van Buren County,Race,Black,0,0,33,33
+2024,Van Buren County,Race,Hispanic,137,22,24,183
+2024,Van Buren County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Van Buren County,Race,Two or More Races,108,59,37,204
+2024,Van Buren County,Race,White,3578,2432,963,6973
+2024,Van Buren County,Total,All,3877,2141,1414,7432
+2024,Washington County,Age,25 to 44 Years,25368,8399,4255,38022
+2024,Washington County,Age,45 to 64 Years,22082,7455,2283,31820
+2024,Washington County,Age,65 Years and Over,11537,6712,2367,20616
+2024,Washington County,Age,Under 25 Years,2847,2602,3961,9410
+2024,Washington County,HouseholdType,Married With Children,15547,2551,1592,19690
+2024,Washington County,HouseholdType,"Single or Cohabiting, Under 65, no Children",32152,12642,6591,51385
+2024,Washington County,HouseholdType,Single-Female-Headed With Children,1596,2134,1716,5446
+2024,Washington County,HouseholdType,Single-Male-Headed With Children,1002,1129,600,2731
+2024,Washington County,Race,American Indian/Alaska Native,575,287,14,876
+2024,Washington County,Race,Asian,1231,650,116,1997
+2024,Washington County,Race,Black,1176,1197,511,2884
+2024,Washington County,Race,Hispanic,7325,4964,874,13163
+2024,Washington County,Race,Native Hawaiian/Pacific Islander,915,586,54,1555
+2024,Washington County,Race,Two or More Races,9125,7065,1558,17748
+2024,Washington County,Race,White,41118,19446,3908,64472
+2024,Washington County,Total,All,61834,25168,12866,99868
+2024,White County,Age,25 to 44 Years,5535,1897,2019,9451
+2024,White County,Age,45 to 64 Years,6482,2694,2503,11679
+2024,White County,Age,65 Years and Over,4260,3491,1607,9358
+2024,White County,Age,Under 25 Years,373,621,221,1215
+2024,White County,HouseholdType,Married With Children,4871,505,668,6044
+2024,White County,HouseholdType,"Single or Cohabiting, Under 65, no Children",6714,3856,2608,13178
+2024,White County,HouseholdType,Single-Female-Headed With Children,375,504,1201,2080
+2024,White County,HouseholdType,Single-Male-Headed With Children,430,347,266,1043
+2024,White County,Race,American Indian/Alaska Native,4,66,6,76
+2024,White County,Race,Asian,167,29,0,196
+2024,White County,Race,Black,368,714,260,1342
+2024,White County,Race,Hispanic,513,595,72,1180
+2024,White County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,White County,Race,Two or More Races,637,554,220,1411
+2024,White County,Race,White,14905,8888,4433,28226
+2024,White County,Total,All,16650,8703,6350,31703
+2024,Woodruff County,Age,25 to 44 Years,303,85,175,563
+2024,Woodruff County,Age,45 to 64 Years,565,138,240,943
+2024,Woodruff County,Age,65 Years and Over,409,369,296,1074
+2024,Woodruff County,Age,Under 25 Years,49,0,63,112
+2024,Woodruff County,HouseholdType,Married With Children,312,17,51,380
+2024,Woodruff County,HouseholdType,"Single or Cohabiting, Under 65, no Children",582,198,347,1127
+2024,Woodruff County,HouseholdType,Single-Female-Headed With Children,23,0,78,101
+2024,Woodruff County,HouseholdType,Single-Male-Headed With Children,0,8,2,10
+2024,Woodruff County,Race,American Indian/Alaska Native,0,0,0,0
+2024,Woodruff County,Race,Asian,0,0,0,0
+2024,Woodruff County,Race,Black,248,201,292,741
+2024,Woodruff County,Race,Hispanic,9,0,4,13
+2024,Woodruff County,Race,Native Hawaiian/Pacific Islander,0,5,0,5
+2024,Woodruff County,Race,Two or More Races,39,19,40,98
+2024,Woodruff County,Race,White,1048,502,288,1838
+2024,Woodruff County,Total,All,1326,592,774,2692
+2024,Yell County,Age,25 to 44 Years,1746,411,490,2647
+2024,Yell County,Age,45 to 64 Years,1897,522,497,2916
+2024,Yell County,Age,65 Years and Over,1020,962,243,2225
+2024,Yell County,Age,Under 25 Years,192,223,120,535
+2024,Yell County,HouseholdType,Married With Children,1230,153,230,1613
+2024,Yell County,HouseholdType,"Single or Cohabiting, Under 65, no Children",2261,622,612,3495
+2024,Yell County,HouseholdType,Single-Female-Headed With Children,75,322,155,552
+2024,Yell County,HouseholdType,Single-Male-Headed With Children,269,59,110,438
+2024,Yell County,Race,American Indian/Alaska Native,29,4,20,53
+2024,Yell County,Race,Asian,53,40,6,99
+2024,Yell County,Race,Black,47,26,0,73
+2024,Yell County,Race,Hispanic,798,386,53,1237
+2024,Yell County,Race,Native Hawaiian/Pacific Islander,0,0,0,0
+2024,Yell County,Race,Two or More Races,304,151,55,510
+2024,Yell County,Race,White,3814,2036,773,6623
+2024,Yell County,Total,All,4855,2118,1350,8323
